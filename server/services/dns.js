@@ -182,13 +182,23 @@ async function request(url, { method = 'GET', headers = {}, body, provider } = {
 }
 
 const duckdns = {
-  async setA(cfg, label, ip) {
-    const url = `${API.duckdns}/update?domains=${encodeURIComponent(label)}&token=${encodeURIComponent(cfg.token)}&ip=${encodeURIComponent(ip)}&verbose=true`;
+  async call(cfg, label, extra) {
+    const url = `${API.duckdns}/update?domains=${encodeURIComponent(label)}&token=${encodeURIComponent(cfg.token)}&${extra}&verbose=true`;
     const { res, text } = await request(url, { provider: 'duckdns' });
-    const lines = text.trim().split(/\r?\n/);
-    if (!res.ok || lines[0] !== 'OK') {
-      throw new HttpError(400, `DuckDNS rechazó "${label}". Revisa que el subdominio exista en tu cuenta de duckdns.org y que el token sea el correcto.`);
+    return res.ok && text.trim().split(/\r?\n/)[0] === 'OK';
+  },
+  async setA(cfg, label, ip) {
+    if (await duckdns.call(cfg, label, `ip=${encodeURIComponent(ip)}`)) return;
+    // DuckDNS solo responde "KO", sin decir por qué. Se prueba el mismo token con el registro TXT
+    // (no cambia la IP) para saber si el problema es el token o la IP.
+    const tokenOk = await duckdns.call(cfg, label, 'txt=mc-hosting-panel').catch(() => false);
+    if (tokenOk) {
+      throw new HttpError(400, `DuckDNS aceptó tu token pero no la IP ${ip} para "${label}". Intenta "Guardar y actualizar" en unos minutos.`);
     }
+    throw new HttpError(
+      400,
+      `DuckDNS rechazó el token para "${label}". El token guardado en el panel termina en ${cfg.token.slice(-4)}: compáralo con el que aparece arriba en duckdns.org (fila "token") y, si no coincide, pégalo de nuevo en Ajustes del panel.`
+    );
   },
 };
 
