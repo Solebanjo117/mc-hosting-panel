@@ -4,6 +4,7 @@ import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { CopyButton, useToast } from '../../ui.jsx';
 import { Findings } from './LogsTab.jsx';
+import QuickCommands from './QuickCommands.jsx';
 
 // Quita códigos de color ANSI y de Minecraft (§a, §l…).
 const clean = (line) => line.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/§[0-9a-fk-or]/gi, '');
@@ -16,13 +17,6 @@ function lineClass(line) {
   if (/joined the game|left the game/.test(line)) return 'l-join';
   return '';
 }
-
-const QUICK = [
-  { label: 'Guardar mundo', cmd: 'save-all' },
-  { label: 'Hacer de día', cmd: 'time set day' },
-  { label: 'Quitar lluvia', cmd: 'weather clear' },
-  { label: 'Lista de jugadores', cmd: 'list' },
-];
 
 export default function ConsoleTab({ server, runtime, state }) {
   const { subscribeConsole } = useLive();
@@ -196,18 +190,7 @@ export default function ConsoleTab({ server, runtime, state }) {
           </div>
         </dl>
 
-        <div className="stack" style={{ gap: '0.4rem' }}>
-          <h3 className="muted" style={{ fontWeight: 500 }}>
-            Comandos rápidos
-          </h3>
-          <div className="row" style={{ gap: '0.4rem' }}>
-            {QUICK.map((q) => (
-              <button key={q.cmd} className="btn-sm" disabled={state !== 'running'} onClick={() => send(q.cmd)}>
-                {q.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} />
       </aside>
     </div>
     </div>

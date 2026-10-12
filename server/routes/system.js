@@ -8,8 +8,19 @@ import { listVersions, SERVER_TYPES } from '../services/versions.js';
 import { installedJavas, ensureJava } from '../services/java.js';
 import { localIps, publicIp } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
+import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
 
 export const systemRouter = express.Router();
+
+// --- Comandos rápidos de la consola ------------------------------------------------
+
+systemRouter.get('/quick-commands', (_req, res) => {
+  res.json({ commands: listCommands(), defaults: DEFAULT_COMMANDS, types: PARAM_TYPES, custom: Boolean(db.data.settings.quickCommands) });
+});
+systemRouter.put('/quick-commands', (req, res) => {
+  const commands = saveCommands(req.body?.reset ? null : req.body?.commands);
+  res.json({ commands, defaults: DEFAULT_COMMANDS, types: PARAM_TYPES, custom: Boolean(db.data.settings.quickCommands) });
+});
 
 systemRouter.get('/info', (_req, res) => {
   res.json({ version: VERSION, system: systemInfo(), types: SERVER_TYPES });

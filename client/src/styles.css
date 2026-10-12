@@ -1501,3 +1501,57 @@ label.check input {
   color: var(--sand-dim);
   word-break: break-all;
 }
+
+/* Comandos rápidos: buscador de objetos y editor */
+.picker-list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--night);
+}
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-bottom: 1px solid var(--slate-2);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  font-weight: 400;
+}
+.picker-item:last-child {
+  border-bottom: 0;
+}
+.picker-item:hover:not(:disabled) {
+  background: var(--slate-2);
+}
+.picker-item.on {
+  background: var(--slate-3);
+  box-shadow: inset 3px 0 0 var(--prismarine);
+}
+.picker-item .mono {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 45%;
+}
+.picker-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  image-rendering: pixelated;
+}
+.qc-row {
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  padding: 0.5rem;
+  background: var(--slate);
+}
+.qc-preview {
+  margin: 0.3rem 0 0 2.2rem;
+  overflow-wrap: anywhere;
+}

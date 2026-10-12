@@ -13,6 +13,7 @@ import { externalCheck, publicIp } from '../services/network.js';
 import * as bedrock from '../services/bedrock.js';
 import * as playit from '../services/playit.js';
 import * as dns from '../services/dns.js';
+import { gameList } from '../services/gameData.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
@@ -251,6 +252,13 @@ serversRouter.post('/:id/playit', async (req, res) => {
   const result = await playit.enableForServer(server.id);
   bus.emit('servers');
   res.json(result);
+});
+
+// --- Listas del juego para los comandos rápidos (objetos, efectos…) ---------------
+
+serversRouter.get('/:id/gamedata/:kind', async (req, res) => {
+  const server = load(req);
+  res.json({ version: server.mcVersion, list: await gameList(server.mcVersion, req.params.kind) });
 });
 
 // --- Dominio del servidor ---------------------------------------------------------
