@@ -25,6 +25,7 @@ integrationsRouter.get('/playit/tunnels', async (_req, res) => res.json(await pl
 
 integrationsRouter.get('/dns', (_req, res) => res.json(dns.publicStatus()));
 integrationsRouter.put('/dns', async (req, res) => res.json(await dns.saveSettings(req.body || {})));
+integrationsRouter.post('/dns/unlink', async (_req, res) => res.json(await dns.unlink()));
 
 // --- Modpacks ------------------------------------------------------------------
 

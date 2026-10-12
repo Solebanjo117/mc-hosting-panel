@@ -136,6 +136,27 @@ export async function saveSettings(body = {}) {
   return publicStatus();
 }
 
+/**
+ * Desvincula el dominio del panel: borra los registros que creó (deSEC y Cloudflare;
+ * DuckDNS no deja borrar), apaga el dominio en todos los servidores y olvida el token.
+ */
+export async function unlink() {
+  const s = settings();
+  const errors = [];
+  for (const server of db.data.servers) {
+    if (!server.dns) continue;
+    if (server.dns.applied?.provider === s.provider) {
+      await removeRecords(server, s).catch((err) => errors.push(`${server.name}: ${err.message}`));
+    }
+    server.dns = { ...server.dns, enabled: false, applied: null };
+  }
+  if (s.provider) s[s.provider] = {};
+  s.provider = null;
+  db.flush();
+  bus.emit('servers');
+  return { ...publicStatus(), warnings: errors };
+}
+
 // --- Llamadas a cada proveedor -------------------------------------------------
 
 async function request(url, { method = 'GET', headers = {}, body, provider } = {}) {

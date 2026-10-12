@@ -544,11 +544,20 @@ Si tienes CGNAT (por ejemplo, abriste el puerto en el módem y en el firewall y 
 
 | Servicio | Gratis | Java con playit | Bedrock con playit |
 |---|---|---|---|
-| **deSEC** (`tunombre.dedyn.io`) | Sí | `smp.tunombre.dedyn.io`, sin puerto | dirección + puerto |
+| **deSEC** (con tu dominio o `.dedyn.io` cuando esté abierto) | Sí | `smp.tunombre.dpdns.org`, sin puerto | dirección + puerto |
 | **DuckDNS** | Sí | `tunombre.duckdns.org:41234`, con puerto (no tiene SRV) | dirección + puerto |
-| **Cloudflare** con tu dominio | El dominio cuesta poco al año | `mc.tudominio.com`, sin puerto | dirección + puerto |
+| **Cloudflare** con tu dominio | Sí (dominio gratis de DigitalPlat o uno comprado) | `mc.tudominio.com`, sin puerto | dirección + puerto |
 
-**Para crear tu cuenta de deSEC:** entra a `desec.io/signup`, escribe tu correo y elige el dominio gratis para DynDNS (`tunombre.dedyn.io`). Confirma el correo, entra y en **Token Management** crea un token. Pega el dominio y el token en el panel.
+**Si no tienes dominio:** el registro gratis de `.dedyn.io` en deSEC a veces está suspendido. Una alternativa gratis es **DigitalPlat** (`domain.digitalplat.org`), que da dominios como `tunombre.dpdns.org` o `tunombre.us.kg` (uno por cuenta):
+
+1. Pide tu dominio en DigitalPlat.
+2. Agrégalo en **Cloudflare** (plan Free) y copia los dos nameservers que te da; o agrégalo en **deSEC** y usa `ns1.desec.io` y `ns2.desec.org`.
+3. Pon esos nameservers en tu dominio dentro de DigitalPlat y espera a que se active (minutos a horas).
+4. Crea el token (Cloudflare: plantilla **Edit zone DNS**; deSEC: **Token Management**) y pégalo en el panel.
+
+No edites a mano los registros **NS** del dominio dentro de deSEC o Cloudflare: si se borran, el dominio deja de funcionar.
+
+**Para quitarlo:** en **Ajustes del panel > Dominio para tus servidores** pulsa **Desvincular dominio**. El panel borra los registros que creó (en DuckDNS no se pueden borrar y se quedan con la última IP), quita el dominio de los servidores y olvida el token. Para quitarlo de un solo servidor, usa **Quitar dominio de este servidor** en su pestaña **Conexión**.
 
 Si playit le da a Bedrock una IP distinta que a Java, el panel crea un nombre aparte para Bedrock (`be.smp.tunombre.dedyn.io`). En DuckDNS tienes que crear un segundo subdominio para eso; el panel te avisa.
 

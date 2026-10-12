@@ -522,7 +522,7 @@ function DomainSection({ server, hasTunnel }) {
       const r = await api(`/servers/${server.id}/dns`, { method: 'PUT', body: { ...form, enabled } });
       setD(r);
       if (r.applied?.error) throw new Error(r.applied.error);
-    }, enabled ? 'Dominio actualizado' : 'Dominio desactivado');
+    }, enabled ? 'Dominio actualizado' : d.srv ? 'Dominio quitado: se borraron sus registros' : 'Dominio quitado de este servidor');
   const a = d.applied;
   const bedrockOn = Boolean(server.bedrock?.enabled);
 
@@ -532,8 +532,20 @@ function DomainSection({ server, hasTunnel }) {
         <h2 className="grow" style={{ margin: 0 }}>
           Dominio
         </h2>
-        {d.enabled && <span className="chip">{d.providerName}</span>}
+        {d.enabled && <span className="chip">Activo</span>}
       </div>
+      {d.provider && (
+        <p className="faint small" style={{ margin: 0 }}>
+          Usa {d.providerName}
+          {d.provider !== 'duckdns' && (
+            <>
+              {' '}
+              con <span className="mono">{d.zone}</span>
+            </>
+          )}
+          . Para cambiar de servicio o desvincularlo ve a <Link to="/ajustes">Ajustes del panel</Link>.
+        </p>
+      )}
       {!d.provider ? (
         <p className="small">
           Elige un servicio de dominio (deSEC, DuckDNS o Cloudflare) en <Link to="/ajustes">Ajustes del panel</Link> y luego vuelve aquí para ponerle nombre a
@@ -603,8 +615,8 @@ function DomainSection({ server, hasTunnel }) {
               {d.enabled ? 'Guardar y actualizar' : 'Activar dominio'}
             </button>
             {d.enabled && (
-              <button disabled={busy} onClick={() => save(false)}>
-                Desactivar
+              <button className="btn-stop" disabled={busy} onClick={() => save(false)}>
+                Quitar dominio de este servidor
               </button>
             )}
           </div>
