@@ -402,40 +402,68 @@ function hostOf(name, cfg = settings()) {
 
 /**
  * Registros que debería tener el servidor y lo que deben escribir tus amigos.
- * Con SRV (deSEC, Cloudflare) Java entra solo con el nombre.
+ *
+ * Con playit hay un detalle: su túnel de Java solo deja pasar al jugador si Minecraft llega con el
+ * nombre del túnel (el que va en el "handshake"). Un registro A con tu nombre hacia la IP de playit
+ * no sirve (playit corta la conexión). Un registro SRV sí: Minecraft sigue el SRV y se conecta usando
+ * el nombre de playit que va dentro, así que funciona. Por eso con playit:
+ *  - deSEC / Cloudflare: SRV _minecraft._tcp.<tu nombre> -> nombre de playit + puerto.
+ *  - DuckDNS (sin SRV): Java no se puede; solo Bedrock (UDP, no revisa el nombre).
  */
-function plan(server, ep, cfg = settings()) {
+export function plan(server, ep, cfg = settings()) {
   const conf = server.dns;
   const records = [];
+  const warnings = [];
   const srv = cfg.provider !== 'duckdns';
+  const viaPlayit = ep.target === 'playit';
   const javaHost = hostOf(conf.name, cfg);
-  records.push({ type: 'A', host: javaHost, ip: ep.java.ip });
-  let javaAddress = ep.java.port === 25565 ? javaHost : `${javaHost}:${ep.java.port}`;
-  if (srv && ep.java.port !== 25565) {
-    // Minecraft Java busca _minecraft._tcp.<nombre> y así tus amigos no escriben el puerto.
-    records.push({ type: 'SRV', host: `_minecraft._tcp.${javaHost}`, port: ep.java.port, target: ep.java.target || javaHost });
-    javaAddress = javaHost;
+  let java;
+
+  if (viaPlayit) {
+    if (srv) {
+      if (!ep.java.target) throw new HttpError(409, 'No se pudo leer el nombre del túnel Java de playit');
+      records.push({ type: 'SRV', host: `_minecraft._tcp.${javaHost}`, port: ep.java.port, target: ep.java.target });
+      java = { address: javaHost, withPort: false };
+    } else {
+      java = { unsupported: true, playitAddress: ep.playitJava };
+      if (!ep.bedrock) {
+        throw new HttpError(
+          409,
+          'Con el túnel de playit, Java no funciona con DuckDNS: playit solo acepta su propia dirección (DuckDNS no tiene registros SRV). Usa Cloudflare o deSEC con tu dominio, o comparte la dirección de playit.'
+        );
+      }
+    }
+  } else {
+    records.push({ type: 'A', host: javaHost, ip: ep.java.ip });
+    java = { address: ep.java.port === 25565 ? javaHost : `${javaHost}:${ep.java.port}`, withPort: ep.java.port !== 25565 };
+    if (srv && ep.java.port !== 25565) {
+      // Minecraft Java busca _minecraft._tcp.<nombre> y así tus amigos no escriben el puerto.
+      records.push({ type: 'SRV', host: `_minecraft._tcp.${javaHost}`, port: ep.java.port, target: javaHost });
+      java = { address: javaHost, withPort: false };
+    }
   }
 
   let bedrock = null;
-  const warnings = [];
   if (ep.bedrock) {
-    let bedrockHost = javaHost;
+    let bedrockHost;
     if (cfg.provider === 'duckdns') {
-      if (conf.bedrockName) bedrockHost = hostOf(conf.bedrockName, cfg);
-      else if (ep.bedrock.ip !== ep.java.ip) {
+      bedrockHost = conf.bedrockName ? hostOf(conf.bedrockName, cfg) : javaHost;
+      if (!viaPlayit && bedrockHost === javaHost && ep.bedrock.ip !== ep.java.ip) {
         bedrockHost = null;
-        warnings.push('playit le dio a Bedrock otra IP que a Java. Crea un segundo subdominio en duckdns.org y escríbelo en "Subdominio para Bedrock".');
+        warnings.push('Bedrock usa otra IP que Java. Crea un segundo subdominio en duckdns.org y escríbelo en "Subdominio para Bedrock".');
       }
-    } else if (ep.bedrock.ip !== ep.java.ip) {
-      bedrockHost = hostOf(conf.name ? `be.${conf.name}` : 'be', cfg);
+    } else if (viaPlayit) {
+      // Con playit el nombre no tiene registro A para Java (usa SRV), así que Bedrock puede usarlo.
+      bedrockHost = javaHost;
+    } else {
+      bedrockHost = ep.bedrock.ip === ep.java.ip ? javaHost : hostOf(conf.name ? `be.${conf.name}` : 'be', cfg);
     }
     if (bedrockHost) {
-      if (bedrockHost !== javaHost) records.push({ type: 'A', host: bedrockHost, ip: ep.bedrock.ip });
+      if (!records.some((r) => r.type === 'A' && r.host === bedrockHost)) records.push({ type: 'A', host: bedrockHost, ip: ep.bedrock.ip });
       bedrock = { host: bedrockHost, port: ep.bedrock.port };
     }
   }
-  return { records, java: { address: javaAddress, withPort: javaAddress !== javaHost }, bedrock, warnings };
+  return { records, java, bedrock, warnings };
 }
 
 let syncing = Promise.resolve();

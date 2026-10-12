@@ -555,7 +555,20 @@ function DomainSection({ server, hasTunnel }) {
         <>
           {d.enabled && a?.ok && (
             <div className="stack" style={{ gap: '0.2rem' }}>
-              <Address label={a.java.withPort ? 'Java: esta es la dirección para tus amigos (con puerto)' : 'Java: esta es la dirección para tus amigos'} text={a.java.address} />
+              {a.java?.unsupported ? (
+                <div className="note small">
+                  <strong>Java:</strong> playit solo deja entrar con la dirección de su túnel, y DuckDNS no puede redirigir a ella (no tiene registros SRV). Para
+                  Java comparte la dirección de playit
+                  {a.java.playitAddress && (
+                    <>
+                      : <span className="mono">{a.java.playitAddress}</span>
+                    </>
+                  )}
+                  . Para tener tu propio nombre en Java usa Cloudflare o deSEC con tu dominio (en Ajustes del panel).
+                </div>
+              ) : (
+                <Address label={a.java.withPort ? 'Java: esta es la dirección para tus amigos (con puerto)' : 'Java: esta es la dirección para tus amigos'} text={a.java.address} />
+              )}
               {a.bedrock && <Address label={`Bedrock: dirección ${a.bedrock.host}, puerto ${a.bedrock.port}`} text={a.bedrock.host} />}
               <p className="faint small" style={{ marginTop: '0.4rem' }}>
                 Apunta a {a.target === 'playit' ? 'tu túnel de playit.gg' : 'la IP de tu casa (necesita los puertos abiertos)'} (actualizado {formatDate(a.at)}). Un
@@ -606,8 +619,9 @@ function DomainSection({ server, hasTunnel }) {
           </div>
           {!d.srv && (
             <p className="faint small">
-              DuckDNS no tiene registros SRV: si el puerto no es 25565 (con playit casi nunca lo es), tus amigos de Java escriben la dirección con{' '}
-              <span className="mono">:puerto</span>. Con deSEC o Cloudflare no hace falta.
+              DuckDNS solo guarda IPs (no tiene registros SRV). Con la IP de tu casa funciona para Java y Bedrock (Java con <span className="mono">:puerto</span> si
+              no es 25565). Con el túnel de playit solo sirve para Bedrock: playit no deja entrar a Java con otro nombre. Para Java con playit usa Cloudflare o
+              deSEC.
             </p>
           )}
           <div className="row">

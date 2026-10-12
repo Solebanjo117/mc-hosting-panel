@@ -538,14 +538,14 @@ Los registros SRV no tienen nube, pero el registro A o CNAME al que apuntan **s�
 
 Si tienes CGNAT (por ejemplo, abriste el puerto en el módem y en el firewall y aun así no conecta), el túnel de playit es el camino. Su dirección es larga (`algo.gl.joinmc.link` o `147.185.221.20:41234`), pero puedes poner tu propio nombre encima:
 
-- Cada túnel de playit tiene una **IP y un puerto** fijos. Un registro **A** con tu nombre apunta a esa IP.
-- Minecraft Java busca un registro **SRV** (`_minecraft._tcp.tunombre`) con el puerto. Si el servicio de DNS permite SRV, tus amigos escriben solo el nombre.
-- Bedrock **no usa SRV**: siempre se escribe la dirección y el puerto en campos separados.
+- El túnel de **Java** de playit solo deja entrar si Minecraft llega con el **nombre del túnel**. Si apuntas tu nombre a la IP de playit con un registro A, playit corta la conexión ("Connection reset").
+- Lo que sí funciona es un registro **SRV** (`_minecraft._tcp.tunombre`): Minecraft lo sigue y se conecta con el nombre y el puerto de playit que van dentro. Tus amigos escriben solo tu nombre. Por eso para Java con playit necesitas un servicio con SRV (deSEC o Cloudflare).
+- **Bedrock** no usa SRV ni revisa el nombre: un registro A hacia la IP del túnel Bedrock funciona, y se escribe la dirección y el puerto en campos separados.
 
 | Servicio | Gratis | Java con playit | Bedrock con playit |
 |---|---|---|---|
 | **deSEC** (con tu dominio o `.dedyn.io` cuando esté abierto) | Sí | `smp.tunombre.dpdns.org`, sin puerto | dirección + puerto |
-| **DuckDNS** | Sí | `tunombre.duckdns.org:41234`, con puerto (no tiene SRV) | dirección + puerto |
+| **DuckDNS** | Sí | **No funciona** (playit no acepta otro nombre y DuckDNS no tiene SRV); comparte la dirección de playit | dirección + puerto |
 | **Cloudflare** con tu dominio | Sí (dominio gratis de DigitalPlat o uno comprado) | `mc.tudominio.com`, sin puerto | dirección + puerto |
 
 **Si no tienes dominio:** el registro gratis de `.dedyn.io` en deSEC a veces está suspendido. Una alternativa gratis es **DigitalPlat** (`domain.digitalplat.org`), que da dominios como `tunombre.dpdns.org` o `tunombre.us.kg` (uno por cuenta):

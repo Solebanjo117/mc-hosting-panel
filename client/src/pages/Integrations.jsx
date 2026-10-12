@@ -209,7 +209,7 @@ export function DnsSettings() {
       {provider === 'desec' && (
         <>
           <p className="small" style={{ maxWidth: '75ch' }}>
-            <strong>Recomendado.</strong> Gratis y permite registros SRV, así tus amigos de Java entran solo con el nombre, sin puerto, aunque uses playit.
+            Gratis y permite registros SRV: tus amigos de Java entran solo con el nombre, sin puerto, y funciona con el túnel de playit.
           </p>
           <ol className="small stack" style={{ gap: '0.3rem', margin: 0, paddingLeft: '1.2rem', maxWidth: '75ch' }}>
             <li>
@@ -246,8 +246,8 @@ export function DnsSettings() {
       {provider === 'duckdns' && (
         <>
           <p className="small" style={{ maxWidth: '75ch' }}>
-            Gratis y muy fácil, pero solo guarda IPs: con playit tus amigos de Java tienen que escribir el puerto (por ejemplo{' '}
-            <span className="mono">miserver.duckdns.org:41234</span>). Crea uno o más subdominios en{' '}
+            Gratis y muy fácil, pero solo guarda IPs. Sirve con la IP de tu casa (puertos abiertos). Con el túnel de playit solo funciona para Bedrock:
+            playit no deja entrar a Java con otro nombre, y DuckDNS no tiene registros SRV para redirigir. Crea uno o más subdominios en{' '}
             <a href="https://www.duckdns.org" target="_blank" rel="noreferrer">
               duckdns.org
             </a>{' '}
