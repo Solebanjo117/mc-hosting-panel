@@ -151,7 +151,7 @@ export default function ServerView() {
         <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
         <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
         <Route path="jugadores" element={<PlayersTab server={server} runtime={rt} />} />
-        <Route path="archivos" element={<FilesTab server={server} />} />
+        <Route path="archivos" element={<FilesTab server={server} state={state} />} />
         <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
         <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
         <Route path="mundos" element={<WorldsTab server={server} state={state} />} />

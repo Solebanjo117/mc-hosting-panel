@@ -77,3 +77,25 @@ export const TYPE_LABEL = {
   forge: 'Forge',
   neoforge: 'NeoForge',
 };
+
+/** Subida con barra de progreso (fetch no informa el avance de la subida). */
+export function uploadWithProgress(path, form, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `/api${path}`);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    xhr.onload = () => {
+      let data = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        /* sin JSON */
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(new ApiError(xhr.status, data?.error || `Error ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new ApiError(0, 'Se perdió la conexión durante la subida'));
+    xhr.send(form);
+  });
+}

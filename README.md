@@ -5,7 +5,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - Crea servidores **Paper, Fabric, Forge, NeoForge o Vanilla** eligiendo tipo y versión; el panel descarga el servidor y el **Java correcto** (Eclipse Temurin) sin que instales nada.
 - **Consola en vivo** con historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido.
 - **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC), filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
-- Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), administrador de archivos con editor, subida y extracción de .zip, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
+- Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic.
 - **DuckDNS integrado:** un dominio gratis (`tunombre.duckdns.org`) que el panel mantiene actualizado con tu IP.
@@ -108,6 +108,7 @@ server/
     scheduler.js        tareas programadas con avisos en el chat
     metrics.js          historial de CPU, RAM, TPS y jugadores
     worlds.js           varios mundos por servidor
+  lib/nbt.js            lectura y escritura de NBT (gzip, zlib o sin comprimir; UTF-8 modificado de Java)
     logs.js             lectura y búsqueda de logs y crash reports
     crashAnalyzer.js    explica en español las causas de un crash
     clone.js            copia un servidor con otros puertos

@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, formatBytes, formatDate } from '../../api.js';
 import { Confirm, Modal, useAction, useToast } from '../../ui.jsx';
+import NbtEditor from './NbtEditor.jsx';
 
 export default function WorldsTab({ server, state }) {
   const [data, setData] = useState(null);
   const [creating, setCreating] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [nbt, setNbt] = useState(null);
+  const [playersOf, setPlayersOf] = useState(null);
   const fileRef = useRef(null);
   const [run, busy] = useAction();
   const toast = useToast();
@@ -83,6 +86,16 @@ export default function WorldsTab({ server, state }) {
                     </button>
                   )}{' '}
                   {w.generated && (
+                    <>
+                      <button className="btn-sm" onClick={() => setNbt({ path: `${w.name}/level.dat`, title: `${w.name}: configuración del mundo (level.dat)` })}>
+                        Editar datos
+                      </button>{' '}
+                      <button className="btn-sm" onClick={() => setPlayersOf(w.name)}>
+                        Jugadores
+                      </button>{' '}
+                    </>
+                  )}
+                  {w.generated && (
                     <a className="btn btn-sm" href={`/api${base}/${encodeURIComponent(w.name)}/download`}>
                       Descargar
                     </a>
@@ -103,6 +116,18 @@ export default function WorldsTab({ server, state }) {
         Haz un respaldo antes de borrar.
       </p>
 
+      {nbt && <NbtEditor serverId={server.id} path={nbt.path} title={nbt.title} running={on} onClose={() => setNbt(null)} onSaved={() => toast('Guardado (se dejó una copia .panel-bak)')} />}
+      {playersOf && (
+        <PlayerData
+          serverId={server.id}
+          world={playersOf}
+          onClose={() => setPlayersOf(null)}
+          onOpen={(p) => {
+            setPlayersOf(null);
+            setNbt({ path: p.path, title: `Datos de ${p.name || p.uuid}` });
+          }}
+        />
+      )}
       {creating && <CreateWorld base={base} seed={data.seed} onClose={() => setCreating(false)} onDone={setData} />}
       {confirm && (
         <Confirm
@@ -158,6 +183,49 @@ function CreateWorld({ base, onClose, onDone }) {
           Crear mundo
         </button>
       </div>
+    </Modal>
+  );
+}
+
+function PlayerData({ serverId, world, onClose, onOpen }) {
+  const [list, setList] = useState(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    api(`/servers/${serverId}/files/players?world=${encodeURIComponent(world)}`)
+      .then((r) => setList(r.players))
+      .catch((err) => setError(err.message));
+  }, [serverId, world]);
+  return (
+    <Modal title={`Datos de jugadores en ${world}`} onClose={onClose}>
+      <p className="muted small">
+        Inventario, posición, vida, experiencia y modo de juego de cada jugador. Edítalos con el servidor apagado; si el jugador está conectado, el
+        servidor sobrescribe los cambios.
+      </p>
+      {error && <div className="error-box">{error}</div>}
+      {!list && !error && <p className="muted">Cargando…</p>}
+      {list?.length === 0 && <p className="muted">Todavía no ha entrado nadie a este mundo.</p>}
+      {list?.length > 0 && (
+        <table className="table">
+          <tbody>
+            {list.map((p) => (
+              <tr key={p.uuid}>
+                <td>
+                  <span className="row" style={{ gap: '0.5rem', flexWrap: 'nowrap' }}>
+                    {p.name && <img src={`https://mc-heads.net/avatar/${p.uuid}/24`} alt="" width={24} height={24} style={{ imageRendering: 'pixelated', borderRadius: 3 }} />}
+                    <span>{p.name || <span className="mono small">{p.uuid}</span>}</span>
+                  </span>
+                </td>
+                <td className="muted small">{formatDate(p.mtime)}</td>
+                <td className="actions">
+                  <button className="btn-sm btn-go" onClick={() => onOpen(p)}>
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </Modal>
   );
 }
