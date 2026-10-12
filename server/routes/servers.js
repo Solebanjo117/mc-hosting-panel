@@ -12,6 +12,7 @@ import { getPlayers, playerAction } from '../services/players.js';
 import { externalCheck, publicIp } from '../services/network.js';
 import * as bedrock from '../services/bedrock.js';
 import * as playit from '../services/playit.js';
+import * as dns from '../services/dns.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
@@ -78,7 +79,10 @@ serversRouter.patch('/:id', async (req, res) => {
     writeProperties(server.id, { 'server-port': patch.port, 'query.port': patch.port });
   }
   updateServer(server.id, patch);
-  if (patch.port) playit.syncServer(server.id);
+  if (patch.port) {
+    playit.syncServer(server.id);
+    dns.scheduleSync();
+  }
   bus.emit('servers');
   res.json(view(server));
 });
@@ -87,6 +91,7 @@ serversRouter.delete('/:id', async (req, res) => {
   const server = load(req);
   if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor antes de eliminarlo');
   if (isInstalling(server.id)) throw new HttpError(409, 'Espera a que termine la instalación');
+  await dns.forgetServer(server.id);
   if (server.playit?.enabled) await playit.disableForServer(server.id).catch(() => {});
   fs.rmSync(serverDir(server.id), { recursive: true, force: true });
   fs.rmSync(path.join(DATA_DIR, 'modpacks', `${server.id}.mrpack`), { force: true });
@@ -156,6 +161,7 @@ serversRouter.put('/:id/properties', async (req, res) => {
     updateServer(server.id, { port });
     values['query.port'] = port;
     playit.syncServer(server.id);
+    dns.scheduleSync();
   }
   res.json({ properties: writeProperties(server.id, values), restartRequired: isRunning(server.id) });
 });
@@ -201,6 +207,7 @@ serversRouter.post('/:id/bedrock/enable', async (req, res) => {
   const server = load(req);
   const result = await bedrock.enable(server.id, req.body || {});
   playit.syncServer(server.id);
+  dns.scheduleSync();
   bus.emit('servers');
   res.json({ ...result, restartRequired: isRunning(server.id) });
 });
@@ -215,6 +222,7 @@ serversRouter.post('/:id/bedrock/disable', (req, res) => {
   const server = load(req);
   bedrock.disable(server.id);
   playit.syncServer(server.id);
+  dns.scheduleSync();
   bus.emit('servers');
   res.json({ ok: true, restartRequired: isRunning(server.id) });
 });
@@ -243,6 +251,19 @@ serversRouter.post('/:id/playit', async (req, res) => {
   const result = await playit.enableForServer(server.id);
   bus.emit('servers');
   res.json(result);
+});
+
+// --- Dominio del servidor ---------------------------------------------------------
+
+serversRouter.get('/:id/dns', (req, res) => res.json(dns.serverStatus(load(req).id)));
+serversRouter.put('/:id/dns', async (req, res) => {
+  const result = await dns.configureServer(load(req).id, req.body || {});
+  res.json(result);
+});
+serversRouter.post('/:id/dns/update', async (req, res) => {
+  const server = load(req);
+  await dns.syncServer(server.id, { force: true });
+  res.json(dns.serverStatus(server.id));
 });
 
 /** Usa túneles que el usuario creó a mano en playit.gg. */

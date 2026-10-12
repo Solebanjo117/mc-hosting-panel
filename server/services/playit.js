@@ -448,6 +448,7 @@ export async function enableForServer(id) {
   }
   server.playit = p;
   db.flush();
+  bus.emit('tunnels', id);
   return { ...(await serverTunnels(id)), warnings };
 }
 
@@ -494,6 +495,7 @@ export async function linkTunnels(id, { java, bedrock } = {}) {
   await pick('bedrock', bedrock, server.bedrock?.port);
   server.playit = p;
   db.flush();
+  bus.emit('tunnels', id);
   if (!state.proc) await startAgent().catch((err) => warnings.push(err.message));
   return { ...(await serverTunnels(id)), warnings };
 }
@@ -514,6 +516,7 @@ export async function disableForServer(id) {
   }
   server.playit = { enabled: false };
   db.flush();
+  bus.emit('tunnels', id);
 }
 
 /** Al cambiar puertos o activar Bedrock, los túneles se ajustan solos. */

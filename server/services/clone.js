@@ -53,6 +53,7 @@ export async function cloneServer(id, { name }) {
     createdAt: new Date().toISOString(),
     clonedFrom: id,
     playit: { enabled: false },
+    dns: undefined, // el dominio es del original; la copia se configura aparte
     lastAutoBackup: null,
     scheduleLog: [],
     protectionState: null,

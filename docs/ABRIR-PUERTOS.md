@@ -450,9 +450,11 @@ Si no te dan IP pública, usa una de las [alternativas](#8-alternativas-si-no-pu
 
 Problemas de dar la IP a tus amigos: es difícil de recordar y, en la mayoría de los planes caseros, **cambia** cada cierto tiempo (al reiniciar el módem, por ejemplo). La solución es un nombre que siempre apunte a tu IP actual: **DNS dinámico** (DDNS).
 
+> **El panel ya lo hace por ti, con la IP de tu casa o con playit:** en **Ajustes del panel > Dominio para tus servidores** eliges **deSEC**, **DuckDNS** o **Cloudflare** y pegas tu token. Luego, en la pestaña **Conexión** de cada servidor, le pones un nombre y eliges a dónde apunta: **IP de mi casa**, **Túnel de playit** o **Automático** (playit si el servidor tiene túnel). El panel crea los registros y los mantiene al día cada 5 minutos. Ver [6.5](#65-dominio-con-el-túnel-de-playit).
+
 ### 6.1 DuckDNS (gratis, sin caducidad mensual)
 
-> **El panel ya lo hace por ti:** en **Ajustes del panel > Dominio gratis con DuckDNS** pegas tu subdominio y tu token, y el panel actualiza la IP cada 5 minutos. No necesitas instalar el actualizador de DuckDNS que se describe abajo; esos pasos quedan como referencia.
+> **El panel ya lo hace por ti:** en **Ajustes del panel > Dominio para tus servidores** eliges DuckDNS y pegas tu token; el subdominio se escribe en la pestaña **Conexión** de cada servidor. El panel actualiza la IP cada 5 minutos. No necesitas instalar el actualizador de DuckDNS que se describe abajo; esos pasos quedan como referencia.
 
 
 1. Entra a **duckdns.org** e inicia sesión con una de las cuentas que ofrece (Google, GitHub, etc.).
@@ -531,6 +533,26 @@ En Cloudflare, cada registro A/CNAME tiene una nube:
 Los registros SRV no tienen nube, pero el registro A o CNAME al que apuntan **sí debe estar en gris**.
 
 ---
+
+### 6.5 Dominio con el túnel de playit
+
+Si tienes CGNAT (por ejemplo, abriste el puerto en el módem y en el firewall y aun así no conecta), el túnel de playit es el camino. Su dirección es larga (`algo.gl.joinmc.link` o `147.185.221.20:41234`), pero puedes poner tu propio nombre encima:
+
+- Cada túnel de playit tiene una **IP y un puerto** fijos. Un registro **A** con tu nombre apunta a esa IP.
+- Minecraft Java busca un registro **SRV** (`_minecraft._tcp.tunombre`) con el puerto. Si el servicio de DNS permite SRV, tus amigos escriben solo el nombre.
+- Bedrock **no usa SRV**: siempre se escribe la dirección y el puerto en campos separados.
+
+| Servicio | Gratis | Java con playit | Bedrock con playit |
+|---|---|---|---|
+| **deSEC** (`tunombre.dedyn.io`) | Sí | `smp.tunombre.dedyn.io`, sin puerto | dirección + puerto |
+| **DuckDNS** | Sí | `tunombre.duckdns.org:41234`, con puerto (no tiene SRV) | dirección + puerto |
+| **Cloudflare** con tu dominio | El dominio cuesta poco al año | `mc.tudominio.com`, sin puerto | dirección + puerto |
+
+**Para crear tu cuenta de deSEC:** entra a `desec.io/signup`, escribe tu correo y elige el dominio gratis para DynDNS (`tunombre.dedyn.io`). Confirma el correo, entra y en **Token Management** crea un token. Pega el dominio y el token en el panel.
+
+Si playit le da a Bedrock una IP distinta que a Java, el panel crea un nombre aparte para Bedrock (`be.smp.tunombre.dedyn.io`). En DuckDNS tienes que crear un segundo subdominio para eso; el panel te avisa.
+
+Los cambios de DNS pueden tardar unos minutos en verse. Si un amigo ya intentó entrar antes, que cierre y vuelva a abrir Minecraft.
 
 ## 7. Paso 6: Verificar que funciona
 

@@ -8,7 +8,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg.
-- **DuckDNS integrado:** un dominio gratis (`tunombre.duckdns.org`) que el panel mantiene actualizado con tu IP.
+- **Dominio para cada servidor** con **deSEC**, **DuckDNS** o **Cloudflare**: apunta a la IP de tu casa o al túnel de playit, y el panel crea y actualiza los registros (A y SRV). Con deSEC o Cloudflare tus amigos de Java entran solo con el nombre, sin puerto, aunque uses playit.
 - **Modpacks de Modrinth:** busca un modpack o sube un `.mrpack` y el panel crea el servidor con el loader, la versión, los mods (solo los de servidor) y la configuración.
 - **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
 - **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
@@ -67,7 +67,7 @@ Para mover el panel a otra PC copia la carpeta completa, incluida `data/`.
 - El panel solo acepta conexiones de esta PC, tu red y Tailscale (configurable en Ajustes). Si alguien abre el 8080 en el router, los de internet ven "Acceso bloqueado".
 - Bloquea peticiones enviadas desde otras páginas (CSRF), manda cabeceras de seguridad y guarda un historial de inicios de sesión.
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
-- La llave de playit (`data/playit/playit.toml`) y el token de DuckDNS se guardan en `data/`; no compartas esa carpeta.
+- La llave de playit (`data/playit/playit.toml`) y los tokens de DuckDNS, deSEC o Cloudflare se guardan en `data/`; no compartas esa carpeta.
 - La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly`. Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
 - Deja `online-mode=true` y usa la lista blanca si tu servidor es solo para amigos.
 
@@ -103,7 +103,7 @@ server/
     bedrock.js          crossplay: instala Geyser/Floodgate/ViaVersion y reserva puertos UDP
     geyserConfig.js     ajusta el puerto y la autenticación en el config.yml de Geyser
     playit.js           agente de playit.gg: vinculación, túneles por servidor (API de playit)
-    duckdns.js          actualiza el dominio de DuckDNS cada 5 minutos
+    dns.js              dominio por servidor (DuckDNS, deSEC, Cloudflare) hacia tu IP o el túnel de playit
     modpack.js          importa .mrpack: loader, mods del lado del servidor y overrides
     scheduler.js        tareas programadas con avisos en el chat
     metrics.js          historial de CPU, RAM, TPS y jugadores

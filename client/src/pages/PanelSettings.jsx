@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useAction, useToast } from '../ui.jsx';
-import { DuckDnsSettings, PlayitSettings } from './Integrations.jsx';
+import { DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 
 const JAVA_VERSIONS = [
@@ -34,7 +34,7 @@ export default function PanelSettings() {
       <h1>Ajustes del panel</h1>
 
       <PlayitSettings />
-      <DuckDnsSettings />
+      <DnsSettings />
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Contraseña</h2>

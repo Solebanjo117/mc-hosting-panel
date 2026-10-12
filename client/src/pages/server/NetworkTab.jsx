@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, qs } from '../../api.js';
+import { api, formatDate, qs } from '../../api.js';
 import { CopyButton, Modal, useAction, useToast } from '../../ui.jsx';
 import { useLive } from '../../live.jsx';
 
@@ -27,7 +27,6 @@ export default function NetworkTab({ server, state }) {
   const [checking, setChecking] = useState(false);
   const toast = useToast();
   const bedrock = server.bedrock?.enabled ? server.bedrock.port : null;
-  const [duck, setDuck] = useState(null);
   const [tunnels, setTunnels] = useState(null);
   const [tunnelError, setTunnelError] = useState('');
   const [createError, setCreateError] = useState('');
@@ -37,7 +36,6 @@ export default function NetworkTab({ server, state }) {
 
   useEffect(() => {
     api('/system/network').then(setNet).catch((err) => toast(err.message, 'error'));
-    api('/integrations/duckdns').then(setDuck).catch(() => {});
   }, [toast]);
 
   const loadTunnels = () =>
@@ -55,7 +53,6 @@ export default function NetworkTab({ server, state }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [server.id, server.playit?.enabled, server.bedrock?.enabled, livePlayit?.status]);
 
-  const duckHost = duck?.enabled && duck.hosts[0];
   const linkedOnly = server.playit?.enabled && server.playit.owned && !Object.entries(server.playit.owned).some(([k, v]) => v && server.playit[`${k}TunnelId`]);
 
   const lan = net?.localIps.find((i) => !i.virtual) || net?.localIps[0];
@@ -104,16 +101,10 @@ export default function NetworkTab({ server, state }) {
           ) : (
             <p className="faint small">No se pudo detectar tu IP pública.</p>
           )}
-          {duckHost ? (
-            <>
-              <Address label="Con tu dominio de DuckDNS (no cambia aunque cambie tu IP)" text={server.port === 25565 ? duckHost : `${duckHost}:${server.port}`} />
-              {bedrock && <Address label={`Bedrock: dirección ${duckHost}, puerto ${bedrock}`} text={duckHost} />}
-            </>
-          ) : (
-            <p className="faint small" style={{ marginTop: '0.5rem' }}>
-              Tu IP pública puede cambiar. Para tener una dirección fija configura DuckDNS en <Link to="/ajustes">Ajustes del panel</Link>.
-            </p>
-          )}
+          <p className="faint small" style={{ marginTop: '0.5rem' }}>
+            Tu IP pública puede cambiar. Para un nombre fijo usa la sección <a href="#dominio">Dominio</a> de abajo. Si tu internet tiene CGNAT (abriste puertos
+            y aun así no conecta), usa el túnel de playit.gg.
+          </p>
         </div>
       </section>
 
@@ -210,6 +201,8 @@ export default function NetworkTab({ server, state }) {
           )
         )}
       </section>
+
+      <DomainSection server={server} hasTunnel={Boolean(server.playit?.enabled)} />
 
       {linking && (
         <LinkTunnels
@@ -497,5 +490,138 @@ function LinkTunnels({ server, bedrockPort, agentId, onClose, onDone }) {
         </button>
       </div>
     </Modal>
+  );
+}
+
+const TARGETS = [
+  { id: 'auto', label: 'Automático' },
+  { id: 'playit', label: 'Túnel de playit' },
+  { id: 'home', label: 'IP de mi casa' },
+];
+
+function DomainSection({ server, hasTunnel }) {
+  const [d, setD] = useState(null);
+  const [form, setForm] = useState(null);
+  const [run, busy] = useAction();
+
+  const load = () =>
+    api(`/servers/${server.id}/dns`).then((r) => {
+      setD(r);
+      setForm((f) => f || { name: r.name || (r.provider === 'duckdns' ? '' : slug(server.name)), bedrockName: r.bedrockName, target: r.target });
+    });
+  useEffect(() => {
+    load().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [server.id, server.dns?.applied?.at, server.playit?.enabled]);
+
+  if (!d || !form) return null;
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const host = (name) => (name ? `${name}.${d.zone}` : d.zone);
+  const save = (enabled) =>
+    run(async () => {
+      const r = await api(`/servers/${server.id}/dns`, { method: 'PUT', body: { ...form, enabled } });
+      setD(r);
+      if (r.applied?.error) throw new Error(r.applied.error);
+    }, enabled ? 'Dominio actualizado' : 'Dominio desactivado');
+  const a = d.applied;
+  const bedrockOn = Boolean(server.bedrock?.enabled);
+
+  return (
+    <section className="panel stack" style={{ gap: '0.8rem' }} id="dominio">
+      <div className="row">
+        <h2 className="grow" style={{ margin: 0 }}>
+          Dominio
+        </h2>
+        {d.enabled && <span className="chip">{d.providerName}</span>}
+      </div>
+      {!d.provider ? (
+        <p className="small">
+          Elige un servicio de dominio (deSEC, DuckDNS o Cloudflare) en <Link to="/ajustes">Ajustes del panel</Link> y luego vuelve aquí para ponerle nombre a
+          este servidor.
+        </p>
+      ) : (
+        <>
+          {d.enabled && a?.ok && (
+            <div className="stack" style={{ gap: '0.2rem' }}>
+              <Address label={a.java.withPort ? 'Java: esta es la dirección para tus amigos (con puerto)' : 'Java: esta es la dirección para tus amigos'} text={a.java.address} />
+              {a.bedrock && <Address label={`Bedrock: dirección ${a.bedrock.host}, puerto ${a.bedrock.port}`} text={a.bedrock.host} />}
+              <p className="faint small" style={{ marginTop: '0.4rem' }}>
+                Apunta a {a.target === 'playit' ? 'tu túnel de playit.gg' : 'la IP de tu casa (necesita los puertos abiertos)'} (actualizado {formatDate(a.at)}). Un
+                cambio puede tardar unos minutos en verse en todos lados.
+              </p>
+              {a.warnings?.map((w, i) => (
+                <p key={i} className="note">
+                  {w}
+                </p>
+              ))}
+            </div>
+          )}
+          {d.enabled && a && !a.ok && <div className="error-box">{a.error}</div>}
+
+          <div className="grid-2">
+            <label className="field">
+              <span>{d.provider === 'duckdns' ? 'Subdominio de DuckDNS' : 'Nombre'}</span>
+              <input
+                value={form.name}
+                onChange={(e) => set('name', e.target.value.toLowerCase().trim())}
+                placeholder={d.provider === 'duckdns' ? 'miserver' : 'smp (vacío = solo el dominio)'}
+              />
+              <span className="mono">{host(form.name || (d.provider === 'duckdns' ? 'tunombre' : ''))}</span>
+            </label>
+            {d.provider === 'duckdns' && bedrockOn && (
+              <label className="field">
+                <span>Subdominio para Bedrock (opcional)</span>
+                <input value={form.bedrockName} onChange={(e) => set('bedrockName', e.target.value.toLowerCase().trim())} placeholder="Vacío = el mismo" />
+                <span>Solo hace falta si playit le da a Bedrock otra IP.</span>
+              </label>
+            )}
+          </div>
+          <div className="stack" style={{ gap: '0.4rem' }}>
+            <span className="small">Apuntar a</span>
+            <div className="segmented" role="radiogroup" aria-label="Apuntar a">
+              {TARGETS.map((t) => (
+                <button key={t.id} type="button" className={form.target === t.id ? 'on' : ''} onClick={() => set('target', t.id)}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <span className="faint small">
+              {form.target === 'auto' &&
+                (hasTunnel ? 'Ahora usa tu túnel de playit. Si lo quitas, pasa a la IP de tu casa.' : 'Ahora usa la IP de tu casa. Si creas un túnel de playit, cambia a él solo.')}
+              {form.target === 'playit' && 'Siempre el túnel de playit (funciona aunque tengas CGNAT).'}
+              {form.target === 'home' && 'Siempre la IP de tu casa: necesitas los puertos abiertos en el router.'}
+            </span>
+          </div>
+          {!d.srv && (
+            <p className="faint small">
+              DuckDNS no tiene registros SRV: si el puerto no es 25565 (con playit casi nunca lo es), tus amigos de Java escriben la dirección con{' '}
+              <span className="mono">:puerto</span>. Con deSEC o Cloudflare no hace falta.
+            </p>
+          )}
+          <div className="row">
+            <button className="btn-go" disabled={busy || (d.provider === 'duckdns' && !form.name)} onClick={() => save(true)}>
+              {d.enabled ? 'Guardar y actualizar' : 'Activar dominio'}
+            </button>
+            {d.enabled && (
+              <button disabled={busy} onClick={() => save(false)}>
+                Desactivar
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function slug(text) {
+  return (
+    String(text)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 30) || 'mc'
   );
 }
