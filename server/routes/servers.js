@@ -11,6 +11,7 @@ import { instance, isRunning, removeInstance } from '../services/processManager.
 import { readProperties, writeProperties } from '../services/properties.js';
 import { getPlayers, playerAction } from '../services/players.js';
 import { externalCheck, isPortFree, publicIp } from '../services/network.js';
+import * as bedrock from '../services/bedrock.js';
 
 export const serversRouter = express.Router();
 
@@ -208,8 +209,38 @@ serversRouter.get('/:id/network/check', async (req, res) => {
   if (!/^[A-Za-z0-9.-]+$/.test(host)) throw new HttpError(400, 'Dirección inválida');
   if (explicitPort && !/^\d{1,5}$/.test(explicitPort)) throw new HttpError(400, 'Puerto inválido');
   // Un dominio sin puerto se prueba tal cual para respetar registros SRV.
+  const bedrock = req.query.edition === 'bedrock';
+  if (bedrock && !server.bedrock?.enabled) throw new HttpError(409, 'Activa Bedrock en este servidor primero');
+  const ownPort = bedrock ? server.bedrock.port : server.port;
   const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-  const port = explicitPort ? Number(explicitPort) : isIp ? server.port : null;
-  const result = await externalCheck(host, port);
-  res.json({ host, running: isRunning(server.id), ...result, port: result.port || port || server.port });
+  // Bedrock no usa registros SRV: sin puerto explícito se prueba el del servidor.
+  const port = explicitPort ? Number(explicitPort) : isIp || bedrock ? ownPort : null;
+  const result = await externalCheck(host, port, bedrock ? 'bedrock' : 'java');
+  res.json({ host, edition: bedrock ? 'bedrock' : 'java', running: isRunning(server.id), ...result, port: result.port || port || ownPort });
+});
+
+// --- Bedrock (Geyser) ---------------------------------------------------------
+
+serversRouter.get('/:id/bedrock', async (req, res) => {
+  res.json(await bedrock.status(load(req).id));
+});
+
+serversRouter.post('/:id/bedrock/enable', async (req, res) => {
+  const server = load(req);
+  const result = await bedrock.enable(server.id, req.body || {});
+  bus.emit('servers');
+  res.json({ ...result, restartRequired: isRunning(server.id) });
+});
+
+serversRouter.post('/:id/bedrock/update', async (req, res) => {
+  const server = load(req);
+  const result = await bedrock.update(server.id);
+  res.json({ ...result, restartRequired: isRunning(server.id) });
+});
+
+serversRouter.post('/:id/bedrock/disable', (req, res) => {
+  const server = load(req);
+  bedrock.disable(server.id);
+  bus.emit('servers');
+  res.json({ ok: true, restartRequired: isRunning(server.id) });
 });

@@ -6,7 +6,8 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Consola en vivo** con historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido.
 - **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC), filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), administrador de archivos con editor, subida y extracción de .zip, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
-- Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet.
+- **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
+- Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.
 
 ## Requisitos
@@ -31,7 +32,7 @@ La ventana negra es el panel: si la cierras, se apagan los servidores (de forma 
 |---|---|
 | `iniciar.bat` | Prepara (la primera vez) y abre el panel |
 | `actualizar.bat` | Baja la última versión con `git pull` y recompila; no toca tus servidores |
-| `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor |
+| `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
 
 ## Dónde se guardan las cosas
@@ -83,13 +84,16 @@ server/
     players.js          whitelist, ops y baneos (por comando o editando los JSON)
     properties.js       lectura/escritura de server.properties sin perder comentarios
     network.js          IP local/pública y prueba externa con mcsrvstat.us
+    bedrock.js          crossplay: instala Geyser/Floodgate/ViaVersion y reserva puertos UDP
+    geyserConfig.js     ajusta el puerto y la autenticación en el config.yml de Geyser
 client/                 React + Vite
 docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ```
 
 ## Limitaciones conocidas
 
-- Solo Minecraft **Java Edition**. Bedrock no está soportado.
+- Los servidores son de Java Edition; Bedrock entra a través de Geyser, que no existe para Forge ni puede ir en Vanilla. En Fabric y NeoForge, Geyser solo sigue la versión más reciente de Minecraft.
+- Las consolas (Xbox, PlayStation, Switch) no permiten agregar servidores propios; la guía explica las alternativas.
 - CurseForge no está integrado porque su API exige una clave privada; los mods de CurseForge se pueden subir a mano desde **Archivos** (carpeta `mods`).
 - Algunos plugins de Hangar se publican solo como enlace externo; el panel te muestra el enlace en lugar de instalarlos.
 - Forge para versiones anteriores a 1.17 se instala, pero conviene probar cada modpack antiguo.

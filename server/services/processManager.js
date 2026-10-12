@@ -7,6 +7,7 @@ import { HttpError, sleep } from '../lib/util.js';
 import { ensureJava, requiredJava } from './java.js';
 import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
+import { applyGeyserConfig } from './geyserConfig.js';
 
 const MAX_LINES = 1500;
 const STOP_TIMEOUT_MS = 45_000;
@@ -58,14 +59,15 @@ class Instance {
     if (this.status === 'starting' && /Done \(\d+[.,]?\d*s\)!/.test(line)) {
       this.crashCount = 0;
       this.setStatus('running');
+      if (this.geyserPending) this.finishGeyserSetup();
     }
-    let m = line.match(/: ([A-Za-z0-9_.]{2,16}) joined the game/);
+    let m = line.match(/: ([A-Za-z0-9_.]{2,17}) joined the game/);
     if (m) {
       this.players.add(m[1]);
       bus.emit('status', this.id, this.snapshot());
       return;
     }
-    m = line.match(/: ([A-Za-z0-9_.]{2,16}) left the game/);
+    m = line.match(/: ([A-Za-z0-9_.]{2,17}) left the game/);
     if (m) {
       this.players.delete(m[1]);
       bus.emit('status', this.id, this.snapshot());
@@ -77,6 +79,31 @@ class Instance {
       this.players = new Set(m[1].split(',').map((s) => s.trim()).filter(Boolean));
       bus.emit('status', this.id, this.snapshot());
     }
+  }
+
+  /**
+   * La primera vez Geyser crea su config.yml al arrancar, con el puerto 19132.
+   * Cuando aparece, el panel pone el puerto de este servidor y recarga Geyser.
+   */
+  async finishGeyserSetup() {
+    this.geyserPending = false;
+    for (let attempt = 0; attempt < 10 && this.proc; attempt++) {
+      await sleep(3000);
+      const server = getServer(this.id);
+      if (!server?.bedrock?.enabled) return;
+      const result = applyGeyserConfig(server);
+      if (result === 'missing') continue;
+      if (result === 'changed') {
+        this.panelLine(`Configurando Geyser en el puerto UDP ${server.bedrock.port}…`);
+        try {
+          this.send('geyser reload');
+        } catch {
+          /* el servidor se apagó */
+        }
+      }
+      return;
+    }
+    if (this.proc) this.panelLine('Geyser no creó su configuración. Revisa que el plugin/mod de Geyser se haya cargado sin errores.');
   }
 
   /** Espera una línea que cumpla la expresión (útil para backups). */
@@ -129,6 +156,13 @@ class Instance {
       ...launchArgs(server.launch),
       'nogui',
     ];
+
+    this.geyserPending = false;
+    if (server.bedrock?.enabled) {
+      const geyser = applyGeyserConfig(server);
+      if (geyser === 'missing') this.geyserPending = true;
+      else if (geyser === 'changed') this.panelLine(`Geyser configurado en el puerto UDP ${server.bedrock.port}.`);
+    }
 
     this.panelLine(`Iniciando: java ${args.join(' ')}`);
     const proc = spawn(javaPath, args, { cwd: serverDir(this.id), windowsHide: true });

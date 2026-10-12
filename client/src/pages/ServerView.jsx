@@ -9,6 +9,7 @@ import PlayersTab from './server/PlayersTab.jsx';
 import ContentTab from './server/ContentTab.jsx';
 import BackupsTab from './server/BackupsTab.jsx';
 import NetworkTab from './server/NetworkTab.jsx';
+import BedrockTab from './server/BedrockTab.jsx';
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -43,6 +44,7 @@ export default function ServerView() {
               {server.loaderVersion && server.type !== 'vanilla' ? ` (${server.type === 'paper' ? 'build ' : ''}${server.loaderVersion})` : ''}
             </span>
             <span>Puerto {server.port}</span>
+            {server.bedrock?.enabled && <span>Bedrock UDP {server.bedrock.port}</span>}
             <span>{(server.memoryMb / 1024).toFixed(1).replace('.0', '')} GB de RAM</span>
           </div>
         </div>
@@ -115,6 +117,9 @@ export default function ServerView() {
         <NavLink to={`${base}/conexion`} className="tab">
           Conexión
         </NavLink>
+        <NavLink to={`${base}/bedrock`} className="tab">
+          Bedrock
+        </NavLink>
         <NavLink to={`${base}/ajustes`} className="tab">
           Ajustes
         </NavLink>
@@ -127,6 +132,7 @@ export default function ServerView() {
         <Route path="archivos" element={<FilesTab server={server} />} />
         <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
         <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
+        <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
         <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
       </Routes>
     </div>

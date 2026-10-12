@@ -11,12 +11,29 @@ if errorlevel 1 (
 )
 
 echo.
-echo  Este script permite conexiones TCP entrantes a un servidor de Minecraft.
+echo  Este script permite conexiones entrantes a un servidor de Minecraft.
 echo  No abras el puerto del panel (8080).
 echo.
+echo    1. Java    (TCP, normalmente 25565)
+echo    2. Bedrock (UDP, normalmente 19132, si activaste Geyser)
+echo.
+choice /c 12 /n /m "  Elige 1 o 2: "
+if errorlevel 2 goto :bedrock
+set PROTO=TCP
+set DEFAULT=25565
+set LABEL=Minecraft
+goto :ask
+
+:bedrock
+set PROTO=UDP
+set DEFAULT=19132
+set LABEL=Minecraft Bedrock
+
+:ask
+echo.
 set PORT=
-set /p PORT=  Puerto a abrir [25565]:
-if "%PORT%"=="" set PORT=25565
+set /p PORT=  Puerto a abrir [%DEFAULT%]:
+if "%PORT%"=="" set PORT=%DEFAULT%
 
 echo %PORT%| findstr /r "^[0-9][0-9]*$" >nul
 if errorlevel 1 goto :invalid
@@ -29,8 +46,8 @@ if %PORT%==8080 (
 )
 
 :: Borra una regla anterior con el mismo nombre para no duplicarla.
-netsh advfirewall firewall delete rule name="Minecraft %PORT%" >nul 2>&1
-netsh advfirewall firewall add rule name="Minecraft %PORT%" dir=in action=allow protocol=TCP localport=%PORT% profile=any
+netsh advfirewall firewall delete rule name="%LABEL% %PORT%" >nul 2>&1
+netsh advfirewall firewall add rule name="%LABEL% %PORT%" dir=in action=allow protocol=%PROTO% localport=%PORT% profile=any
 if errorlevel 1 (
   echo  No se pudo crear la regla.
   pause
@@ -38,9 +55,9 @@ if errorlevel 1 (
 )
 
 echo.
-echo  Listo: el Firewall de Windows ya permite el puerto %PORT% TCP.
-echo  Ahora crea el reenvio de puertos en tu router (ver la guia del panel).
-echo  Para quitar la regla: netsh advfirewall firewall delete rule name="Minecraft %PORT%"
+echo  Listo: el Firewall de Windows ya permite el puerto %PORT% %PROTO%.
+echo  Ahora crea el reenvio de puertos %PROTO% en tu router (ver la guia del panel).
+echo  Para quitar la regla: netsh advfirewall firewall delete rule name="%LABEL% %PORT%"
 pause
 exit /b 0
 

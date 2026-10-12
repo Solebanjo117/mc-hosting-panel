@@ -71,9 +71,10 @@ export default function PlayersTab({ server, runtime }) {
           style={{ width: 'auto', maxWidth: 320 }}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre de jugador"
+          placeholder={server.bedrock?.enabled ? 'Nombre (Bedrock: .Gamertag)' : 'Nombre de jugador'}
           aria-label="Nombre de jugador"
-          pattern="[A-Za-z0-9_]{2,16}"
+          title="Para jugadores de Bedrock pon un punto antes del gamertag, por ejemplo .Steve"
+          pattern="\.?[A-Za-z0-9_]{1,16}"
         />
         <button className="btn-go" disabled={busy || !name.trim()}>
           Agregar a la lista blanca

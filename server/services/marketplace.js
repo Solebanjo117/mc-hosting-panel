@@ -279,6 +279,7 @@ export function listInstalled(id) {
         projectId: rec?.projectId || null,
         versionName: rec?.versionName || null,
         dependency: rec?.dependency || false,
+        managedBy: rec?.managedBy || null,
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title));

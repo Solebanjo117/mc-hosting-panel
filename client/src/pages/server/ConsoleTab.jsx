@@ -165,6 +165,11 @@ export default function ConsoleTab({ server, runtime, state }) {
                 <CopyButton text={`${lanIp}:${server.port}`} />
               </div>
             )}
+            {lanIp && server.bedrock?.enabled && (
+              <p className="small muted" style={{ marginTop: '0.4rem' }}>
+                Bedrock: {lanIp}, puerto {server.bedrock.port}
+              </p>
+            )}
             <p className="small muted" style={{ marginTop: '0.4rem' }}>
               Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
             </p>

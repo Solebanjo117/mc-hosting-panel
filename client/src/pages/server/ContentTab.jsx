@@ -318,7 +318,10 @@ function Installed({ server, label }) {
                       </div>
                     </td>
                     <td className="muted">{item.versionName || '—'}</td>
-                    <td className="muted">{item.source === 'manual' ? 'Subido a mano' : item.source === 'hangar' ? 'Hangar' : 'Modrinth'}</td>
+                    <td className="muted">
+                      {{ manual: 'Subido a mano', hangar: 'Hangar', geysermc: 'GeyserMC' }[item.source] || 'Modrinth'}
+                      {item.managedBy === 'bedrock' ? ', para Bedrock' : ''}
+                    </td>
                     <td>
                       <input
                         type="checkbox"

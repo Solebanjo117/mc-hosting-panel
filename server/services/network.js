@@ -41,9 +41,10 @@ export function isPortFree(port) {
  * Pregunta a mcsrvstat.us (un servicio externo) si el servidor se ve desde internet.
  * Es la prueba real de que el reenvío de puertos funciona.
  */
-export async function externalCheck(host, port) {
+export async function externalCheck(host, port, edition = 'java') {
   const address = `${encodeURIComponent(host)}${port ? `:${port}` : ''}`;
-  const data = await getJson(`https://api.mcsrvstat.us/3/${address}`, { timeout: 20000 });
+  const base = edition === 'bedrock' ? 'https://api.mcsrvstat.us/bedrock/3' : 'https://api.mcsrvstat.us/3';
+  const data = await getJson(`${base}/${address}`, { timeout: 20000 });
   return {
     online: Boolean(data.online),
     ip: data.ip || null,

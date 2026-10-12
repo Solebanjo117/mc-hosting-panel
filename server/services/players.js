@@ -70,17 +70,28 @@ export async function playerAction(id, action, name, reason = '') {
   if (!COMMANDS[action]) throw new HttpError(400, 'Acción desconocida');
   const target = String(name || '').trim();
   const isIp = action.endsWith('-ip');
-  if (!isIp && !/^[A-Za-z0-9_]{2,16}$/.test(target)) throw new HttpError(400, 'Nombre de jugador inválido');
+  // Floodgate antepone un punto a los jugadores de Bedrock (".Gamertag").
+  const isBedrockName = target.startsWith('.');
+  if (!isIp && !/^\.?[A-Za-z0-9_]{1,16}$/.test(target)) throw new HttpError(400, 'Nombre de jugador inválido');
   if (isIp && !/^[0-9a-fA-F:.]+$/.test(target)) throw new HttpError(400, 'IP inválida');
   const cleanReason = String(reason).replace(/[\r\n]/g, ' ').slice(0, 200);
 
   if (isRunning(id)) {
-    instance(id).send(COMMANDS[action](target, cleanReason));
-    await sleep(800);
+    const inst = instance(id);
+    if (isBedrockName && (action === 'whitelist-add' || action === 'whitelist-remove')) {
+      // La lista blanca de Bedrock se maneja con Floodgate, que busca la cuenta de Xbox.
+      inst.send(`fwhitelist ${action === 'whitelist-add' ? 'add' : 'remove'} ${target.slice(1)}`);
+    } else {
+      inst.send(COMMANDS[action](target, cleanReason));
+    }
+    await sleep(isBedrockName ? 2000 : 800);
     return getPlayers(id);
   }
 
   if (action === 'kick') throw new HttpError(409, 'El servidor está apagado; no hay a quién expulsar');
+  if (isBedrockName) {
+    throw new HttpError(409, 'Enciende el servidor para administrar jugadores de Bedrock (Floodgate necesita buscar su cuenta de Xbox)');
+  }
   const lower = target.toLowerCase();
   const without = (key, field = 'name') => readList(id, key).filter((e) => String(e[field]).toLowerCase() !== lower);
   const now = new Date().toISOString().replace('T', ' ').replace(/\..+/, ' +0000');

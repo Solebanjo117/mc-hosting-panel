@@ -4,7 +4,7 @@ Manual de **MC Hosting Panel** para que tus servidores de Minecraft Java, que co
 
 > **Lee esto primero**
 >
-> - Este manual es solo para **Minecraft Java Edition** (puertos **TCP**). Bedrock (UDP 19132) no está soportado por el panel.
+> - Los servidores son de **Minecraft Java Edition** (puertos **TCP**). Si activas **Bedrock** en un servidor (pestaña **Bedrock**, con Geyser), además se abre un puerto **UDP**; lee la [sección 12](#12-jugadores-de-bedrock-geyser).
 > - El panel web usa el puerto **8080**. **No lo abras a internet.** Más adelante se explica cómo administrarlo a distancia de forma segura con Tailscale.
 > - Los menús de los routers cambian según el modelo, la versión de firmware y la compañía. Donde no pudimos confirmar el nombre exacto de una opción, lo indicamos con **(no verificado)** y te explicamos cómo reconocerla.
 
@@ -24,6 +24,7 @@ Manual de **MC Hosting Panel** para que tus servidores de Minecraft Java, que co
 9. [Cómo se conectan tus amigos](#9-cómo-se-conectan-tus-amigos)
 10. [Seguridad](#10-seguridad)
 11. [Solución de problemas](#11-solución-de-problemas)
+12. [Jugadores de Bedrock (Geyser)](#12-jugadores-de-bedrock-geyser)
 
 ---
 
@@ -101,6 +102,8 @@ Hay **tres "puertas"** que deben estar abiertas en orden, y si falla cualquiera 
 | Segundo servidor | 25566 | TCP | Sí, si quieres que sea público |
 | Tercer servidor | 25567 | TCP | Sí, si quieres que sea público |
 | ... y así sucesivamente | +1 por servidor | TCP | Uno por servidor |
+| Bedrock del primer servidor con Geyser | 19132 | **UDP** | Sí, si activaste Bedrock |
+| Bedrock de otros servidores | 19133, 19134... | **UDP** | Uno por servidor con Bedrock |
 
 El puerto exacto de cada servidor aparece en su pestaña **Conexión** del panel. Cada servidor necesita su propia regla en el firewall y en el router.
 
@@ -688,3 +691,78 @@ Abrir un puerto hace que **cualquiera en internet** pueda intentar conectarse. H
 1. Desactiva **temporalmente** el Firewall de Windows y prueba desde otra PC de tu casa. Si funciona, el problema es la regla del firewall (o el de tu antivirus). **Vuelve a activarlo** de inmediato.
 2. Revisa que el reenvío apunte a la IP que realmente tiene tu PC **ahora** (`ipconfig`).
 3. Confirma si hay CGNAT. Si lo hay, ningún ajuste en tu casa lo resuelve: necesitas IP pública o una alternativa del punto 8.
+
+---
+
+## 12. Jugadores de Bedrock (Geyser)
+
+En la pestaña **Bedrock** de un servidor puedes activar **Geyser**. Con eso, los jugadores de Minecraft Bedrock (Android, iPhone, Windows 10/11, Xbox, PlayStation y Switch) entran al mismo mundo que los de Java.
+
+### Qué servidores lo admiten
+
+| Tipo de servidor | ¿Bedrock? | Notas |
+|---|---|---|
+| **Paper** | Sí, casi cualquier versión | Si el servidor no está en la versión más reciente de Minecraft, el panel instala también **ViaVersion**. |
+| **Fabric** | Solo en la versión más reciente | El panel instala también **Fabric API**. |
+| **NeoForge** | Solo en la versión más reciente | |
+| **Forge** | No | Geyser no tiene versión para Forge. |
+| **Vanilla** | No | No admite plugins. Crea un servidor **Paper**, que se juega igual. |
+
+Ten en cuenta que Geyser traduce entre las dos ediciones: la mayoría de las cosas funcionan, pero algunos mods o mecánicas muy específicas de Java pueden verse o comportarse distinto en Bedrock.
+
+### Floodgate: jugar sin cuenta de Java
+
+Al activar Bedrock, la opción **"Permitir jugadores sin cuenta de Java"** instala **Floodgate**. Sin Floodgate, cada jugador de Bedrock tendría que iniciar sesión además con una cuenta de Minecraft **Java**.
+
+Con Floodgate, los jugadores de Bedrock aparecen con un **punto antes del nombre** (por ejemplo `.Steve`). Así se distinguen de los jugadores de Java.
+
+- **Para agregarlos a la lista blanca:** en la pestaña **Jugadores** escribe el gamertag con el punto (`.Steve`) con el servidor **encendido**. El panel usa el comando `fwhitelist add Steve` de Floodgate.
+- **Para hacerlos operador:** usa el nombre con punto: `op .Steve`.
+
+### Abrir el puerto Bedrock
+
+Es igual que el de Java (pasos 1 a 6), con una diferencia: el protocolo es **UDP**.
+
+1. **Firewall de Windows:** ejecuta `scripts\abrir-firewall.bat`, elige **UDP** y escribe el puerto Bedrock (19132 si es el primero). O, en una terminal como administrador:
+
+   ```bat
+   netsh advfirewall firewall add rule name="Minecraft Bedrock 19132" dir=in action=allow protocol=UDP localport=19132
+   ```
+
+2. **Router:** crea **otra** regla de reenvío con protocolo **UDP**, puerto externo e interno 19132, hacia la IP local de tu PC. Si el router tiene la opción **TCP/UDP** o **Ambos**, también sirve.
+3. **Prueba:** en la pestaña **Conexión**, elige **Bedrock** y pulsa **"Probar desde internet"**.
+
+El CGNAT afecta igual a UDP: si tu compañía usa CGNAT (paso 4), el puerto Bedrock tampoco funcionará.
+
+### Cómo se conectan
+
+**Celular, tablet y Windows:**
+
+1. Minecraft > **Jugar** > pestaña **Servidores**.
+2. Baja hasta **Agregar servidor**.
+3. **Nombre:** el que quieran. **Dirección:** tu IP pública o tu dominio (sin puerto). **Puerto:** el puerto Bedrock (19132, 19133...).
+
+En Bedrock la dirección y el puerto van en **campos separados**. Los registros SRV no funcionan en Bedrock, así que siempre hay que escribir el puerto si no es 19132.
+
+**Xbox, PlayStation y Switch:**
+
+Las consolas **no permiten agregar servidores propios**; solo muestran los servidores destacados. Hay dos formas comunes de rodear esto. Las dos son de terceros (no oficiales), así que úsalas bajo tu propio criterio:
+
+- **MCXboxBroadcast:** una extensión de Geyser que publica tu servidor en la pestaña **Amigos** usando una cuenta de Xbox. Tus amigos agregan esa cuenta como amigo y el servidor aparece para unirse.
+- **BedrockConnect:** la consola cambia su DNS a uno de BedrockConnect; al entrar a un servidor destacado aparece una lista donde se escribe la dirección de cualquier servidor.
+
+### Si no puedes abrir puertos
+
+- **playit.gg** tiene túneles para **Minecraft Bedrock** (UDP). Crea un túnel de ese tipo apuntando al puerto Bedrock del servidor, además del túnel de Java.
+- **Tailscale** funciona en celulares (Android e iPhone), pero **no en consolas**.
+
+### Problemas comunes con Bedrock
+
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| Java entra pero Bedrock no, desde fuera | La regla del firewall o del router es TCP | Crea las reglas como **UDP** |
+| Bedrock no conecta ni dentro de casa | Geyser no se cargó o usa otro puerto | Revisa la consola: debe aparecer Geyser iniciando en el puerto correcto. Reinicia el servidor después de activar Bedrock |
+| "Outdated client" o "Outdated server" en Bedrock | La versión de Bedrock del jugador es más nueva o más vieja de lo que soporta Geyser | Actualiza Minecraft en el dispositivo, y pulsa **Actualizar Geyser** en la pestaña Bedrock |
+| Pide iniciar sesión con una cuenta de Java | Floodgate no está activado | Activa "Permitir jugadores sin cuenta de Java" y reinicia |
+| "You are not white-listed" para un jugador de Bedrock | Falta agregarlo con el punto | Agrega `.Gamertag` en la pestaña Jugadores con el servidor encendido |
+
