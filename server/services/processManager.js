@@ -8,6 +8,8 @@ import { ensureJava, requiredJava } from './java.js';
 import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
+import { analyze } from './crashAnalyzer.js';
+import { compareVersions } from '../lib/util.js';
 
 const MAX_LINES = 1500;
 const STOP_TIMEOUT_MS = 45_000;
@@ -25,6 +27,11 @@ class Instance {
     this.crashCount = 0;
     this.lineListeners = new Set();
     this.partial = '';
+    this.tps = null; // { value, at }
+    this.tpsSupported = true;
+    this.silent = null; // { until, patterns }
+    this.xbox = null; // estado de inicio de sesión de MCXboxBroadcast
+    this.lastCrash = null; // { at, code, findings }
   }
 
   snapshot() {
@@ -33,7 +40,10 @@ class Instance {
       players: [...this.players],
       startedAt: this.startedAt,
       stats: this.stats,
+      tps: this.tps?.value ?? null,
       pid: this.proc?.pid || null,
+      xbox: this.xbox,
+      lastCrash: this.lastCrash,
     };
   }
 
@@ -43,6 +53,11 @@ class Instance {
   }
 
   pushLine(line) {
+    // Las respuestas a comandos internos del panel (tps) no se muestran en la consola.
+    if (this.silent && Date.now() < this.silent.until && this.silent.patterns.some((r) => r.test(line))) {
+      this.parse(line);
+      return;
+    }
     this.lines.push(line);
     if (this.lines.length > MAX_LINES) this.lines.splice(0, this.lines.length - MAX_LINES);
     bus.emit('console', this.id, line);
@@ -56,6 +71,7 @@ class Instance {
   }
 
   parse(line) {
+    this.parseExtras(line);
     if (this.status === 'starting' && /Done \(\d+[.,]?\d*s\)!/.test(line)) {
       this.crashCount = 0;
       this.setStatus('running');
@@ -78,6 +94,73 @@ class Instance {
     if (m) {
       this.players = new Set(m[1].split(',').map((s) => s.trim()).filter(Boolean));
       bus.emit('status', this.id, this.snapshot());
+    }
+  }
+
+  /** TPS, inicio de sesión de Xbox (MCXboxBroadcast) y comandos desconocidos. */
+  parseExtras(line) {
+    let m = line.match(/TPS from last 1m, 5m, 15m: (?:§.)?\*?([\d.]+)/);
+    if (m) {
+      this.tps = { value: Math.min(20, Number(m[1])), at: Date.now() };
+      return;
+    }
+    m = line.match(/Average time per tick: ([\d.]+) ?ms/);
+    if (m) {
+      const mspt = Number(m[1]);
+      this.tps = { value: Math.round(Math.min(20, mspt > 0 ? 1000 / mspt : 20) * 10) / 10, at: Date.now() };
+      return;
+    }
+    if (this.silent && Date.now() < this.silent.until && /Unknown (?:or incomplete )?command|Unknown command|Incorrect argument/i.test(line)) {
+      this.tpsSupported = false;
+      return;
+    }
+    m = line.match(/use a web browser to open the page (\S+) and enter the code (\S+?)\.? to authenticate/);
+    if (m) {
+      this.xbox = { state: 'login', url: m[1], code: m[2], at: new Date().toISOString() };
+      bus.emit('status', this.id, this.snapshot());
+      return;
+    }
+    m = line.match(/Successfully authenticated as (.+?) \((\d+)\)/);
+    if (m) {
+      this.xbox = { state: 'authenticated', gamertag: m[1], at: new Date().toISOString() };
+      const server = getServer(this.id);
+      if (server?.bedrock) {
+        server.bedrock.xboxGamertag = m[1];
+        db.save();
+      }
+      bus.emit('status', this.id, this.snapshot());
+      return;
+    }
+    if (/Creation of Xbox LIVE session was successful/.test(line)) {
+      this.xbox = { ...(this.xbox || {}), state: 'live', at: new Date().toISOString() };
+      bus.emit('status', this.id, this.snapshot());
+    }
+  }
+
+  /** Envía un comando sin mostrarlo ni mostrar su respuesta en la consola. */
+  silentCommand(command, patterns, ms = 3000) {
+    if (!this.proc) return;
+    this.silent = { until: Date.now() + ms, patterns };
+    this.proc.stdin.write(`${command}\n`);
+  }
+
+  /** Pide el TPS al servidor: "tps" en Paper, "tick query" en Minecraft 1.20.3+. */
+  pollTps() {
+    if (this.status !== 'running' || !this.tpsSupported) return;
+    const server = getServer(this.id);
+    if (!server) return;
+    if (server.type === 'paper') {
+      this.silentCommand('tps', [/TPS from last/, /Unknown command/i]);
+    } else if (/^\d{2}\./.test(server.mcVersion) || compareVersions(server.mcVersion, '1.20.3') >= 0) {
+      this.silentCommand('tick query', [
+        /The game is (running|frozen|sprinting|stepping)/,
+        /Target tick rate/,
+        /Average time per tick/,
+        /Percentiles|P50|P95|P99|Sample/i,
+        /Unknown (or incomplete )?command|Incorrect argument|<--\[HERE\]/i,
+      ]);
+    } else {
+      this.tpsSupported = false;
     }
   }
 
@@ -128,6 +211,10 @@ class Instance {
 
     this.manualStop = false;
     this.players.clear();
+    this.tps = null;
+    this.tpsSupported = true;
+    this.xbox = null;
+    this.lastCrash = null;
     this.setStatus('starting');
 
     let javaPath = server.javaPath;
@@ -190,6 +277,7 @@ class Instance {
     this.proc = null;
     this.startedAt = null;
     this.stats = null;
+    this.tps = null;
     this.players.clear();
     const server = getServer(this.id);
     if (this.manualStop || code === 0) {
@@ -202,6 +290,9 @@ class Instance {
       return;
     }
     this.panelLine(`El servidor se cerró inesperadamente (código ${code}).`);
+    const findings = analyze(this.lines.slice(-400).join('\n'));
+    this.lastCrash = { at: new Date().toISOString(), code, findings };
+    for (const f of findings.slice(0, 3)) this.panelLine(`Posible causa: ${f.title}. ${f.fix}`);
     this.setStatus('crashed');
     if (server?.autoRestart && this.crashCount < 3) {
       this.crashCount += 1;

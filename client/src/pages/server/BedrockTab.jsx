@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useLive } from '../../live.jsx';
-import { useAction, useToast } from '../../ui.jsx';
+import { CopyButton, useAction, useToast } from '../../ui.jsx';
 
 export default function BedrockTab({ server, state }) {
-  const { refresh } = useLive();
+  const { refresh, runtime } = useLive();
+  const xbox = runtime[server.id]?.xbox;
   const [info, setInfo] = useState(null);
   const [error, setError] = useState('');
   const [port, setPort] = useState('');
@@ -186,12 +187,89 @@ export default function BedrockTab({ server, state }) {
               <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
             </p>
             <p className="muted small">
-              Xbox, PlayStation y Switch no dejan agregar servidores propios; la <Link to="/guia#12-jugadores-de-bedrock-geyser">guía</Link> explica cómo
-              entrar desde consolas.
+              Xbox, PlayStation y Switch no dejan agregar servidores propios; para ellos activa la opción de abajo.
             </p>
           </section>
+
+          <Broadcast server={server} info={info} xbox={xbox} on={on} onChange={load} />
         </>
       )}
     </div>
+  );
+}
+
+function Broadcast({ server, info, xbox, on, onChange }) {
+  const [run, busy] = useAction();
+  const b = info.broadcast || {};
+  const set = (body, msg) =>
+    run(async () => {
+      const r = await api(`/servers/${server.id}/bedrock/broadcast`, { method: 'POST', body });
+      await onChange();
+      return r;
+    }, msg);
+
+  return (
+    <section className="panel stack" style={{ gap: '0.8rem' }}>
+      <div className="row">
+        <h2 className="grow" style={{ margin: 0 }}>
+          Consolas: Xbox, PlayStation y Switch
+        </h2>
+        {b.installed && <span className="chip">MCXboxBroadcast</span>}
+      </div>
+      <p className="muted small" style={{ maxWidth: '75ch' }}>
+        MCXboxBroadcast conecta el servidor a una cuenta de Xbox. Tus amigos agregan esa cuenta como amiga y el servidor les aparece en la pestaña
+        Amigos de Minecraft, desde cualquier consola. Usa una cuenta de Microsoft secundaria, no la tuya principal: es una herramienta no oficial.
+      </p>
+
+      {!b.installed ? (
+        <div>
+          <button className="btn-go" disabled={busy} onClick={() => set({ enabled: true }, 'MCXboxBroadcast instalado. Reinicia el servidor.')}>
+            Activar para consolas
+          </button>
+        </div>
+      ) : (
+        <>
+          {xbox?.state === 'login' ? (
+            <div className="login-code">
+              <p>Inicia sesión con la cuenta de Xbox que va a anunciar el servidor:</p>
+              <ol className="small" style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                <li>
+                  Abre{' '}
+                  <a href={xbox.url} target="_blank" rel="noreferrer">
+                    {xbox.url}
+                  </a>
+                </li>
+                <li>
+                  Escribe el código <span className="code-big">{xbox.code}</span> <CopyButton text={xbox.code} />
+                </li>
+                <li>Entra con la cuenta secundaria. Esta página se actualiza sola cuando termines.</li>
+              </ol>
+            </div>
+          ) : xbox?.state === 'authenticated' || xbox?.state === 'live' || b.gamertag ? (
+            <p className="small">
+              Anunciando con la cuenta <strong>{xbox?.gamertag || b.gamertag}</strong>
+              {xbox?.state === 'live' ? ' (sesión de Xbox activa)' : ''}. Tus amigos deben agregar <strong>{xbox?.gamertag || b.gamertag}</strong> como
+              amigo en Xbox; se acepta solo y el servidor aparece en Minecraft, pestaña Amigos.
+            </p>
+          ) : (
+            <p className="muted small">
+              {on
+                ? 'Esperando a que MCXboxBroadcast arranque… Si no aparece un código en un minuto, reinicia el servidor.'
+                : 'Enciende el servidor: la primera vez aparecerá aquí un código para iniciar sesión con Xbox.'}
+            </p>
+          )}
+          <div className="row">
+            <button className="btn-stop" disabled={busy} onClick={() => set({ enabled: false }, 'MCXboxBroadcast desactivado')}>
+              Desactivar
+            </button>
+            {b.loggedIn && (
+              <button disabled={busy} onClick={() => set({ enabled: false, forgetAccount: true }, 'Cuenta de Xbox olvidada')}>
+                Cerrar sesión de Xbox
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </section>
   );
 }

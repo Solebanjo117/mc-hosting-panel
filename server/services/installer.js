@@ -139,7 +139,7 @@ async function doInstall(server, report) {
       break;
     }
     case 'fabric': {
-      const fabric = await fabricLauncherUrl(mcVersion);
+      const fabric = await fabricLauncherUrl(mcVersion, server.modpack ? loaderVersion : null);
       await download(fabric.url, path.join(dir, 'fabric-server-launch.jar'), pct(`Descargando Fabric ${fabric.loader}…`));
       loaderVersion = fabric.loader;
       launch = { type: 'jar', jar: 'fabric-server-launch.jar' };
@@ -181,6 +181,14 @@ export function startInstall(id) {
   const report = reporter(id);
 
   doInstall(server, report)
+    .then(async (result) => {
+      // Un modpack recién importado: descarga sus mods y copia sus archivos de configuración.
+      if (server.modpack?.pendingApply) {
+        const { applyModpack } = await import('./modpack.js');
+        await applyModpack(id, report);
+      }
+      return result;
+    })
     .then(({ launch, loaderVersion, javaMajor }) => {
       updateServer(id, { installState: 'ready', launch, loaderVersion, javaMajor, installedAt: new Date().toISOString() });
       bus.emit('install', id, { state: 'ready', message: 'Instalación completa. ¡Ya puedes iniciar el servidor!', progress: 1 });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useLive } from '../live.jsx';
 
@@ -79,7 +79,10 @@ export default function CreateServer() {
   return (
     <div className="page" style={{ maxWidth: 880 }}>
       <div className="page-head">
-        <h1>Crear servidor</h1>
+        <h1 className="grow">Crear servidor</h1>
+        <Link to="/nuevo/modpack" className="btn">
+          Crear desde un modpack
+        </Link>
       </div>
 
       <form className="stack" style={{ gap: '1.75rem' }} onSubmit={submit}>

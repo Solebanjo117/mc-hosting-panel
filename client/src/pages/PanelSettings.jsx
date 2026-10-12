@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useAction, useToast } from '../ui.jsx';
+import { DuckDnsSettings, PlayitSettings } from './Integrations.jsx';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -30,6 +31,9 @@ export default function PanelSettings() {
   return (
     <div className="page stack" style={{ gap: '1.75rem', maxWidth: 860 }}>
       <h1>Ajustes del panel</h1>
+
+      <PlayitSettings />
+      <DuckDnsSettings />
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Contraseña</h2>

@@ -1139,3 +1139,197 @@ label.check input {
     transition: none !important;
   }
 }
+
+/* ---------- Gráficas de rendimiento ---------- */
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  gap: 1rem;
+}
+
+.chart {
+  margin: 0;
+  background: var(--slate);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  padding: 0.9rem 1rem 0.6rem;
+}
+
+.chart figcaption {
+  margin-bottom: 0.4rem;
+}
+
+.chart-value {
+  font-size: var(--step--1);
+  color: var(--sand);
+  font-weight: 500;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+}
+
+.chart-grid {
+  stroke: var(--slate-3);
+  stroke-width: 1;
+}
+
+.chart-axis {
+  fill: var(--sand-faint);
+  font-size: 11px;
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--prismarine);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-area {
+  fill: var(--prismarine);
+  opacity: 0.1;
+}
+
+.chart-dot {
+  fill: var(--prismarine);
+  stroke: var(--slate);
+  stroke-width: 2;
+}
+
+.chart-cursor {
+  stroke: var(--sand-dim);
+  stroke-width: 1;
+}
+
+.chart-ref {
+  stroke: var(--sand-faint);
+  stroke-width: 1;
+}
+
+.chart-empty {
+  padding: 2.5rem 0;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Logs ---------- */
+
+.logs-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 760px) {
+  .logs-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.file-pick {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 30px;
+  background: transparent;
+  border-color: transparent;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+}
+
+.file-pick.on {
+  background: var(--slate-2);
+  box-shadow: inset 3px 0 0 var(--prismarine);
+}
+
+.logview {
+  margin: 0;
+  background: #0d121c;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  padding: 0.75rem 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 65vh;
+  overflow: auto;
+  color: #c9cfd8;
+}
+
+.logview .ln {
+  display: inline-block;
+  min-width: 3.5em;
+  color: var(--sand-faint);
+  user-select: none;
+}
+
+.logview .l-error {
+  color: #ff8a7a;
+}
+
+.logview .l-warn {
+  color: var(--gold);
+}
+
+.link-btn {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--prismarine);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.link-btn:hover:not(:disabled) {
+  background: none;
+  text-decoration: underline;
+}
+
+.finding {
+  border-left: 3px solid var(--redstone);
+  padding: 0.3rem 0 0.3rem 0.8rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+/* ---------- Códigos de vinculación (playit, Xbox) ---------- */
+
+.login-code {
+  border: 1px dashed var(--gold);
+  border-radius: var(--r-panel);
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.5rem;
+  background: rgba(232, 182, 75, 0.05);
+}
+
+.code-big {
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+  letter-spacing: 0.08em;
+  color: var(--sand);
+  background: var(--night);
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+}
+
+.segmented {
+  justify-self: start;
+  width: max-content;
+  max-width: 100%;
+}

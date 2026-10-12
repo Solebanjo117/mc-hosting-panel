@@ -138,10 +138,13 @@ export async function paperBuild(mcVersion) {
   return { build: build.id, url: dl.url, channel: build.channel };
 }
 
-export async function fabricLauncherUrl(mcVersion) {
+export async function fabricLauncherUrl(mcVersion, wantedLoader = null) {
   const loaders = await getJson(`${FABRIC_META}/versions/loader/${encodeURIComponent(mcVersion)}`);
   if (!loaders.length) throw new HttpError(404, `Fabric no soporta ${mcVersion}`);
-  const loader = (loaders.find((l) => l.loader.stable) || loaders[0]).loader.version;
+  // Un modpack fija su versión de Fabric Loader; si no, la estable más reciente.
+  const loader = wantedLoader && loaders.some((l) => l.loader.version === wantedLoader)
+    ? wantedLoader
+    : (loaders.find((l) => l.loader.stable) || loaders[0]).loader.version;
   const installers = await getJson(`${FABRIC_META}/versions/installer`);
   const installer = (installers.find((i) => i.stable) || installers[0]).version;
   return {

@@ -7,7 +7,8 @@ import { download } from '../lib/http.js';
 import { HttpError, compareVersions } from '../lib/util.js';
 import * as market from './marketplace.js';
 import { mojangManifest } from './versions.js';
-import { applyGeyserConfig, readGeyserPort } from './geyserConfig.js';
+import { applyGeyserConfig, readGeyserPort, GEYSER_CONFIG_PATHS } from './geyserConfig.js';
+import { instance, isRunning } from './processManager.js';
 
 /**
  * Crossplay con Bedrock (celular, Windows 10/11, consolas) usando GeyserMC.
@@ -90,6 +91,7 @@ export async function status(id) {
     port: server.bedrock?.port || nextBedrockPort(server.id),
     floodgate: server.bedrock?.floodgate ?? true,
     configPort: readGeyserPort(server),
+    broadcast: broadcastStatus(server),
   };
   if (UNSUPPORTED[server.type]) return { ...base, supported: false, reason: UNSUPPORTED[server.type], items: [] };
 
@@ -221,6 +223,56 @@ export async function update(id) {
 export function disable(id) {
   const server = requireServer(id);
   removeComponent(server, () => true);
+  disableBroadcast(id);
   server.bedrock = { ...(server.bedrock || {}), enabled: false };
   db.flush();
+}
+
+// --- MCXboxBroadcast -------------------------------------------------------------
+// Extensión de Geyser que anuncia el servidor en la pestaña "Amigos" de Xbox Live.
+// Así entran desde Xbox, PlayStation y Switch, que no permiten agregar servidores propios.
+
+const BROADCAST_URL = 'https://github.com/MCXboxBroadcast/Broadcaster/releases/latest/download/MCXboxBroadcastExtension.jar';
+const BROADCAST_FILE = 'MCXboxBroadcastExtension.jar';
+
+function extensionsDir(server) {
+  const cfg = GEYSER_CONFIG_PATHS[server.type];
+  return cfg ? path.join(serverDir(server.id), path.dirname(cfg), 'extensions') : null;
+}
+
+function broadcastStatus(server) {
+  const dir = extensionsDir(server);
+  const installed = Boolean(dir && fs.existsSync(path.join(dir, BROADCAST_FILE)));
+  const dataDir = dir && path.join(dir, 'mcxboxbroadcast');
+  return {
+    installed,
+    loggedIn: Boolean(dataDir && fs.existsSync(path.join(dataDir, 'cache.json'))),
+    gamertag: server.bedrock?.xboxGamertag || null,
+    live: instance(server.id).xbox,
+    running: isRunning(server.id),
+  };
+}
+
+export async function enableBroadcast(id) {
+  const server = requireServer(id);
+  if (!server.bedrock?.enabled) throw new HttpError(409, 'Activa Bedrock primero');
+  const dir = extensionsDir(server);
+  if (!dir) throw new HttpError(400, 'Este tipo de servidor no admite extensiones de Geyser');
+  fs.mkdirSync(dir, { recursive: true });
+  await download(BROADCAST_URL, path.join(dir, BROADCAST_FILE));
+  return broadcastStatus(requireServer(id));
+}
+
+/** Quita la extensión. Con `forgetAccount` también borra la sesión de Xbox guardada. */
+export function disableBroadcast(id, { forgetAccount = false } = {}) {
+  const server = requireServer(id);
+  const dir = extensionsDir(server);
+  if (!dir) return broadcastStatus(server);
+  fs.rmSync(path.join(dir, BROADCAST_FILE), { force: true });
+  if (forgetAccount) {
+    fs.rmSync(path.join(dir, 'mcxboxbroadcast', 'cache.json'), { force: true });
+    server.bedrock = { ...server.bedrock, xboxGamertag: null };
+    db.flush();
+  }
+  return broadcastStatus(server);
 }

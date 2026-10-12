@@ -57,6 +57,7 @@ export function attachWebSocket(httpServer) {
 
   bus.on('status', (id, snapshot) => send(() => true, { type: 'status', id, ...snapshot }));
   bus.on('servers', () => send(() => true, { type: 'servers' }));
+  bus.on('playit', (status) => send(() => true, { type: 'playit', ...status, logs: undefined }));
   bus.on('install', (id, payload) => send(() => true, { type: 'install', id, ...payload }));
   bus.on('console', (id, line) => send((ws) => ws.subscriptions.has(id), { type: 'console', id, line }));
 

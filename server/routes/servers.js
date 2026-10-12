@@ -1,17 +1,20 @@
 import express from 'express';
 import fs from 'node:fs';
-import crypto from 'node:crypto';
-import { serverDir, backupDir, DEFAULT_MC_PORT } from '../config.js';
+import path from 'node:path';
+import { serverDir, backupDir, DATA_DIR } from '../config.js';
 import { db, getServer, updateServer } from '../db.js';
 import { bus } from '../lib/bus.js';
 import { HttpError, dirSize } from '../lib/util.js';
-import { SERVER_TYPES } from '../services/versions.js';
 import { startInstall, isInstalling } from '../services/installer.js';
 import { instance, isRunning, removeInstance } from '../services/processManager.js';
 import { readProperties, writeProperties } from '../services/properties.js';
 import { getPlayers, playerAction } from '../services/players.js';
-import { externalCheck, isPortFree, publicIp } from '../services/network.js';
+import { externalCheck, publicIp } from '../services/network.js';
 import * as bedrock from '../services/bedrock.js';
+import * as playit from '../services/playit.js';
+import { createServerRecord, validatePort } from '../services/serverFactory.js';
+import { cloneServer } from '../services/clone.js';
+import { removeMetrics } from '../services/metrics.js';
 
 export const serversRouter = express.Router();
 
@@ -31,57 +34,21 @@ function load(req) {
   return server;
 }
 
-function nextFreePort() {
-  const used = new Set(db.data.servers.map((s) => Number(s.port)));
-  let port = DEFAULT_MC_PORT;
-  while (used.has(port)) port += 1;
-  return port;
-}
-
-async function validatePort(port, selfId) {
-  const p = Number(port);
-  if (!Number.isInteger(p) || p < 1024 || p > 65535) throw new HttpError(400, 'El puerto debe estar entre 1024 y 65535');
-  const clash = db.data.servers.find((s) => Number(s.port) === p && s.id !== selfId);
-  if (clash) throw new HttpError(409, `El puerto ${p} ya lo usa el servidor "${clash.name}"`);
-  if (Number(db.data.settings.panelPort) === p) throw new HttpError(409, `El puerto ${p} lo usa el propio panel`);
-  return p;
-}
-
 serversRouter.get('/', (_req, res) => {
   res.json(db.data.servers.map(view));
 });
 
 serversRouter.post('/', async (req, res) => {
-  const { name, type, mcVersion, loaderVersion, memoryMb = 2048, port, eula } = req.body || {};
-  if (!eula) throw new HttpError(400, 'Debes aceptar el EULA de Minecraft para crear un servidor');
-  if (!SERVER_TYPES[type]) throw new HttpError(400, 'Tipo de servidor inválido');
-  if (!mcVersion) throw new HttpError(400, 'Elige una versión de Minecraft');
-  const cleanName = String(name || '').trim().slice(0, 40);
-  if (!cleanName) throw new HttpError(400, 'Ponle un nombre al servidor');
-  const finalPort = await validatePort(port || nextFreePort());
-  if (!(await isPortFree(finalPort))) throw new HttpError(409, `Otro programa ya está usando el puerto ${finalPort} en esta PC`);
-
-  const server = {
-    id: crypto.randomUUID().slice(0, 8),
-    name: cleanName,
-    type,
-    mcVersion,
-    loaderVersion: loaderVersion || null,
-    port: finalPort,
-    memoryMb: Math.max(512, Number(memoryMb) || 2048),
-    jvmArgs: '',
-    javaPath: null,
-    autoStart: false,
-    autoRestart: true,
-    backupSchedule: { enabled: false, intervalHours: 24, keep: 7, mode: 'mundo' },
-    installState: 'pending',
-    createdAt: new Date().toISOString(),
-    content: [],
-  };
-  db.data.servers.push(server);
-  db.flush();
+  const { name, type, mcVersion, loaderVersion, memoryMb, port, eula } = req.body || {};
+  const server = await createServerRecord({ name, type, mcVersion, loaderVersion, memoryMb, port, eula });
   startInstall(server.id);
   res.status(201).json(view(server));
+});
+
+serversRouter.post('/:id/clone', async (req, res) => {
+  const clone = await cloneServer(load(req).id, req.body || {});
+  bus.emit('servers');
+  res.status(201).json(view(clone));
 });
 
 serversRouter.get('/:id', (req, res) => res.json(view(load(req))));
@@ -111,6 +78,7 @@ serversRouter.patch('/:id', async (req, res) => {
     writeProperties(server.id, { 'server-port': patch.port, 'query.port': patch.port });
   }
   updateServer(server.id, patch);
+  if (patch.port) playit.syncServer(server.id);
   bus.emit('servers');
   res.json(view(server));
 });
@@ -119,7 +87,10 @@ serversRouter.delete('/:id', async (req, res) => {
   const server = load(req);
   if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor antes de eliminarlo');
   if (isInstalling(server.id)) throw new HttpError(409, 'Espera a que termine la instalación');
+  if (server.playit?.enabled) await playit.disableForServer(server.id).catch(() => {});
   fs.rmSync(serverDir(server.id), { recursive: true, force: true });
+  fs.rmSync(path.join(DATA_DIR, 'modpacks', `${server.id}.mrpack`), { force: true });
+  removeMetrics(server.id);
   if (req.query.keepBackups !== 'true') fs.rmSync(backupDir(server.id), { recursive: true, force: true });
   db.data.servers = db.data.servers.filter((s) => s.id !== server.id);
   db.flush();
@@ -184,6 +155,7 @@ serversRouter.put('/:id/properties', async (req, res) => {
     const port = await validatePort(values['server-port'], server.id);
     updateServer(server.id, { port });
     values['query.port'] = port;
+    playit.syncServer(server.id);
   }
   res.json({ properties: writeProperties(server.id, values), restartRequired: isRunning(server.id) });
 });
@@ -228,6 +200,7 @@ serversRouter.get('/:id/bedrock', async (req, res) => {
 serversRouter.post('/:id/bedrock/enable', async (req, res) => {
   const server = load(req);
   const result = await bedrock.enable(server.id, req.body || {});
+  playit.syncServer(server.id);
   bus.emit('servers');
   res.json({ ...result, restartRequired: isRunning(server.id) });
 });
@@ -241,6 +214,33 @@ serversRouter.post('/:id/bedrock/update', async (req, res) => {
 serversRouter.post('/:id/bedrock/disable', (req, res) => {
   const server = load(req);
   bedrock.disable(server.id);
+  playit.syncServer(server.id);
   bus.emit('servers');
   res.json({ ok: true, restartRequired: isRunning(server.id) });
+});
+
+serversRouter.post('/:id/bedrock/broadcast', async (req, res) => {
+  const server = load(req);
+  const result = req.body?.enabled
+    ? await bedrock.enableBroadcast(server.id)
+    : bedrock.disableBroadcast(server.id, { forgetAccount: Boolean(req.body?.forgetAccount) });
+  res.json({ broadcast: result, restartRequired: isRunning(server.id) });
+});
+
+// --- playit.gg por servidor -----------------------------------------------------
+
+serversRouter.get('/:id/playit', async (req, res) => {
+  res.json(await playit.serverTunnels(load(req).id));
+});
+
+serversRouter.post('/:id/playit', async (req, res) => {
+  const server = load(req);
+  if (req.body?.enabled === false) {
+    await playit.disableForServer(server.id);
+    bus.emit('servers');
+    return res.json(await playit.serverTunnels(server.id));
+  }
+  const result = await playit.enableForServer(server.id);
+  bus.emit('servers');
+  res.json(result);
 });

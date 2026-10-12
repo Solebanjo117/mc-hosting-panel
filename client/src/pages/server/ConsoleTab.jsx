@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { CopyButton, useToast } from '../../ui.jsx';
+import { Findings } from './LogsTab.jsx';
 
 // Quita códigos de color ANSI y de Minecraft (§a, §l…).
 const clean = (line) => line.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/§[0-9a-fk-or]/gi, '');
@@ -82,7 +83,22 @@ export default function ConsoleTab({ server, runtime, state }) {
   const memPct = stats ? Math.min(100, (stats.memoryMb / server.memoryMb) * 100) : 0;
   const players = runtime?.players || [];
 
+  const crash = state === 'crashed' ? runtime?.lastCrash : null;
+
   return (
+    <div className="stack" style={{ gap: '1.25rem' }}>
+      {crash && (
+        <section className="panel" style={{ borderColor: 'rgba(224,80,63,0.5)' }}>
+          <h2>El servidor se cerró con un error</h2>
+          {crash.findings.length ? (
+            <Findings findings={crash.findings} />
+          ) : (
+            <p className="muted small">
+              No reconocimos la causa. Revisa las últimas líneas de la consola o el reporte en <Link to={`/servidor/${server.id}/logs`}>Logs</Link>.
+            </p>
+          )}
+        </section>
+      )}
     <div className="console-layout">
       <section className="terminal" aria-label="Consola del servidor">
         <div
@@ -141,6 +157,10 @@ export default function ConsoleTab({ server, runtime, state }) {
             )}
           </div>
           <div className="stat">
+            <dt>TPS</dt>
+            <dd>{runtime?.tps != null ? `${runtime.tps}` : '—'}</dd>
+          </div>
+          <div className="stat">
             <dt>Memoria</dt>
             <dd>{stats ? `${(stats.memoryMb / 1024).toFixed(1)} / ${(server.memoryMb / 1024).toFixed(1)} GB` : '—'}</dd>
             <div className="meter">
@@ -189,6 +209,7 @@ export default function ConsoleTab({ server, runtime, state }) {
           </div>
         </div>
       </aside>
+    </div>
     </div>
   );
 }

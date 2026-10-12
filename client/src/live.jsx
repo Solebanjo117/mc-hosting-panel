@@ -13,6 +13,7 @@ export function LiveProvider({ children }) {
   const [runtime, setRuntime] = useState({});
   const [installs, setInstalls] = useState({});
   const [connected, setConnected] = useState(false);
+  const [playit, setPlayit] = useState(null);
   const consoles = useRef(new Map()); // id -> { lines, listeners:Set }
   const wsRef = useRef(null);
   const subs = useRef(new Map()); // id -> contador de vistas suscritas
@@ -60,6 +61,9 @@ export function LiveProvider({ children }) {
           setRuntime((prev) => ({ ...prev, [id]: snap }));
         } else if (msg.type === 'servers') {
           refresh();
+        } else if (msg.type === 'playit') {
+          const { type: _t, ...rest } = msg;
+          setPlayit(rest);
         } else if (msg.type === 'install') {
           setInstalls((prev) => ({ ...prev, [msg.id]: msg }));
         } else if (msg.type === 'console-history' || msg.type === 'console') {
@@ -98,7 +102,7 @@ export function LiveProvider({ children }) {
   }, []);
 
   return (
-    <LiveContext.Provider value={{ servers, loaded, runtime, installs, connected, refresh, subscribeConsole }}>
+    <LiveContext.Provider value={{ servers, loaded, runtime, installs, connected, refresh, subscribeConsole, playit }}>
       {children}
     </LiveContext.Provider>
   );

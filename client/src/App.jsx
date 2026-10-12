@@ -5,6 +5,7 @@ import { LiveProvider, useLive, serverState } from './live.jsx';
 import Login from './pages/Login.jsx';
 import Home from './pages/Home.jsx';
 import CreateServer from './pages/CreateServer.jsx';
+import ImportModpack from './pages/ImportModpack.jsx';
 import ServerView from './pages/ServerView.jsx';
 import Guide from './pages/Guide.jsx';
 import PanelSettings from './pages/PanelSettings.jsx';
@@ -105,6 +106,7 @@ function Shell({ username, onLogout }) {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/nuevo" element={<CreateServer />} />
+          <Route path="/nuevo/modpack" element={<ImportModpack />} />
           <Route path="/servidor/:id/*" element={<ServerView />} />
           <Route path="/guia" element={<Guide />} />
           <Route path="/ajustes" element={<PanelSettings />} />

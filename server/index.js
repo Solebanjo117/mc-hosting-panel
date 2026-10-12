@@ -12,6 +12,12 @@ import { filesRouter } from './routes/files.js';
 import { backupsRouter } from './routes/backups.js';
 import { contentRouter } from './routes/content.js';
 import { systemRouter } from './routes/system.js';
+import { manageRouter } from './routes/manage.js';
+import { integrationsRouter } from './routes/integrations.js';
+import * as playit from './services/playit.js';
+import './services/metrics.js';
+import './services/scheduler.js';
+import './services/duckdns.js';
 import { attachWebSocket } from './ws.js';
 import { autoStartServers, stopAll } from './services/processManager.js';
 import { localIps } from './services/network.js';
@@ -29,6 +35,8 @@ app.use('/api/servers', serversRouter);
 app.use('/api/servers/:id/files', filesRouter);
 app.use('/api/servers/:id/backups', backupsRouter);
 app.use('/api/servers/:id/content', contentRouter);
+app.use('/api/servers/:id', manageRouter);
+app.use('/api/integrations', integrationsRouter);
 app.use('/api', (_req, _res, next) => next(Object.assign(new Error('Ruta no encontrada'), { status: 404 })));
 
 if (fs.existsSync(DIST_DIR)) {
@@ -75,6 +83,7 @@ server.listen(port, '0.0.0.0', () => {
     spawn('cmd', ['/c', 'start', '', `http://localhost:${port}`], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
   }
   autoStartServers();
+  playit.autoStart();
 });
 
 let shuttingDown = false;
@@ -84,7 +93,7 @@ async function shutdown(signal) {
   console.log(`\n  Apagando servidores (${signal})…`);
   db.flush();
   // Windows da pocos segundos al cerrar la ventana de consola (SIGHUP).
-  await stopAll(signal === 'SIGHUP' ? 4000 : 20000);
+  await Promise.all([stopAll(signal === 'SIGHUP' ? 4000 : 20000), playit.stopAgent().catch(() => {})]);
   process.exit(0);
 }
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) process.on(sig, () => shutdown(sig));

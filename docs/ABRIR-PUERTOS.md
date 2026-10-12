@@ -451,6 +451,9 @@ Problemas de dar la IP a tus amigos: es difícil de recordar y, en la mayoría d
 
 ### 6.1 DuckDNS (gratis, sin caducidad mensual)
 
+> **El panel ya lo hace por ti:** en **Ajustes del panel > Dominio gratis con DuckDNS** pegas tu subdominio y tu token, y el panel actualiza la IP cada 5 minutos. No necesitas instalar el actualizador de DuckDNS que se describe abajo; esos pasos quedan como referencia.
+
+
 1. Entra a **duckdns.org** e inicia sesión con una de las cuentas que ofrece (Google, GitHub, etc.).
 2. Escribe un subdominio, por ejemplo `miservermc`, y haz clic en **add domain**. Tu dirección será `miservermc.duckdns.org`.
 3. Copia tu **token** (aparece arriba en la página). **Es secreto:** quien lo tenga puede cambiar tu dominio.
@@ -556,6 +559,9 @@ Muchos módems caseros **no permiten** conectarte a tu propia IP pública (o a t
 Si tienes CGNAT, tu módem está bloqueado o no quieres abrir puertos, estas opciones funcionan **sin reenvío de puertos**.
 
 ### 8.1 playit.gg (túnel gratuito)
+
+> **El panel ya lo hace por ti:** en **Ajustes del panel > Túneles de playit.gg** pulsa "Vincular con mi cuenta de playit.gg" y acepta en el sitio. Luego, en la pestaña **Conexión** de cada servidor, pulsa "Crear túnel": el panel descarga el agente oficial, lo mantiene encendido y te muestra la dirección para tus amigos (Java y, si activaste Bedrock, también Bedrock). Los pasos manuales de abajo solo hacen falta si prefieres instalar playit por tu cuenta.
+
 
 playit.gg crea un túnel desde tu PC hacia sus servidores y te da una dirección pública. Tus amigos se conectan a esa dirección y el tráfico llega a tu PC.
 

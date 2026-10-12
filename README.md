@@ -7,6 +7,15 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC), filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), administrador de archivos con editor, subida y extracción de .zip, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
+- **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic.
+- **DuckDNS integrado:** un dominio gratis (`tunombre.duckdns.org`) que el panel mantiene actualizado con tu IP.
+- **Modpacks de Modrinth:** busca un modpack o sube un `.mrpack` y el panel crea el servidor con el loader, la versión, los mods (solo los de servidor) y la configuración.
+- **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
+- **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
+- **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
+- **Mundos:** varios mundos por servidor, crear con semilla y tipo, importar desde .zip, descargar y cambiar entre ellos.
+- **Logs y diagnóstico:** búsqueda en todos los logs (también los antiguos .gz), lectura de crash reports y explicación en español de las causas comunes (falta de memoria, mods que faltan o chocan, Java incorrecto, puerto ocupado…).
+- **Clonar servidores** para probar mods o versiones sin arriesgar el original.
 - Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.
 
@@ -41,7 +50,10 @@ Todo vive en la carpeta `data/` (no se sube a Git):
 
 ```
 data/
-  db.json          cuenta, ajustes y lista de servidores
+  db.json          cuenta, ajustes, servidores, tareas programadas
+  metrics/         historial de rendimiento (7 días)
+  modpacks/        archivos .mrpack importados
+  playit/          agente de playit.gg y su llave (playit.toml)
   servers/<id>/    cada servidor: mundos, mods, plugins, configuración
   backups/<id>/    respaldos .zip
   java/<versión>/  Java descargado automáticamente
@@ -52,6 +64,7 @@ Para mover el panel a otra PC copia la carpeta completa, incluida `data/`.
 ## Seguridad
 
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
+- La llave de playit (`data/playit/playit.toml`) y el token de DuckDNS se guardan en `data/`; no compartas esa carpeta.
 - La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly`. Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
 - Deja `online-mode=true` y usa la lista blanca si tu servidor es solo para amigos.
 
@@ -86,6 +99,15 @@ server/
     network.js          IP local/pública y prueba externa con mcsrvstat.us
     bedrock.js          crossplay: instala Geyser/Floodgate/ViaVersion y reserva puertos UDP
     geyserConfig.js     ajusta el puerto y la autenticación en el config.yml de Geyser
+    playit.js           agente de playit.gg: vinculación, túneles por servidor (API de playit)
+    duckdns.js          actualiza el dominio de DuckDNS cada 5 minutos
+    modpack.js          importa .mrpack: loader, mods del lado del servidor y overrides
+    scheduler.js        tareas programadas con avisos en el chat
+    metrics.js          historial de CPU, RAM, TPS y jugadores
+    worlds.js           varios mundos por servidor
+    logs.js             lectura y búsqueda de logs y crash reports
+    crashAnalyzer.js    explica en español las causas de un crash
+    clone.js            copia un servidor con otros puertos
 client/                 React + Vite
 docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ```
@@ -93,6 +115,8 @@ docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ## Limitaciones conocidas
 
 - Los servidores son de Java Edition; Bedrock entra a través de Geyser, que no existe para Forge ni puede ir en Vanilla. En Fabric y NeoForge, Geyser solo sigue la versión más reciente de Minecraft.
+- playit.gg se controla con la API que usa su agente oficial (v1.0.x). Si playit cambia esa API, la creación de túneles podría fallar; en ese caso los túneles se pueden crear a mano en playit.gg.
+- MCXboxBroadcast es una herramienta no oficial: usa una cuenta de Microsoft secundaria.
 - Las consolas (Xbox, PlayStation, Switch) no permiten agregar servidores propios; la guía explica las alternativas.
 - CurseForge no está integrado porque su API exige una clave privada; los mods de CurseForge se pueden subir a mano desde **Archivos** (carpeta `mods`).
 - Algunos plugins de Hangar se publican solo como enlace externo; el panel te muestra el enlace en lugar de instalarlos.

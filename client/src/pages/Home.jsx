@@ -27,9 +27,14 @@ export default function Home() {
             </p>
           )}
         </div>
-        <Link to="/nuevo" className="btn btn-go">
-          Crear servidor
-        </Link>
+        <div className="row">
+          <Link to="/nuevo/modpack" className="btn">
+            Desde un modpack
+          </Link>
+          <Link to="/nuevo" className="btn btn-go">
+            Crear servidor
+          </Link>
+        </div>
       </div>
 
       {loaded && servers.length === 0 ? (

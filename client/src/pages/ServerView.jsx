@@ -10,6 +10,10 @@ import ContentTab from './server/ContentTab.jsx';
 import BackupsTab from './server/BackupsTab.jsx';
 import NetworkTab from './server/NetworkTab.jsx';
 import BedrockTab from './server/BedrockTab.jsx';
+import MetricsTab from './server/MetricsTab.jsx';
+import WorldsTab from './server/WorldsTab.jsx';
+import SchedulesTab from './server/SchedulesTab.jsx';
+import LogsTab from './server/LogsTab.jsx';
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -45,6 +49,8 @@ export default function ServerView() {
             </span>
             <span>Puerto {server.port}</span>
             {server.bedrock?.enabled && <span>Bedrock UDP {server.bedrock.port}</span>}
+            {server.playit?.enabled && <span>Túnel playit.gg</span>}
+            {server.modpack && <span>Modpack {server.modpack.name}</span>}
             <span>{(server.memoryMb / 1024).toFixed(1).replace('.0', '')} GB de RAM</span>
           </div>
         </div>
@@ -111,8 +117,20 @@ export default function ServerView() {
         <NavLink to={`${base}/archivos`} className="tab">
           Archivos
         </NavLink>
+        <NavLink to={`${base}/mundos`} className="tab">
+          Mundos
+        </NavLink>
         <NavLink to={`${base}/respaldos`} className="tab">
           Respaldos
+        </NavLink>
+        <NavLink to={`${base}/tareas`} className="tab">
+          Tareas
+        </NavLink>
+        <NavLink to={`${base}/rendimiento`} className="tab">
+          Rendimiento
+        </NavLink>
+        <NavLink to={`${base}/logs`} className="tab">
+          Logs
         </NavLink>
         <NavLink to={`${base}/conexion`} className="tab">
           Conexión
@@ -132,6 +150,10 @@ export default function ServerView() {
         <Route path="archivos" element={<FilesTab server={server} />} />
         <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
         <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
+        <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
+        <Route path="tareas" element={<SchedulesTab server={server} />} />
+        <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
+        <Route path="logs" element={<LogsTab server={server} />} />
         <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
         <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
       </Routes>

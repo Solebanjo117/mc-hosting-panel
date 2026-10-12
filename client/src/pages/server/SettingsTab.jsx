@@ -40,6 +40,7 @@ export default function SettingsTab({ server, state }) {
   });
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [versionModal, setVersionModal] = useState(false);
+  const [cloneName, setCloneName] = useState(`${server.name} (copia)`.slice(0, 40));
   const [run, busy] = useAction();
   const on = ['running', 'starting', 'stopping'].includes(state);
 
@@ -166,6 +167,29 @@ export default function SettingsTab({ server, state }) {
             }
           >
             Guardar cambios
+          </button>
+        </div>
+      </section>
+
+      <section className="panel stack">
+        <h2 style={{ margin: 0 }}>Clonar servidor</h2>
+        <p className="muted small">
+          Crea una copia exacta (mundos, mods, plugins y configuración) con otro nombre y puerto. Úsala para probar mods o una versión nueva sin
+          arriesgar el original. Se puede clonar con el servidor encendido.
+        </p>
+        <div className="row">
+          <input style={{ maxWidth: 320 }} value={cloneName} onChange={(e) => setCloneName(e.target.value)} maxLength={40} aria-label="Nombre de la copia" />
+          <button
+            disabled={busy || !cloneName.trim()}
+            onClick={() =>
+              run(async () => {
+                const c = await api(`/servers/${server.id}/clone`, { method: 'POST', body: { name: cloneName } });
+                await refresh();
+                navigate(`/servidor/${c.id}`);
+              }, 'Servidor clonado')
+            }
+          >
+            Clonar
           </button>
         </div>
       </section>
