@@ -1,0 +1,215 @@
+import express from 'express';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import { serverDir, backupDir, DEFAULT_MC_PORT } from '../config.js';
+import { db, getServer, updateServer } from '../db.js';
+import { bus } from '../lib/bus.js';
+import { HttpError, dirSize } from '../lib/util.js';
+import { SERVER_TYPES } from '../services/versions.js';
+import { startInstall, isInstalling } from '../services/installer.js';
+import { instance, isRunning, removeInstance } from '../services/processManager.js';
+import { readProperties, writeProperties } from '../services/properties.js';
+import { getPlayers, playerAction } from '../services/players.js';
+import { externalCheck, isPortFree, publicIp } from '../services/network.js';
+
+export const serversRouter = express.Router();
+
+function view(server) {
+  const inst = instance(server.id);
+  return {
+    ...server,
+    content: undefined,
+    installing: isInstalling(server.id),
+    runtime: inst.snapshot(),
+  };
+}
+
+function load(req) {
+  const server = getServer(req.params.id);
+  if (!server) throw new HttpError(404, 'Servidor no encontrado');
+  return server;
+}
+
+function nextFreePort() {
+  const used = new Set(db.data.servers.map((s) => Number(s.port)));
+  let port = DEFAULT_MC_PORT;
+  while (used.has(port)) port += 1;
+  return port;
+}
+
+async function validatePort(port, selfId) {
+  const p = Number(port);
+  if (!Number.isInteger(p) || p < 1024 || p > 65535) throw new HttpError(400, 'El puerto debe estar entre 1024 y 65535');
+  const clash = db.data.servers.find((s) => Number(s.port) === p && s.id !== selfId);
+  if (clash) throw new HttpError(409, `El puerto ${p} ya lo usa el servidor "${clash.name}"`);
+  if (Number(db.data.settings.panelPort) === p) throw new HttpError(409, `El puerto ${p} lo usa el propio panel`);
+  return p;
+}
+
+serversRouter.get('/', (_req, res) => {
+  res.json(db.data.servers.map(view));
+});
+
+serversRouter.post('/', async (req, res) => {
+  const { name, type, mcVersion, loaderVersion, memoryMb = 2048, port, eula } = req.body || {};
+  if (!eula) throw new HttpError(400, 'Debes aceptar el EULA de Minecraft para crear un servidor');
+  if (!SERVER_TYPES[type]) throw new HttpError(400, 'Tipo de servidor inválido');
+  if (!mcVersion) throw new HttpError(400, 'Elige una versión de Minecraft');
+  const cleanName = String(name || '').trim().slice(0, 40);
+  if (!cleanName) throw new HttpError(400, 'Ponle un nombre al servidor');
+  const finalPort = await validatePort(port || nextFreePort());
+  if (!(await isPortFree(finalPort))) throw new HttpError(409, `Otro programa ya está usando el puerto ${finalPort} en esta PC`);
+
+  const server = {
+    id: crypto.randomUUID().slice(0, 8),
+    name: cleanName,
+    type,
+    mcVersion,
+    loaderVersion: loaderVersion || null,
+    port: finalPort,
+    memoryMb: Math.max(512, Number(memoryMb) || 2048),
+    jvmArgs: '',
+    javaPath: null,
+    autoStart: false,
+    autoRestart: true,
+    backupSchedule: { enabled: false, intervalHours: 24, keep: 7, mode: 'mundo' },
+    installState: 'pending',
+    createdAt: new Date().toISOString(),
+    content: [],
+  };
+  db.data.servers.push(server);
+  db.flush();
+  startInstall(server.id);
+  res.status(201).json(view(server));
+});
+
+serversRouter.get('/:id', (req, res) => res.json(view(load(req))));
+
+serversRouter.patch('/:id', async (req, res) => {
+  const server = load(req);
+  const body = req.body || {};
+  const patch = {};
+  if (body.name !== undefined) patch.name = String(body.name).trim().slice(0, 40) || server.name;
+  if (body.memoryMb !== undefined) patch.memoryMb = Math.max(512, Number(body.memoryMb) || server.memoryMb);
+  if (body.jvmArgs !== undefined) patch.jvmArgs = String(body.jvmArgs).slice(0, 1000);
+  if (body.javaPath !== undefined) patch.javaPath = body.javaPath ? String(body.javaPath) : null;
+  if (body.autoStart !== undefined) patch.autoStart = Boolean(body.autoStart);
+  if (body.autoRestart !== undefined) patch.autoRestart = Boolean(body.autoRestart);
+  if (body.backupSchedule !== undefined) {
+    const b = body.backupSchedule;
+    patch.backupSchedule = {
+      enabled: Boolean(b.enabled),
+      intervalHours: Math.max(1, Number(b.intervalHours) || 24),
+      keep: Math.max(1, Number(b.keep) || 7),
+      mode: b.mode === 'completo' ? 'completo' : 'mundo',
+    };
+  }
+  if (body.port !== undefined && Number(body.port) !== Number(server.port)) {
+    if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor para cambiar el puerto');
+    patch.port = await validatePort(body.port, server.id);
+    writeProperties(server.id, { 'server-port': patch.port, 'query.port': patch.port });
+  }
+  updateServer(server.id, patch);
+  bus.emit('servers');
+  res.json(view(server));
+});
+
+serversRouter.delete('/:id', async (req, res) => {
+  const server = load(req);
+  if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor antes de eliminarlo');
+  if (isInstalling(server.id)) throw new HttpError(409, 'Espera a que termine la instalación');
+  fs.rmSync(serverDir(server.id), { recursive: true, force: true });
+  if (req.query.keepBackups !== 'true') fs.rmSync(backupDir(server.id), { recursive: true, force: true });
+  db.data.servers = db.data.servers.filter((s) => s.id !== server.id);
+  db.flush();
+  removeInstance(server.id);
+  bus.emit('servers');
+  res.json({ ok: true });
+});
+
+// --- Encendido / apagado -----------------------------------------------------
+
+for (const action of ['start', 'stop', 'restart', 'kill']) {
+  serversRouter.post(`/:id/${action}`, async (req, res) => {
+    const server = load(req);
+    const inst = instance(server.id);
+    if (action === 'start') await inst.start();
+    else if (action === 'kill') inst.kill();
+    else inst[action]().catch((err) => inst.panelLine(`Error: ${err.message}`)); // stop/restart responden al instante
+    res.json(inst.snapshot());
+  });
+}
+
+serversRouter.post('/:id/command', (req, res) => {
+  const server = load(req);
+  instance(server.id).send(req.body?.command || '');
+  res.json({ ok: true });
+});
+
+serversRouter.get('/:id/console', (req, res) => {
+  res.json({ lines: instance(load(req).id).lines });
+});
+
+/** Reinstala o cambia de versión conservando mundos y configuración. */
+serversRouter.post('/:id/reinstall', (req, res) => {
+  const server = load(req);
+  if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor antes de reinstalar');
+  const { mcVersion, loaderVersion } = req.body || {};
+  updateServer(server.id, {
+    mcVersion: mcVersion || server.mcVersion,
+    loaderVersion: loaderVersion !== undefined ? loaderVersion : server.loaderVersion,
+    javaMajor: null,
+  });
+  startInstall(server.id);
+  res.json(view(server));
+});
+
+serversRouter.get('/:id/disk', async (req, res) => {
+  const server = load(req);
+  res.json({ server: await dirSize(serverDir(server.id)), backups: await dirSize(backupDir(server.id)) });
+});
+
+// --- server.properties -------------------------------------------------------
+
+serversRouter.get('/:id/properties', (req, res) => {
+  res.json(readProperties(load(req).id));
+});
+
+serversRouter.put('/:id/properties', async (req, res) => {
+  const server = load(req);
+  const values = { ...(req.body || {}) };
+  if (values['server-port'] !== undefined && Number(values['server-port']) !== Number(server.port)) {
+    if (isRunning(server.id)) throw new HttpError(409, 'Apaga el servidor para cambiar el puerto');
+    const port = await validatePort(values['server-port'], server.id);
+    updateServer(server.id, { port });
+    values['query.port'] = port;
+  }
+  res.json({ properties: writeProperties(server.id, values), restartRequired: isRunning(server.id) });
+});
+
+// --- Jugadores ---------------------------------------------------------------
+
+serversRouter.get('/:id/players', (req, res) => {
+  res.json(getPlayers(load(req).id));
+});
+
+serversRouter.post('/:id/players', async (req, res) => {
+  const { action, name, reason } = req.body || {};
+  res.json(await playerAction(load(req).id, action, name, reason));
+});
+
+// --- Red ---------------------------------------------------------------------
+
+serversRouter.get('/:id/network/check', async (req, res) => {
+  const server = load(req);
+  const input = String(req.query.host || '').trim();
+  const [host, explicitPort] = (input || (await publicIp()) || '').split(':');
+  if (!host) throw new HttpError(502, 'No se pudo obtener tu IP pública');
+  if (!/^[A-Za-z0-9.-]+$/.test(host)) throw new HttpError(400, 'Dirección inválida');
+  if (explicitPort && !/^\d{1,5}$/.test(explicitPort)) throw new HttpError(400, 'Puerto inválido');
+  // Un dominio sin puerto se prueba tal cual para respetar registros SRV.
+  const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+  const port = explicitPort ? Number(explicitPort) : isIp ? server.port : null;
+  const result = await externalCheck(host, port);
+  res.json({ host, running: isRunning(server.id), ...result, port: result.port || port || server.port });
+});
