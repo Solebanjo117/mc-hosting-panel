@@ -20,7 +20,7 @@ systemRouter.get('/versions/:type', async (req, res) => {
 });
 
 systemRouter.get('/network', async (_req, res) => {
-  res.json({ localIps: localIps(), publicIp: await publicIp(), panelPort: db.data.settings.panelPort });
+  res.json({ localIps: localIps(), publicIp: await publicIp(), panelPort: db.data.settings.panelPort, remoteAccess: db.data.settings.remoteAccess || 'lan' });
 });
 
 systemRouter.get('/java', (_req, res) => {
@@ -34,7 +34,11 @@ systemRouter.post('/java/:major', async (req, res) => {
 });
 
 systemRouter.put('/settings', (req, res) => {
-  const { panelPort, javaPaths } = req.body || {};
+  const { panelPort, javaPaths, remoteAccess } = req.body || {};
+  if (remoteAccess !== undefined) {
+    if (!['local', 'lan', 'any'].includes(remoteAccess)) throw new HttpError(400, 'Opción inválida');
+    db.data.settings.remoteAccess = remoteAccess;
+  }
   if (panelPort !== undefined) {
     const p = Number(panelPort);
     if (!Number.isInteger(p) || p < 1024 || p > 65535) throw new HttpError(400, 'Puerto inválido');

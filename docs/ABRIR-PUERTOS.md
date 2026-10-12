@@ -25,6 +25,7 @@ Manual de **MC Hosting Panel** para que tus servidores de Minecraft Java, que co
 10. [Seguridad](#10-seguridad)
 11. [Solución de problemas](#11-solución-de-problemas)
 12. [Jugadores de Bedrock (Geyser)](#12-jugadores-de-bedrock-geyser)
+13. [Seguridad y ataques DDoS](#13-seguridad-y-ataques-ddos)
 
 ---
 
@@ -771,4 +772,51 @@ Las consolas **no permiten agregar servidores propios**; solo muestran los servi
 | "Outdated client" o "Outdated server" en Bedrock | La versión de Bedrock del jugador es más nueva o más vieja de lo que soporta Geyser | Actualiza Minecraft en el dispositivo, y pulsa **Actualizar Geyser** en la pestaña Bedrock |
 | Pide iniciar sesión con una cuenta de Java | Floodgate no está activado | Activa "Permitir jugadores sin cuenta de Java" y reinicia |
 | "You are not white-listed" para un jugador de Bedrock | Falta agregarlo con el punto | Agrega `.Gamertag` en la pestaña Jugadores con el servidor encendido |
+
+---
+
+## 13. Seguridad y ataques DDoS
+
+### Qué es un DDoS y qué se puede hacer desde casa
+
+Un **DDoS** es cuando muchas máquinas mandan tráfico basura a tu IP al mismo tiempo. Si el tráfico es mayor que tu velocidad de internet, la conexión se satura: nadie puede jugar y en casa tampoco funciona internet. Ese tráfico llena el cable **antes** de llegar a tu PC, así que **ningún programa en tu PC (ni este panel, ni un firewall) puede detenerlo**.
+
+Lo que sí funciona:
+
+| Riesgo | Qué tan común es en servidores pequeños | Qué lo detiene |
+|---|---|---|
+| Bots que entran en masa o ensucian el chat | Común | Lista blanca, `online-mode=true`, protección contra oleadas del panel |
+| Escáneres que buscan servidores abiertos para destruir construcciones | Muy común | Lista blanca, ocultar jugadores, respaldos |
+| Alguien intentando entrar al panel | Raro si no abriste el 8080 | Panel limitado a tu red, contraseña fuerte |
+| DDoS contra tu IP | Raro, pero pasa (sobre todo tras discusiones con alguien) | Ocultar tu IP (playit.gg u otro proxy), cambiar de IP |
+
+### Lo que hace el panel
+
+- **Pestaña Seguridad** de cada servidor: revisa la configuración y arregla con un clic lo más importante (verificación de cuentas, lista blanca, RCON, query, ocultar jugadores, límite de reconexión, respaldos).
+- **Protección contra oleadas de bots:** si una IP se conecta demasiadas veces por minuto, se bloquea por un rato. Si llegan muchas conexiones de muchas IP, el panel activa la **lista blanca de emergencia** y la quita sola cuando pasa el ataque. Tus IP de casa, Tailscale y el túnel de playit nunca se bloquean.
+- **El panel web** solo acepta conexiones de tu PC, tu red y Tailscale (se puede cambiar en Ajustes del panel). Si alguien abre por error el puerto 8080, los de internet ven "Acceso bloqueado". Además bloquea formularios enviados desde otras páginas, limita los intentos de contraseña y guarda un historial de inicios de sesión.
+
+### Esconder tu IP
+
+Quien no conoce tu IP no puede atacar tu internet.
+
+- **playit.gg:** tus amigos se conectan a la dirección de playit, no a tu casa, así que tu IP no aparece. Es lo más sencillo porque ya viene en el panel. Revisa en su sitio qué protección ofrece cada plan.
+- **TCPShield:** proxy con protección DDoS para Minecraft Java. Según su documentación tiene un plan gratuito para Java (Bedrock solo en planes de pago). Pide un dominio propio y un plugin en el servidor, y necesita que el servidor se pueda alcanzar desde internet: **no sirve con CGNAT**. Revisa sus requisitos actuales antes de configurarlo.
+- **No publiques tu IP** en Discord, redes sociales ni listas públicas de servidores. Si quieres un servidor abierto al público, usa un proxy o un hosting con protección DDoS.
+
+### Si te atacan
+
+1. **Pide ayuda a tu compañía** o **cambia de IP**. Muchas líneas de casa (como Totalplay) tienen IP dinámica: apagar el módem un rato, o pedírselo a soporte, puede darte una IP nueva. Si usas DuckDNS, el panel actualiza tu dominio solo y tus amigos no notan el cambio.
+2. Mientras tanto, usa un túnel de playit.gg para que la IP nueva no quede expuesta.
+3. Revisa la pestaña **Seguridad** (actividad reciente) y **Logs** para ver qué pasó.
+
+### Lista corta
+
+- [ ] `online-mode=true` y lista blanca si el servidor es para amigos.
+- [ ] Protección contra oleadas activada.
+- [ ] Respaldos automáticos.
+- [ ] El puerto 8080 **nunca** abierto en el router.
+- [ ] Contraseña larga en el panel; revisa el historial de inicios de sesión de vez en cuando.
+- [ ] Tu IP no publicada; si puedes, usa playit.gg.
+- [ ] Plugins y mods solo de Modrinth, Hangar o sitios conocidos.
 

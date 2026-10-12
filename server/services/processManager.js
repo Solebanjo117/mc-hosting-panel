@@ -9,6 +9,7 @@ import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
 import { analyze } from './crashAnalyzer.js';
+import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
 import { compareVersions } from '../lib/util.js';
 
 const MAX_LINES = 1500;
@@ -99,6 +100,7 @@ class Instance {
 
   /** TPS, inicio de sesión de Xbox (MCXboxBroadcast) y comandos desconocidos. */
   parseExtras(line) {
+    observeConnections(this, line);
     let m = line.match(/TPS from last 1m, 5m, 15m: (?:§.)?\*?([\d.]+)/);
     if (m) {
       this.tps = { value: Math.min(20, Number(m[1])), at: Date.now() };
@@ -379,6 +381,8 @@ setInterval(async () => {
     bus.emit('status', inst.id, inst.snapshot());
   }
 }, 3000).unref();
+
+setInterval(() => tickProtection((id) => instances.get(id)), 20_000).unref();
 
 export async function autoStartServers() {
   for (const server of db.data.servers) {

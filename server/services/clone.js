@@ -55,6 +55,8 @@ export async function cloneServer(id, { name }) {
     playit: { enabled: false },
     lastAutoBackup: null,
     scheduleLog: [],
+    protectionState: null,
+    securityLog: [],
     // Las tareas se copian apagadas para que el clon no reinicie a la misma hora que el original.
     schedules: (src.schedules || []).map((t) => ({ ...t, id: crypto.randomUUID().slice(0, 8), enabled: false, lastRun: null, lastRunKey: null })),
   };

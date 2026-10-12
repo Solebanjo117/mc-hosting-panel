@@ -3,6 +3,7 @@ import { bus } from './lib/bus.js';
 import { COOKIE, verifyToken } from './auth.js';
 import { instance } from './services/processManager.js';
 import { getServer } from './db.js';
+import { isAllowed, sameOriginUpgrade } from './lib/netguard.js';
 
 function parseCookies(header = '') {
   const out = {};
@@ -22,7 +23,7 @@ export function attachWebSocket(httpServer) {
   const wss = new WebSocketServer({ noServer: true });
 
   httpServer.on('upgrade', (req, socket, head) => {
-    if (!req.url.startsWith('/ws')) return socket.destroy();
+    if (!req.url.startsWith('/ws') || !isAllowed(req.socket.remoteAddress) || !sameOriginUpgrade(req)) return socket.destroy();
     if (!verifyToken(parseCookies(req.headers.cookie)[COOKIE])) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
       return socket.destroy();

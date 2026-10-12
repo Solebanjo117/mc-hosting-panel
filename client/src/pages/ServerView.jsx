@@ -14,6 +14,7 @@ import MetricsTab from './server/MetricsTab.jsx';
 import WorldsTab from './server/WorldsTab.jsx';
 import SchedulesTab from './server/SchedulesTab.jsx';
 import LogsTab from './server/LogsTab.jsx';
+import SecurityTab from './server/SecurityTab.jsx';
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -138,6 +139,9 @@ export default function ServerView() {
         <NavLink to={`${base}/bedrock`} className="tab">
           Bedrock
         </NavLink>
+        <NavLink to={`${base}/seguridad`} className="tab">
+          Seguridad
+        </NavLink>
         <NavLink to={`${base}/ajustes`} className="tab">
           Ajustes
         </NavLink>
@@ -154,6 +158,7 @@ export default function ServerView() {
         <Route path="tareas" element={<SchedulesTab server={server} />} />
         <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
         <Route path="logs" element={<LogsTab server={server} />} />
+        <Route path="seguridad" element={<SecurityTab server={server} />} />
         <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
         <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
       </Routes>

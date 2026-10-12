@@ -19,15 +19,19 @@ import './services/metrics.js';
 import './services/scheduler.js';
 import './services/duckdns.js';
 import { attachWebSocket } from './ws.js';
+import { guardHttp, securityHeaders, sameOrigin } from './lib/netguard.js';
 import { autoStartServers, stopAll } from './services/processManager.js';
 import { localIps } from './services/network.js';
 import { startInstall } from './services/installer.js';
 
 const app = express();
 app.disable('x-powered-by');
+app.use(guardHttp);
+app.use(securityHeaders);
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
+app.use('/api', sameOrigin);
 app.use('/api/auth', authRouter);
 app.use('/api', requireAuth);
 app.use('/api/system', systemRouter);

@@ -65,12 +65,24 @@ authRouter.post('/setup', async (req, res) => {
   res.json({ ok: true, username });
 });
 
+function recordLogin(ip, username, ok) {
+  if (!Array.isArray(db.data.loginLog)) db.data.loginLog = [];
+  db.data.loginLog.unshift({ at: new Date().toISOString(), ip: String(ip || '').replace(/^::ffff:/, ''), username: String(username || '').slice(0, 32), ok });
+  db.data.loginLog = db.data.loginLog.slice(0, 40);
+  db.save();
+}
+
+authRouter.get('/log', requireAuth, (_req, res) => {
+  res.json(db.data.loginLog || []);
+});
+
 authRouter.post('/login', async (req, res) => {
   const ip = req.ip;
   checkRate(ip);
   const { username, password } = req.body || {};
   const admin = db.data.admin;
   const ok = admin && username === admin.username && (await bcrypt.compare(String(password || ''), admin.passwordHash));
+  recordLogin(ip, username, Boolean(ok));
   if (!ok) {
     fail(ip);
     throw new HttpError(401, 'Usuario o contraseña incorrectos');

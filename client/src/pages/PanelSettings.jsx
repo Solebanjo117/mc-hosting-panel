@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useAction, useToast } from '../ui.jsx';
 import { DuckDnsSettings, PlayitSettings } from './Integrations.jsx';
+import { formatDate } from '../api.js';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -111,6 +112,8 @@ export default function PanelSettings() {
         </table>
       </section>
 
+      <PanelAccess />
+
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Puerto del panel</h2>
         <p className="muted small">
@@ -135,5 +138,69 @@ export default function PanelSettings() {
         </p>
       )}
     </div>
+  );
+}
+
+const ACCESS = [
+  ['local', 'Solo esta PC', 'Nadie más puede abrir el panel, ni desde tu red.'],
+  ['lan', 'Esta PC, tu red y Tailscale (recomendado)', 'Puedes administrar desde el celular en tu Wi-Fi o desde fuera con Tailscale. Desde internet se rechaza.'],
+  ['any', 'Cualquiera en internet', 'No recomendado: cualquiera que encuentre el panel puede intentar adivinar tu contraseña.'],
+];
+
+function PanelAccess() {
+  const [mode, setMode] = useState(null);
+  const [log, setLog] = useState([]);
+  const [run, busy] = useAction();
+  useEffect(() => {
+    api('/system/network').then((n) => setMode(n.remoteAccess)).catch(() => {});
+    api('/auth/log').then(setLog).catch(() => {});
+  }, []);
+  if (!mode) return null;
+  const failed = log.filter((l) => !l.ok).length;
+  return (
+    <section className="panel stack">
+      <h2 style={{ margin: 0 }}>Quién puede abrir el panel</h2>
+      <div className="stack" style={{ gap: '0.6rem' }} role="radiogroup">
+        {ACCESS.map(([id, label, hint]) => (
+          <label key={id} className="check">
+            <input
+              type="radio"
+              name="access"
+              checked={mode === id}
+              style={{ width: 18, minHeight: 18, height: 18, margin: '2px 0 0' }}
+              onChange={() => run(() => api('/system/settings', { method: 'PUT', body: { remoteAccess: id } }).then(() => setMode(id)), 'Guardado')}
+              disabled={busy}
+            />
+            <span>
+              {label}
+              <span className="faint" style={{ display: 'block' }}>
+                {hint}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <div>
+        <h3 style={{ marginBottom: '0.4rem' }}>Inicios de sesión recientes</h3>
+        {failed > 0 && <p className="note" style={{ marginBottom: '0.5rem' }}>{failed} intento(s) fallido(s). Si no fuiste tú, cambia la contraseña.</p>}
+        {log.length === 0 ? (
+          <p className="faint small">Sin registros todavía.</p>
+        ) : (
+          <table className="table">
+            <tbody>
+              {log.slice(0, 10).map((l, i) => (
+                <tr key={i}>
+                  <td className="muted" style={{ width: 190 }}>
+                    {formatDate(l.at)}
+                  </td>
+                  <td className="mono small">{l.ip}</td>
+                  <td>{l.ok ? 'Correcto' : <span style={{ color: '#f3a59b' }}>Contraseña incorrecta ({l.username || 'sin usuario'})</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </section>
   );
 }

@@ -15,6 +15,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
 - **Mundos:** varios mundos por servidor, crear con semilla y tipo, importar desde .zip, descargar y cambiar entre ellos.
 - **Logs y diagnóstico:** búsqueda en todos los logs (también los antiguos .gz), lectura de crash reports y explicación en español de las causas comunes (falta de memoria, mods que faltan o chocan, Java incorrecto, puerto ocupado…).
+- **Seguridad:** revisión por servidor con arreglos de un clic, protección contra oleadas de bots (bloqueo temporal de IP y lista blanca de emergencia), panel limitado a tu red, historial de inicios de sesión, y una guía sobre DDoS (qué se puede y qué no se puede hacer desde casa).
 - **Clonar servidores** para probar mods o versiones sin arriesgar el original.
 - Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.
@@ -63,6 +64,8 @@ Para mover el panel a otra PC copia la carpeta completa, incluida `data/`.
 
 ## Seguridad
 
+- El panel solo acepta conexiones de esta PC, tu red y Tailscale (configurable en Ajustes). Si alguien abre el 8080 en el router, los de internet ven "Acceso bloqueado".
+- Bloquea peticiones enviadas desde otras páginas (CSRF), manda cabeceras de seguridad y guarda un historial de inicios de sesión.
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
 - La llave de playit (`data/playit/playit.toml`) y el token de DuckDNS se guardan en `data/`; no compartas esa carpeta.
 - La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly`. Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
@@ -108,6 +111,9 @@ server/
     logs.js             lectura y búsqueda de logs y crash reports
     crashAnalyzer.js    explica en español las causas de un crash
     clone.js            copia un servidor con otros puertos
+    security.js         revisión de seguridad y arreglos de un clic
+    floodGuard.js       protección contra oleadas de conexiones
+  lib/netguard.js       quién puede abrir el panel, cabeceras y protección CSRF
 client/                 React + Vite
 docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ```

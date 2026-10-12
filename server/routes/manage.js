@@ -10,6 +10,10 @@ import * as worlds from '../services/worlds.js';
 import * as logs from '../services/logs.js';
 import * as scheduler from '../services/scheduler.js';
 import { getMetrics } from '../services/metrics.js';
+import { audit, applyFix, defaultProtection } from '../services/security.js';
+import { protectionStatus, endLockdown } from '../services/floodGuard.js';
+import { instance } from '../services/processManager.js';
+import { db } from '../db.js';
 
 /** Mundos, logs, tareas programadas y rendimiento de un servidor. */
 export const manageRouter = express.Router({ mergeParams: true });
@@ -95,3 +99,38 @@ manageRouter.post('/schedules/:taskId/run', async (req, res) => {
 // --- Rendimiento ---------------------------------------------------------------
 
 manageRouter.get('/metrics', (req, res) => res.json(getMetrics(req.params.id, String(req.query.range || '6h'))));
+
+// --- Seguridad -----------------------------------------------------------------
+
+function securityView(id) {
+  const server = getServer(id);
+  return { ...audit(id), protection: { ...protectionStatus(server), settings: { ...defaultProtection(), ...(server.protection || {}) } } };
+}
+
+manageRouter.get('/security', (req, res) => res.json(securityView(req.params.id)));
+
+manageRouter.post('/security/fix', (req, res) => {
+  const restartRequired = applyFix(req.params.id, String(req.body?.fix || ''));
+  res.json({ ...securityView(req.params.id), restartRequired });
+});
+
+manageRouter.put('/security/protection', (req, res) => {
+  const server = getServer(req.params.id);
+  const b = req.body || {};
+  const clamp = (v, min, max, def) => Math.min(max, Math.max(min, Math.round(Number(v)) || def));
+  const d = defaultProtection();
+  server.protection = {
+    enabled: Boolean(b.enabled),
+    perIpPerMinute: clamp(b.perIpPerMinute, 3, 100, d.perIpPerMinute),
+    globalPerMinute: clamp(b.globalPerMinute, 5, 500, d.globalPerMinute),
+    banMinutes: clamp(b.banMinutes, 1, 24 * 60, d.banMinutes),
+    lockdownMinutes: clamp(b.lockdownMinutes, 1, 24 * 60, d.lockdownMinutes),
+  };
+  db.flush();
+  res.json(securityView(req.params.id));
+});
+
+manageRouter.post('/security/end-lockdown', (req, res) => {
+  endLockdown(req.params.id, (id) => instance(id));
+  res.json(securityView(req.params.id));
+});

@@ -1333,3 +1333,64 @@ label.check input {
   width: max-content;
   max-width: 100%;
 }
+
+/* ---------- Seguridad ---------- */
+
+.findings {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sec-item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: start;
+  padding: 0.8rem 0.9rem;
+  background: var(--slate);
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--r-panel);
+}
+
+.sec-item h3 {
+  margin-bottom: 0.2rem;
+}
+
+.sec-level {
+  font-size: var(--step--1);
+  font-weight: 600;
+  padding-top: 1px;
+}
+
+.lvl-critical {
+  border-left-color: var(--redstone);
+}
+.lvl-critical .sec-level {
+  color: #f3a59b;
+}
+.lvl-warning {
+  border-left-color: var(--gold);
+}
+.lvl-warning .sec-level {
+  color: var(--gold);
+}
+.lvl-info {
+  border-left-color: var(--lapis);
+}
+.lvl-info .sec-level {
+  color: #a9bdf2;
+}
+
+.sec-ok {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--sand-dim);
+  columns: 2 280px;
+}
+
+@media (max-width: 640px) {
+  .sec-item {
+    grid-template-columns: 1fr;
+  }
+}
