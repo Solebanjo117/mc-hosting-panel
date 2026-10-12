@@ -244,3 +244,11 @@ serversRouter.post('/:id/playit', async (req, res) => {
   bus.emit('servers');
   res.json(result);
 });
+
+/** Usa túneles que el usuario creó a mano en playit.gg. */
+serversRouter.post('/:id/playit/link', async (req, res) => {
+  const server = load(req);
+  const result = await playit.linkTunnels(server.id, { java: req.body?.java || null, bedrock: req.body?.bedrock || null });
+  bus.emit('servers');
+  res.json(result);
+});

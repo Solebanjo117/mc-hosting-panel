@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, qs } from '../../api.js';
-import { CopyButton, useAction, useToast } from '../../ui.jsx';
+import { CopyButton, Modal, useAction, useToast } from '../../ui.jsx';
 import { useLive } from '../../live.jsx';
 
 function Address({ label, text }) {
@@ -30,6 +30,8 @@ export default function NetworkTab({ server, state }) {
   const [duck, setDuck] = useState(null);
   const [tunnels, setTunnels] = useState(null);
   const [tunnelError, setTunnelError] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [linking, setLinking] = useState(false);
   const [run, busy] = useAction();
   const { playit: livePlayit } = useLive();
 
@@ -54,6 +56,7 @@ export default function NetworkTab({ server, state }) {
   }, [server.id, server.playit?.enabled, server.bedrock?.enabled, livePlayit?.status]);
 
   const duckHost = duck?.enabled && duck.hosts[0];
+  const linkedOnly = server.playit?.enabled && server.playit.owned && !Object.entries(server.playit.owned).some(([k, v]) => v && server.playit[`${k}TunnelId`]);
 
   const lan = net?.localIps.find((i) => !i.virtual) || net?.localIps[0];
   const firewallCmd = [fwRule(server.port, 'TCP'), bedrock && fwRule(bedrock, 'UDP')].filter(Boolean).join(' & ');
@@ -126,6 +129,14 @@ export default function NetworkTab({ server, state }) {
           Puede agregar un poco de ping, porque el tráfico pasa por un servidor de playit.
         </p>
         {tunnelError && <div className="error-box">{tunnelError}</div>}
+        {createError && (
+          <div className="error-box">
+            {createError}
+            <div className="small" style={{ marginTop: '0.4rem' }}>
+              Puedes crear el túnel tú mismo en playit.gg y vincularlo con “{server.playit?.enabled ? 'Cambiar túnel' : 'Usar un túnel que ya creé'}”.
+            </div>
+          </div>
+        )}
         {tunnels && !tunnels.claimed ? (
           <p className="small">
             Primero vincula tu cuenta de playit.gg en <Link to="/ajustes">Ajustes del panel</Link> (es gratis y se hace una sola vez).
@@ -146,26 +157,74 @@ export default function NetworkTab({ server, state }) {
               <button disabled={busy} onClick={() => run(() => api(`/servers/${server.id}/playit`, { method: 'POST', body: {} }).then(setTunnels), 'Túneles revisados')}>
                 Reparar túneles
               </button>
+              <button disabled={busy} onClick={() => setLinking(true)}>
+                Cambiar túnel
+              </button>
               <button
                 className="btn-stop"
                 disabled={busy}
-                onClick={() => run(() => api(`/servers/${server.id}/playit`, { method: 'POST', body: { enabled: false } }).then(setTunnels), 'Túneles borrados')}
+                onClick={() =>
+                  run(
+                    () => api(`/servers/${server.id}/playit`, { method: 'POST', body: { enabled: false } }).then(setTunnels),
+                    linkedOnly ? 'Túnel desvinculado (sigue en tu cuenta de playit.gg)' : 'Túneles quitados'
+                  )
+                }
               >
-                Quitar túneles
+                {linkedOnly ? 'Desvincular túnel' : 'Quitar túneles'}
               </button>
             </div>
+            {!linkedOnly && <p className="faint small">"Quitar túneles" borra de playit.gg los túneles que creó el panel. Los que vinculaste tú solo se desvinculan.</p>}
           </>
         ) : (
           tunnels && (
-            <div className="row">
-              <button className="btn-go" disabled={busy} onClick={() => run(() => api(`/servers/${server.id}/playit`, { method: 'POST', body: {} }).then(setTunnels), 'Túneles creados')}>
-                Crear túnel{bedrock ? 'es (Java y Bedrock)' : ''}
-              </button>
-              <span className="faint small">El plan gratuito de playit permite pocos túneles; usa uno por servidor que quieras compartir.</span>
-            </div>
+            <>
+              <div className="row">
+                <button
+                  className="btn-go"
+                  disabled={busy}
+                  onClick={() =>
+                    run(async () => {
+                      setCreateError('');
+                      try {
+                        const r = await api(`/servers/${server.id}/playit`, { method: 'POST', body: {} });
+                        setTunnels(r);
+                        r.warnings?.forEach((w) => setCreateError(w));
+                      } catch (err) {
+                        setCreateError(err.message);
+                        throw err;
+                      }
+                    }, 'Túneles listos')
+                  }
+                >
+                  Crear túnel{bedrock ? 'es (Java y Bedrock)' : ''}
+                </button>
+                <button disabled={busy} onClick={() => setLinking(true)}>
+                  Usar un túnel que ya creé
+                </button>
+              </div>
+              <span className="faint small">
+                El plan gratuito de playit permite pocos túneles; usa uno por servidor que quieras compartir. Si ya tienes un túnel en playit.gg que apunta al
+                puerto {server.port}, “Crear túnel” lo detecta y lo usa en vez de crear otro.
+              </span>
+            </>
           )
         )}
       </section>
+
+      {linking && (
+        <LinkTunnels
+          server={server}
+          bedrockPort={bedrock}
+          agentId={livePlayit?.agentId || tunnels?.agentId}
+          onClose={() => setLinking(false)}
+          onDone={(r) => {
+            setTunnels(r);
+            setCreateError('');
+            setLinking(false);
+            r.warnings?.forEach((w) => toast(w, 'error'));
+          }}
+        />
+      )}
 
       <section className="panel stack" style={{ gap: '0.9rem' }}>
         <h2 style={{ margin: 0 }}>Pasos para abrir {bedrock ? 'los puertos' : `el puerto ${server.port}`}</h2>
@@ -281,5 +340,162 @@ function TunnelRow({ label, tunnel, bedrock }) {
         text={bedrock ? host : tunnel.address}
       />
     </div>
+  );
+}
+
+const typeLabel = (t) =>
+  t.type === 'minecraft-java' ? 'Minecraft Java' : t.type === 'minecraft-bedrock' ? 'Minecraft Bedrock' : t.typeLabel || (t.portType ? t.portType.toUpperCase() : 'Otro');
+
+function fits(t, kind) {
+  if (t.type === 'minecraft-java') return kind === 'java';
+  if (t.type === 'minecraft-bedrock') return kind === 'bedrock';
+  if (!t.type && t.portType) return t.portType === 'both' || t.portType === (kind === 'java' ? 'tcp' : 'udp');
+  return !t.type;
+}
+
+function LinkTunnels({ server, bedrockPort, agentId, onClose, onDone }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [java, setJava] = useState(server.playit?.javaTunnelId || '');
+  const [bed, setBed] = useState(server.playit?.bedrockTunnelId || '');
+  const [run, busy] = useAction();
+
+  const load = () => {
+    setError('');
+    api('/integrations/playit/tunnels')
+      .then((r) => {
+        setData(r);
+        const free = (kind, port) => r.tunnels.find((t) => !t.usedBy && fits(t, kind) && t.localPort === port);
+        if (!server.playit?.javaTunnelId) setJava((v) => v || free('java', server.port)?.id || '');
+        if (bedrockPort && !server.playit?.bedrockTunnelId) setBed((v) => v || free('bedrock', bedrockPort)?.id || '');
+      })
+      .catch((err) => setError(err.message));
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(load, []);
+
+  const options = (kind) => (data?.tunnels || []).filter((t) => fits(t, kind) && (!t.usedBy || t.usedBy === server.name));
+  const shown = data?.tunnels.find((t) => t.id === java);
+
+  return (
+    <Modal title="Usar un túnel de playit.gg" onClose={onClose} wide>
+      <p className="muted small">
+        Crea el túnel en <a href="https://playit.gg/account/setup/new-tunnel" target="_blank" rel="noreferrer">playit.gg → New Tunnel</a> con estos datos y
+        luego pulsa <strong>Actualizar lista</strong>:
+      </p>
+      <ol className="small stack" style={{ gap: '0.3rem', margin: 0, paddingLeft: '1.2rem' }}>
+        <li>
+          <strong>Name your tunnel:</strong> el que quieras, por ejemplo <span className="mono">{server.name.replace(/[^\x20-\x7e]/g, '') || 'Minecraft'}</span>.
+        </li>
+        <li>
+          <strong>Tunnel Type:</strong> Minecraft Java{bedrockPort ? ' (y otro túnel Minecraft Bedrock para celular y consola)' : ''}.
+        </li>
+        <li>
+          <strong>Public Endpoint:</strong> deja la opción gratuita que viene por defecto.
+        </li>
+        <li>
+          <strong>Assign to Agent:</strong> el agente del panel
+          {agentId && (
+            <>
+              {' '}
+              (su ID empieza con <span className="mono">{agentId.slice(0, 8)}</span>)
+            </>
+          )}
+          . Local Address <span className="mono">127.0.0.1</span>, puerto <span className="mono">{server.port}</span>
+          {bedrockPort ? (
+            <>
+              {' '}
+              (Bedrock: <span className="mono">{bedrockPort}</span>)
+            </>
+          ) : null}
+          .
+        </li>
+      </ol>
+
+      {error && <div className="error-box">{error}</div>}
+      {!data && !error && <p className="muted">Buscando tus túneles…</p>}
+      {data && data.tunnels.length === 0 && (
+        <p className="note">
+          El agente del panel todavía no tiene túneles. Si ya creaste uno, revisa que en “Assign to Agent” hayas elegido el agente del panel y no otro.
+        </p>
+      )}
+      {data && data.tunnels.length > 0 && (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Túnel</th>
+                <th>Tipo</th>
+                <th>Dirección</th>
+                <th>Puerto local</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.tunnels.map((t) => (
+                <tr key={t.id}>
+                  <td>
+                    {t.name || <span className="faint">Sin nombre</span>}
+                    {t.usedBy && <span className="faint small"> · lo usa {t.usedBy}</span>}
+                  </td>
+                  <td className="muted small">{typeLabel(t)}</td>
+                  <td className="mono small">{t.address || (t.pending ? `preparando${t.status ? ` (${t.status})` : ''}…` : '—')}</td>
+                  <td className="mono small">{t.localPort ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {data && (
+        <div className="grid-2">
+          <label className="field">
+            <span>Túnel para Java (puerto {server.port})</span>
+            <select value={java} onChange={(e) => setJava(e.target.value)}>
+              <option value="">Ninguno</option>
+              {options('java').map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name || t.id.slice(0, 8)} {t.address ? `— ${t.address}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          {bedrockPort && (
+            <label className="field">
+              <span>Túnel para Bedrock (puerto {bedrockPort})</span>
+              <select value={bed} onChange={(e) => setBed(e.target.value)}>
+                <option value="">Ninguno</option>
+                {options('bedrock').map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name || t.id.slice(0, 8)} {t.address ? `— ${t.address}` : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+      )}
+      {shown?.localPort && shown.localPort !== server.port && (
+        <p className="note">
+          Ese túnel apunta al puerto {shown.localPort} y el servidor usa el {server.port}. El panel intentará corregirlo; si no puede, cámbialo en playit.gg.
+        </p>
+      )}
+
+      <div className="row" style={{ justifyContent: 'flex-end' }}>
+        <button onClick={load} disabled={busy}>
+          Actualizar lista
+        </button>
+        <button onClick={onClose}>Cancelar</button>
+        <button
+          className="btn-go"
+          disabled={busy || (!java && !bed)}
+          onClick={() =>
+            run(async () => onDone(await api(`/servers/${server.id}/playit/link`, { method: 'POST', body: { java: java || null, bedrock: bed || null } })), 'Túnel vinculado')
+          }
+        >
+          Vincular
+        </button>
+      </div>
+    </Modal>
   );
 }

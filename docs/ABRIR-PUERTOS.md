@@ -562,6 +562,8 @@ Si tienes CGNAT, tu módem está bloqueado o no quieres abrir puertos, estas opc
 ### 8.1 playit.gg (túnel gratuito)
 
 > **El panel ya lo hace por ti:** en **Ajustes del panel > Túneles de playit.gg** pulsa "Vincular con mi cuenta de playit.gg" y acepta en el sitio. Luego, en la pestaña **Conexión** de cada servidor, pulsa "Crear túnel": el panel descarga el agente oficial, lo mantiene encendido y te muestra la dirección para tus amigos (Java y, si activaste Bedrock, también Bedrock). Los pasos manuales de abajo solo hacen falta si prefieres instalar playit por tu cuenta.
+>
+> **Si "Crear túnel" falla o prefieres crearlo tú:** en playit.gg ve a **Setup > New Tunnel**. Ponle nombre, elige **Minecraft Java** como tipo, deja el **Public Endpoint** gratuito y en **Assign to Agent** elige el agente del panel con Local Address `127.0.0.1` y el puerto del servidor (por ejemplo `25565`). Luego, en la pestaña **Conexión**, pulsa **"Usar un túnel que ya creé"** y elígelo. Además, "Crear túnel" usa solo cualquier túnel libre que ya apunte al puerto del servidor en vez de crear otro. Al quitar un túnel que vinculaste tú, el panel solo lo desvincula y no lo borra de tu cuenta.
 
 
 playit.gg crea un túnel desde tu PC hacia sus servidores y te da una dirección pública. Tus amigos se conectan a esa dirección y el tráfico llega a tu PC.

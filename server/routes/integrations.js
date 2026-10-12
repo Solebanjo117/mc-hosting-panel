@@ -19,10 +19,7 @@ integrationsRouter.post('/playit/claim', (_req, res) => res.json(playit.startCla
 integrationsRouter.post('/playit/enabled', async (req, res) => res.json(await playit.setEnabled(Boolean(req.body?.enabled))));
 integrationsRouter.post('/playit/reinstall', async (_req, res) => res.json(await playit.installAgent()));
 integrationsRouter.post('/playit/unlink', async (_req, res) => res.json(await playit.unlink()));
-integrationsRouter.get('/playit/tunnels', async (_req, res) => {
-  const { tunnels, notices } = await playit.listTunnels();
-  res.json({ tunnels: [...tunnels.values()], notices });
-});
+integrationsRouter.get('/playit/tunnels', async (_req, res) => res.json(await playit.agentTunnels()));
 
 // --- DuckDNS -------------------------------------------------------------------
 
