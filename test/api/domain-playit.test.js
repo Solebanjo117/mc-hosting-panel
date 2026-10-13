@@ -97,10 +97,14 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       pl().createError = null;
       await c.ok('POST', `/api/servers/${s.id}/bedrock/enable`, { port: await freeUdpPort() });
       pl().createError = { status: 'error', data: { type: 'validation', message: 'PortAllocationFailed' } };
-      const b = await c.ok('POST', `/api/servers/${s.id}/playit`, {});
-      assert.match(b.warnings[0], /No se pudo crear el túnel Bedrock: playit.gg no aceptó la petición: PortAllocationFailed/);
+      let b;
+      try {
+        b = await c.ok('POST', `/api/servers/${s.id}/playit`, {});
+      } finally {
+        pl().createError = null; // que un fallo aquí no arrastre a las demás pruebas
+      }
+      assert.ok(b.warnings.some((w) => /No se pudo crear el túnel Bedrock: playit.gg no aceptó la petición: PortAllocationFailed/.test(w)), b.warnings.join(' | '));
       assert.ok(b.java && !b.bedrock);
-      pl().createError = null;
       const ok = await c.ok('POST', `/api/servers/${s.id}/playit`, {});
       assert.equal(ok.bedrock.type, 'minecraft-bedrock');
     });
