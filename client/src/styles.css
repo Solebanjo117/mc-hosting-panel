@@ -525,6 +525,7 @@ label.check input {
 }
 
 .tabs {
+  position: relative;
   display: flex;
   gap: 0.2rem;
   border-bottom: 1px solid var(--line);
@@ -534,10 +535,10 @@ label.check input {
 }
 
 .tab {
-  padding: 0.6rem 0.85rem;
+  padding: 0.6rem 0.95rem;
   color: var(--sand-dim);
   text-decoration: none;
-  font-size: var(--step--1);
+  font-size: var(--step-0);
   font-weight: 500;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -551,6 +552,40 @@ label.check input {
 .tab.active {
   color: var(--sand);
   border-bottom-color: var(--prismarine);
+}
+
+.tabs:has(+ .subtabs) {
+  margin-bottom: 0.9rem;
+}
+
+.subtabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.subtab {
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--sand-dim);
+  text-decoration: none;
+  font-size: var(--step--1);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.subtab:hover {
+  color: var(--sand);
+  border-color: var(--slate-3);
+}
+
+.subtab.active {
+  color: var(--sand);
+  background: var(--slate-3);
+  border-color: var(--prismarine);
 }
 
 @media (max-width: 640px) {

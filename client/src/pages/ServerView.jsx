@@ -1,4 +1,5 @@
-import { NavLink, Route, Routes, useParams } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
 import { Progress, Status, useAction } from '../ui.jsx';
@@ -20,6 +21,60 @@ import ActivityTab from './server/ActivityTab.jsx';
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
+/**
+ * Pestañas agrupadas: 7 secciones arriba y, dentro de cada una, sus partes.
+ * Las rutas no cambian, así que los enlaces viejos siguen funcionando.
+ */
+function sections(contentLabel) {
+  return [
+    { id: 'consola', label: 'Consola', items: [{ path: '', label: 'Consola' }] },
+    {
+      id: 'jugadores',
+      label: 'Jugadores',
+      items: [
+        { path: 'jugadores', label: 'Lista y permisos' },
+        { path: 'actividad', label: 'Actividad y ranking' },
+      ],
+    },
+    { id: 'contenido', label: contentLabel, items: [{ path: 'contenido', label: contentLabel }] },
+    {
+      id: 'mundo',
+      label: 'Mundo',
+      items: [
+        { path: 'mundos', label: 'Mundos' },
+        { path: 'mapa', label: 'Mapa' },
+        { path: 'respaldos', label: 'Respaldos' },
+        { path: 'archivos', label: 'Archivos' },
+      ],
+    },
+    {
+      id: 'conexion',
+      label: 'Conexión',
+      items: [
+        { path: 'conexion', label: 'Internet y dominio' },
+        { path: 'bedrock', label: 'Bedrock (celular y consolas)' },
+      ],
+    },
+    {
+      id: 'estado',
+      label: 'Estado',
+      items: [
+        { path: 'seguridad', label: 'Revisión' },
+        { path: 'rendimiento', label: 'Rendimiento' },
+        { path: 'logs', label: 'Logs' },
+      ],
+    },
+    {
+      id: 'ajustes',
+      label: 'Ajustes',
+      items: [
+        { path: 'ajustes', label: 'General' },
+        { path: 'tareas', label: 'Tareas programadas' },
+      ],
+    },
+  ];
+}
+
 export default function ServerView() {
   const { id } = useParams();
   const { servers, runtime, installs, loaded } = useLive();
@@ -27,6 +82,7 @@ export default function ServerView() {
   const rt = runtime[id];
   const state = serverState(server, rt);
   const [run, busy] = useAction();
+  const location = useLocation();
 
   if (!server) {
     return <div className="page">{loaded ? <p className="muted">Este servidor no existe o fue eliminado.</p> : null}</div>;
@@ -107,53 +163,7 @@ export default function ServerView() {
         </div>
       )}
 
-      <nav className="tabs" aria-label="Secciones del servidor">
-        <NavLink end to={base} className="tab">
-          Consola
-        </NavLink>
-        <NavLink to={`${base}/contenido`} className="tab">
-          {contentLabel}
-        </NavLink>
-        <NavLink to={`${base}/jugadores`} className="tab">
-          Jugadores
-        </NavLink>
-        <NavLink to={`${base}/actividad`} className="tab">
-          Actividad
-        </NavLink>
-        <NavLink to={`${base}/archivos`} className="tab">
-          Archivos
-        </NavLink>
-        <NavLink to={`${base}/mundos`} className="tab">
-          Mundos
-        </NavLink>
-        <NavLink to={`${base}/mapa`} className="tab">
-          Mapa
-        </NavLink>
-        <NavLink to={`${base}/respaldos`} className="tab">
-          Respaldos
-        </NavLink>
-        <NavLink to={`${base}/tareas`} className="tab">
-          Tareas
-        </NavLink>
-        <NavLink to={`${base}/rendimiento`} className="tab">
-          Rendimiento
-        </NavLink>
-        <NavLink to={`${base}/logs`} className="tab">
-          Logs
-        </NavLink>
-        <NavLink to={`${base}/conexion`} className="tab">
-          Conexión
-        </NavLink>
-        <NavLink to={`${base}/bedrock`} className="tab">
-          Bedrock
-        </NavLink>
-        <NavLink to={`${base}/seguridad`} className="tab">
-          Revisión
-        </NavLink>
-        <NavLink to={`${base}/ajustes`} className="tab">
-          Ajustes
-        </NavLink>
-      </nav>
+      <ServerNav base={base} groups={sections(contentLabel)} pathname={location.pathname} />
 
       <Routes>
         <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
@@ -173,5 +183,37 @@ export default function ServerView() {
         <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
       </Routes>
     </div>
+  );
+}
+
+function ServerNav({ base, groups, pathname }) {
+  const sub = pathname.slice(base.length).replace(/^\//, '').split('/')[0];
+  const current = groups.find((g) => g.items.some((i) => i.path === sub)) || groups[0];
+  const navRef = useRef(null);
+  // En el celular las secciones se desplazan de lado: deja visible la que está abierta.
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector('.tab.active');
+    if (nav && active) nav.scrollLeft = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+  }, [current.id]);
+  return (
+    <>
+      <nav className="tabs" aria-label="Secciones del servidor" ref={navRef}>
+        {groups.map((g) => (
+          <Link key={g.id} to={g.items[0].path ? `${base}/${g.items[0].path}` : base} className={`tab${g === current ? ' active' : ''}`} aria-current={g === current ? 'page' : undefined}>
+            {g.label}
+          </Link>
+        ))}
+      </nav>
+      {current.items.length > 1 && (
+        <nav className="subtabs" aria-label={current.label}>
+          {current.items.map((i) => (
+            <NavLink key={i.path} to={`${base}/${i.path}`} className={({ isActive }) => `subtab${isActive ? ' active' : ''}`}>
+              {i.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
+    </>
   );
 }
