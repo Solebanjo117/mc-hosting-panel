@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
 import ModpackSection from './ModpackSection.jsx';
+import { useLive, serverState } from '../../live.jsx';
 
 /** "hace 3 días", "hace 2 meses"… */
 function ago(iso) {
@@ -33,12 +34,34 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 });
 const renderBody = (md) => DOMPurify.sanitize(marked.parse(md || ''), { FORBID_TAGS: ['style', 'form', 'input', 'iframe'], FORBID_ATTR: ['style'] });
 
+/** Ruta de la API de contenido; kind = 'datapack' trabaja con los datapacks del mundo. */
+const curl = (server, kind, path, params = {}) => {
+  const q = qs({ ...params, kind });
+  return `/servers/${server.id}/content/${path}${q ? `?${q}` : ''}`;
+};
+
 const SOURCE_LABEL = { modrinth: 'Modrinth', hangar: 'Hangar (PaperMC)', curseforge: 'CurseForge' };
 const PAGE = 20;
 
-export default function ContentTab({ server, label }) {
+export default function ContentTab({ server, label, kind = null }) {
   const [view, setView] = useState('explorar');
   const [installedVersion, setInstalledVersion] = useState(0);
+  const datapacks = kind === 'datapack' || server.type === 'vanilla';
+  const apiKind = kind === 'datapack' ? 'datapack' : null;
+  const { runtime } = useLive();
+  const running = serverState(server, runtime[server.id]) === 'running';
+  // Cambios de datapacks hechos con el servidor encendido que todavía no se aplican.
+  const [pending, setPending] = useState(null); // { worldgen: bool }
+  useEffect(() => {
+    if (!running) setPending(null);
+  }, [running]);
+  const markPending = (info = {}) => {
+    if (datapacks && running) setPending((p) => ({ worldgen: Boolean(p?.worldgen || info.worldgen) }));
+  };
+  const changed = (info) => {
+    setInstalledVersion((n) => n + 1);
+    markPending(info);
+  };
 
   if (server.installState !== 'ready') {
     return <p className="muted">Podrás instalar {label.toLowerCase()} cuando termine la instalación del servidor.</p>;
@@ -46,7 +69,8 @@ export default function ContentTab({ server, label }) {
 
   return (
     <div className="stack" style={{ gap: '1.25rem' }}>
-      <ModpackSection server={server} />
+      {!datapacks && <ModpackSection server={server} />}
+      {datapacks && <DatapackNotes server={server} pending={pending} onApplied={() => setPending(null)} />}
       <div className="row">
         <div className="segmented" role="tablist">
           <button className={view === 'explorar' ? 'on' : ''} onClick={() => setView('explorar')} role="tab" aria-selected={view === 'explorar'}>
@@ -57,20 +81,67 @@ export default function ContentTab({ server, label }) {
           </button>
         </div>
         <span className="muted small grow">
-          Solo se muestran {label.toLowerCase()} compatibles con {server.type === 'vanilla' ? 'Minecraft' : server.type} {server.mcVersion}.
-          {server.type !== 'vanilla' && ' Reinicia el servidor después de instalar.'}
+          Solo se muestran {label.toLowerCase()} compatibles con {server.type === 'vanilla' || datapacks ? 'Minecraft' : server.type} {server.mcVersion}.
+          {!datapacks && server.type !== 'vanilla' && ' Reinicia el servidor después de instalar.'}
         </span>
       </div>
       {view === 'explorar' ? (
-        <Explore server={server} label={label} onInstalled={() => setInstalledVersion((n) => n + 1)} />
+        <Explore server={server} label={label} kind={apiKind} onInstalled={changed} />
       ) : (
-        <Installed server={server} label={label} key={installedVersion} />
+        <Installed server={server} label={label} kind={apiKind} onChanged={markPending} key={installedVersion} />
       )}
     </div>
   );
 }
 
-function Explore({ server, label, onInstalled }) {
+/** Para datapacks: en qué mundo van, cómo se aplican y el botón para aplicarlos sin reiniciar. */
+function DatapackNotes({ server, pending, onApplied }) {
+  const [world, setWorld] = useState(null);
+  const [run, busy] = useAction();
+  useEffect(() => {
+    api(`/servers/${server.id}/properties`)
+      .then((p) => setWorld(p['level-name'] || 'world'))
+      .catch(() => setWorld('world'));
+  }, [server.id]);
+  return (
+    <div className="stack" style={{ gap: '0.6rem' }}>
+      <p className="muted small" style={{ margin: 0, maxWidth: '80ch' }}>
+        Los datapacks van en el mundo activo{world && (
+          <>
+            {' '}
+            (<span className="mono">{world}</span>)
+          </>
+        )}
+        . Si creas otro mundo en <Link to={`/servidor/${server.id}/mundos`}>Mundos</Link>, puedes copiarle estos datapacks. Los que cambian la generación del mundo (biomas,
+        estructuras) solo afectan las zonas que todavía no se exploran.
+      </p>
+      {pending && (
+        <div className="note row" style={{ margin: 0, alignItems: 'center' }} role="status">
+          <span className="grow">
+            {pending.worldgen
+              ? 'Hay cambios sin aplicar. Alguno cambia la generación del mundo: eso necesita reiniciar el servidor.'
+              : 'Hay cambios sin aplicar. Puedes aplicarlos ahora sin reiniciar.'}
+          </span>
+          <button
+            className="btn-sm btn-go"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                const r = await api(`/servers/${server.id}/content/reload`, { method: 'POST' });
+                onApplied();
+                return r;
+              }, 'Datapacks aplicados (/reload)')
+            }
+          >
+            {busy ? 'Aplicando…' : 'Aplicar ahora'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Explore({ server, label, kind, onInstalled }) {
   const [source, setSource] = useState('modrinth');
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -92,27 +163,27 @@ function Explore({ server, label, onInstalled }) {
   useEffect(() => setPage(0), [debounced, source, sort]);
 
   const loadInstalled = useCallback(() => {
-    api(`/servers/${server.id}/content/installed`)
+    api(curl(server, kind, 'installed'))
       .then((r) => setInstalled(new Set(r.items.map((i) => i.projectId).filter(Boolean))))
       .catch(() => {});
-  }, [server.id]);
+  }, [server.id, kind]);
   useEffect(loadInstalled, [loadInstalled]);
 
   useEffect(() => {
     const ctrl = new AbortController();
     setLoading(true);
     setError('');
-    api(`/servers/${server.id}/content/search?${qs({ source, query: debounced, sort, offset: page * PAGE, limit: PAGE })}`, { signal: ctrl.signal })
+    api(curl(server, kind, 'search', { source, query: debounced, sort, offset: page * PAGE, limit: PAGE }), { signal: ctrl.signal })
       .then(setData)
       .catch((err) => err.name !== 'AbortError' && setError(err.message))
       .finally(() => setLoading(false));
     return () => ctrl.abort();
-  }, [server.id, source, debounced, sort, page]);
+  }, [server.id, kind, source, debounced, sort, page]);
 
   async function install(item, versionId) {
     setInstalling(item.id);
     try {
-      const r = await api(`/servers/${server.id}/content/install`, {
+      const r = await api(curl(server, kind, 'install'), {
         method: 'POST',
         body: { source: item.source, projectId: item.id, versionId, title: item.title, icon: item.icon },
       });
@@ -121,8 +192,10 @@ function Explore({ server, label, onInstalled }) {
       const failed = r.installed.filter((i) => i.error);
       toast(`Instalado ${main.title} ${main.version}${deps.length ? ` y ${deps.length} dependencia(s)` : ''}`);
       for (const f of failed) toast(f.error, 'error');
+      const worldgen = r.installed.some((i) => i.worldgen);
+      if (worldgen) toast(`${main.title} cambia la generación del mundo: se aplica al reiniciar y solo en zonas nuevas.`);
       loadInstalled();
-      onInstalled();
+      onInstalled({ worldgen });
     } catch (err) {
       toast(err.message, 'error');
     } finally {
@@ -211,6 +284,7 @@ function Explore({ server, label, onInstalled }) {
                 {item.updated && <span title={formatDate(item.updated)}>Actualizado {ago(item.updated)}</span>}
               </div>
               {item.clientOnly && <div className="small" style={{ color: 'var(--gold)' }}>Solo funciona en el cliente, no en el servidor</div>}
+              {item.worldgen && kind === 'datapack' && <div className="small" style={{ color: 'var(--gold)' }}>Cambia la generación del mundo: mejor antes de explorar</div>}
               {item.blocked && <div className="small" style={{ color: 'var(--gold)' }}>El autor solo permite bajarlo desde CurseForge: se instala a mano</div>}
             </div>
             <footer className="mcard-foot">
@@ -259,6 +333,7 @@ function Explore({ server, label, onInstalled }) {
       {picker && (
         <VersionPicker
           server={server}
+          kind={kind}
           item={picker}
           onClose={() => setPicker(null)}
           onPick={(versionId) => {
@@ -271,14 +346,14 @@ function Explore({ server, label, onInstalled }) {
   );
 }
 
-function VersionPicker({ server, item, onClose, onPick }) {
+function VersionPicker({ server, item, kind, onClose, onPick }) {
   const [versions, setVersions] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
-    api(`/servers/${server.id}/content/versions?${qs({ source: item.source, projectId: item.id })}`)
+    api(curl(server, kind, 'versions', { source: item.source, projectId: item.id }))
       .then(setVersions)
       .catch((err) => setError(err.message));
-  }, [server.id, item]);
+  }, [server.id, item, kind]);
 
   return (
     <Modal title={`Versiones de ${item.title}`} onClose={onClose} wide>
@@ -327,12 +402,12 @@ function VersionPicker({ server, item, onClose, onPick }) {
   );
 }
 
-function Installed({ server, label }) {
+function Installed({ server, label, kind, onChanged }) {
   const [data, setData] = useState(null);
   const [updates, setUpdates] = useState(null);
   const [run, busy] = useAction();
 
-  const load = useCallback(() => api(`/servers/${server.id}/content/installed`).then(setData), [server.id]);
+  const load = useCallback(() => api(curl(server, kind, 'installed')).then(setData), [server.id, kind]);
   useEffect(() => {
     load().catch(() => {});
   }, [load]);
@@ -351,7 +426,7 @@ function Installed({ server, label }) {
           disabled={busy || !data.items.length}
           onClick={() =>
             run(async () => {
-              const u = await api(`/servers/${server.id}/content/updates`);
+              const u = await api(curl(server, kind, 'updates'));
               setUpdates(u);
               return u;
             }).then((u) => u && !u.length && setUpdates([]))
@@ -390,27 +465,38 @@ function Installed({ server, label }) {
                           <div>{item.title}</div>
                           <div className="faint mono" style={{ fontSize: 11 }}>
                             {item.filename}
+                            {item.folder ? '/' : ''}
                             {item.dependency ? ' · dependencia' : ''}
                           </div>
+                          {item.worldgen && (
+                            <div className="small" style={{ color: 'var(--gold)' }} title="Se aplica al reiniciar y solo en las zonas que todavía no se exploran">
+                              Generación de mundo
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
                     <td className="muted">{item.versionName || '—'}</td>
                     <td className="muted">
-                      {{ manual: 'Subido a mano', hangar: 'Hangar', geysermc: 'GeyserMC', curseforge: 'CurseForge' }[item.source] || 'Modrinth'}
+                      {item.folder ? 'Carpeta' : { manual: 'Subido a mano', hangar: 'Hangar', geysermc: 'GeyserMC', curseforge: 'CurseForge' }[item.source] || 'Modrinth'}
                       {item.managedBy === 'bedrock' ? ', para Bedrock' : item.managedBy === 'modpack' ? ', del modpack' : ''}
                     </td>
                     <td>
                       <input
                         type="checkbox"
                         checked={item.enabled}
+                        disabled={item.folder}
+                        title={item.folder ? 'Un datapack en carpeta no se puede desactivar; desinstálalo o comprímelo en .zip' : undefined}
                         aria-label={`Activar ${item.title}`}
                         onChange={(e) =>
                           run(() =>
-                            api(`/servers/${server.id}/content/toggle`, {
+                            api(curl(server, kind, 'toggle'), {
                               method: 'POST',
                               body: { filename: item.filename, enabled: e.target.checked },
-                            }).then(setData)
+                            }).then((d) => {
+                              setData(d);
+                              onChanged?.({ worldgen: item.worldgen });
+                            })
                           )
                         }
                       />
@@ -422,9 +508,10 @@ function Installed({ server, label }) {
                           disabled={busy}
                           onClick={() =>
                             run(async () => {
-                              await api(`/servers/${server.id}/content/update`, { method: 'POST', body: up });
+                              await api(curl(server, kind, 'update'), { method: 'POST', body: up });
                               setUpdates((list) => list.filter((u) => u !== up));
                               await load();
+                              onChanged?.({ worldgen: item.worldgen });
                             }, `Actualizado a ${up.newVersion}`)
                           }
                         >
@@ -437,7 +524,10 @@ function Installed({ server, label }) {
                         onClick={() =>
                           run(
                             () =>
-                              api(`/servers/${server.id}/content/uninstall`, { method: 'POST', body: { filename: item.filename } }).then(setData),
+                              api(curl(server, kind, 'uninstall'), { method: 'POST', body: { filename: item.filename } }).then((d) => {
+                                setData(d);
+                                onChanged?.({ worldgen: item.worldgen });
+                              }),
                             `${item.title} desinstalado`
                           )
                         }

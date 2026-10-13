@@ -87,7 +87,7 @@ describe('Panel en el navegador', { skip }, () => {
 
   it('todas las secciones abren sin errores', async () => {
     const base = page.url().replace(/\/$/, '');
-    for (const sub of ['jugadores', 'actividad', 'contenido', 'mundos', 'mapa', 'respaldos', 'archivos', 'conexion', 'bedrock', 'seguridad', 'rendimiento', 'logs', 'ajustes', 'tareas']) {
+    for (const sub of ['jugadores', 'actividad', 'contenido', 'datapacks', 'mundos', 'mapa', 'respaldos', 'archivos', 'conexion', 'bedrock', 'seguridad', 'rendimiento', 'logs', 'ajustes', 'tareas']) {
       await page.goto(`${base}/${sub}`);
       await page.waitForLoadState('networkidle');
       assert.equal(await page.locator('.error-box').count(), 0, `error visible en ${sub}`);

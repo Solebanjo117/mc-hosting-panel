@@ -74,6 +74,7 @@ export default function WorldsTab({ server, state }) {
                   <span style={{ fontWeight: w.active ? 600 : 400 }}>{w.name}</span>{' '}
                   {w.active && <span className="chip">En uso</span>}
                   {!w.generated && <span className="faint small"> Se genera al encender{data.seed ? ` (semilla ${data.seed})` : ''}</span>}
+                  {w.datapacks > 0 && <span className="faint small"> · {w.datapacks === 1 ? '1 datapack' : `${w.datapacks} datapacks`}</span>}
                 </td>
                 <td className="muted">{w.generated ? formatBytes(w.size) : '—'}</td>
                 <td className="muted">{formatDate(w.mtime) || '—'}</td>
@@ -144,7 +145,16 @@ export default function WorldsTab({ server, state }) {
           onClose={() => setInventory(null)}
         />
       )}
-      {creating && <CreateWorld base={base} seed={data.seed} onClose={() => setCreating(false)} onDone={setData} />}
+      {creating && (
+        <CreateWorld
+          base={base}
+          seed={data.seed}
+          activeDatapacks={data.worlds.find((w) => w.active)?.datapacks || 0}
+          activeName={data.active}
+          onClose={() => setCreating(false)}
+          onDone={setData}
+        />
+      )}
       {confirm && (
         <Confirm
           title={`Borrar ${confirm.name}`}
@@ -159,10 +169,11 @@ export default function WorldsTab({ server, state }) {
   );
 }
 
-function CreateWorld({ base, onClose, onDone }) {
+function CreateWorld({ base, activeDatapacks, activeName, onClose, onDone }) {
   const [name, setName] = useState('mundo-nuevo');
   const [seed, setSeed] = useState('');
   const [levelType, setLevelType] = useState('normal');
+  const [copyDatapacks, setCopyDatapacks] = useState(activeDatapacks > 0);
   const [run, busy] = useAction();
   return (
     <Modal title="Crear mundo nuevo" onClose={onClose}>
@@ -183,6 +194,15 @@ function CreateWorld({ base, onClose, onDone }) {
           <option value="amplified">Amplificado</option>
         </select>
       </label>
+      {activeDatapacks > 0 && (
+        <label className="check">
+          <input type="checkbox" checked={copyDatapacks} onChange={(e) => setCopyDatapacks(e.target.checked)} />
+          <span>
+            Copiar los {activeDatapacks === 1 ? 'datapack' : `${activeDatapacks} datapacks`} de <span className="mono">{activeName}</span>. Así también se aplican los que
+            cambian la generación del mundo.
+          </span>
+        </label>
+      )}
       <p className="muted small">El mundo nuevo pasa a ser el activo y se genera la próxima vez que enciendas el servidor. El actual se conserva.</p>
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button onClick={onClose}>Cancelar</button>
@@ -191,9 +211,11 @@ function CreateWorld({ base, onClose, onDone }) {
           disabled={busy || !name.trim()}
           onClick={() =>
             run(async () => {
-              onDone(await api(base, { method: 'POST', body: { name, seed, levelType } }));
+              const r = await api(base, { method: 'POST', body: { name, seed, levelType, copyDatapacks } });
+              onDone(r);
               onClose();
-            }, 'Mundo preparado. Enciende el servidor para generarlo.')
+              return r;
+            }, `Mundo preparado${copyDatapacks && activeDatapacks ? ' con sus datapacks' : ''}. Enciende el servidor para generarlo.`)
           }
         >
           Crear mundo

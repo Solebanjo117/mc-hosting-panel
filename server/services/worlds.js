@@ -59,6 +59,7 @@ export async function listWorlds(id) {
       size,
       mtime: fs.existsSync(levelDat) ? fs.statSync(levelDat).mtime.toISOString() : null,
       dimensions: parts.length,
+      datapacks: countDatapacks(path.join(dir, name, 'datapacks')),
     });
   }
   return { active, seed: readProperties(id)['level-seed'] || '', worlds: out.sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name)) };
@@ -71,12 +72,42 @@ export function switchWorld(id, name) {
   writeProperties(id, { 'level-name': n });
 }
 
-/** Prepara un mundo nuevo: se genera la próxima vez que enciendas el servidor. */
-export function createWorld(id, { name, seed = '', levelType = 'normal' }) {
+function countDatapacks(dir) {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => (e.isFile() && e.name.endsWith('.zip')) || (e.isDirectory() && fs.existsSync(path.join(dir, e.name, 'pack.mcmeta')))).length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Prepara un mundo nuevo: se genera la próxima vez que enciendas el servidor.
+ * Con copyDatapacks se copian los datapacks del mundo activo antes de generarlo, así también
+ * aplican los que cambian la generación (biomas, estructuras).
+ */
+export function createWorld(id, { name, seed = '', levelType = 'normal', copyDatapacks = false }) {
   requireStopped(id);
   const n = validName(name);
   if (folders(id, n).length) throw new HttpError(409, 'Ya existe un mundo con ese nombre');
+  const dir = serverDir(id);
+  const active = readProperties(id)['level-name'] || 'world';
+  let copied = 0;
+  if (copyDatapacks) {
+    const from = path.join(dir, active, 'datapacks');
+    if (fs.existsSync(from)) {
+      const to = path.join(dir, n, 'datapacks');
+      fs.mkdirSync(to, { recursive: true });
+      for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+        const packZip = e.isFile() && /\.zip(\.disabled)?$/.test(e.name);
+        const packDir = e.isDirectory() && fs.existsSync(path.join(from, e.name, 'pack.mcmeta'));
+        if (!packZip && !packDir) continue;
+        fs.cpSync(path.join(from, e.name), path.join(to, e.name), { recursive: true });
+        if (!e.name.endsWith('.disabled')) copied++;
+      }
+    }
+  }
   writeProperties(id, { 'level-name': n, 'level-seed': String(seed).slice(0, 100), 'level-type': LEVEL_TYPES[levelType] || LEVEL_TYPES.normal });
+  return { copiedDatapacks: copied };
 }
 
 export function deleteWorld(id, name) {

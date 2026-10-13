@@ -57,6 +57,8 @@ public class FakeServer {
         out("Automatic saving is now disabled");
       } else if (cmd.equals("save-on")) {
         out("Automatic saving is now enabled");
+      } else if (cmd.equals("reload") || cmd.equals("minecraft:reload")) {
+        out("Reloading!");
       } else if (cmd.equals("tps")) {
         out("TPS from last 1m, 5m, 15m: 19.5, 20.0, 20.0");
       } else if (cmd.equals("crash")) {

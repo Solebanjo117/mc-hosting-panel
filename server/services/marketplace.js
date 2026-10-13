@@ -5,6 +5,7 @@ import { serverDir, USER_AGENT } from '../config.js';
 import { db, getServer } from '../db.js';
 import { download, getJson, getText, rewriteUrl } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
+import AdmZip from 'adm-zip';
 import { readProperties } from './properties.js';
 import * as curseforge from './curseforge.js';
 
@@ -17,10 +18,18 @@ import * as curseforge from './curseforge.js';
 const MODRINTH = process.env.MODRINTH_API || 'https://api.modrinth.com/v2';
 const HANGAR = 'https://hangar.papermc.io/api/v1';
 
-/** Qué tipo de contenido y qué loaders acepta cada tipo de servidor (CurseForge solo si hay clave). */
-export function contentProfile(server) {
-  const p = baseProfile(server);
+/**
+ * Qué tipo de contenido y qué loaders acepta cada tipo de servidor (CurseForge solo si hay clave).
+ * kind = 'datapack' pide los datapacks del mundo activo, que funcionan en cualquier tipo de servidor.
+ */
+export function contentProfile(server, kind = null) {
+  const p = kind === 'datapack' ? datapackProfile(server) : baseProfile(server);
   return curseforge.hasKey() ? { ...p, sources: [...p.sources, 'curseforge'] } : p;
+}
+
+function datapackProfile(server) {
+  const level = readProperties(server.id)['level-name'] || 'world';
+  return { kind: 'datapack', folder: `${level}/datapacks`, ext: '.zip', loaders: ['datapack'], sources: ['modrinth'] };
 }
 
 function baseProfile(server) {
@@ -33,10 +42,8 @@ function baseProfile(server) {
       return { kind: 'mod', folder: 'mods', ext: '.jar', loaders: ['forge'], sources: ['modrinth'] };
     case 'neoforge':
       return { kind: 'mod', folder: 'mods', ext: '.jar', loaders: ['neoforge'], sources: ['modrinth'] };
-    default: {
-      const level = readProperties(server.id)['level-name'] || 'world';
-      return { kind: 'datapack', folder: `${level}/datapacks`, ext: '.zip', loaders: ['datapack'], sources: ['modrinth'] };
-    }
+    default:
+      return datapackProfile(server);
   }
 }
 
@@ -77,6 +84,7 @@ async function searchModrinth(server, profile, { query, offset, limit, sort }) {
       banner: h.featured_gallery || h.gallery?.[0] || null,
       color: typeof h.color === 'number' ? `#${h.color.toString(16).padStart(6, '0')}` : null,
       follows: h.follows ?? null,
+      worldgen: (h.categories || h.display_categories || []).includes('worldgen'),
     })),
   };
 }
@@ -110,9 +118,9 @@ async function searchHangar(server, { query, offset, limit, sort }) {
   };
 }
 
-export async function search(id, { source = 'modrinth', query = '', offset = 0, limit = 20, sort }) {
+export async function search(id, { source = 'modrinth', query = '', offset = 0, limit = 20, sort, kind = null }) {
   const server = requireServer(id);
-  const profile = contentProfile(server);
+  const profile = contentProfile(server, kind);
   if (!profile.sources.includes(source)) throw new HttpError(400, `${source} no aplica para servidores ${server.type}`);
   const opts = { query, offset: Number(offset) || 0, limit: Math.min(Number(limit) || 20, 50), sort };
   const res =
@@ -236,9 +244,9 @@ async function hangarVersions(server, slug) {
   });
 }
 
-export async function projectVersions(id, source, projectId) {
+export async function projectVersions(id, source, projectId, kind = null) {
   const server = requireServer(id);
-  const profile = contentProfile(server);
+  const profile = contentProfile(server, kind);
   if (source === 'curseforge') return curseforge.versions(server, profile, projectId);
   return source === 'hangar' ? hangarVersions(server, projectId) : modrinthVersions(server, profile, projectId);
 }
@@ -277,12 +285,12 @@ async function projectInfo(source, projectId) {
  * Instala un proyecto y, si es de Modrinth, sus dependencias obligatorias.
  * Devuelve la lista de lo que se instaló.
  */
-export async function install(id, { source = 'modrinth', projectId, versionId, title, icon }, depth = 0, done = []) {
+export async function install(id, { source = 'modrinth', projectId, versionId, title, icon, kind = null }, depth = 0, done = []) {
   const server = requireServer(id);
-  const profile = contentProfile(server);
+  const profile = contentProfile(server, kind);
   const list = records(server);
 
-  const versions = await projectVersions(id, source, projectId);
+  const versions = await projectVersions(id, source, projectId, kind);
   if (!versions.length) {
     throw new HttpError(404, `No hay una versión de "${title || projectId}" compatible con ${server.type} ${server.mcVersion}`);
   }
@@ -300,7 +308,10 @@ export async function install(id, { source = 'modrinth', projectId, versionId, t
   const fileName = sanitizeFileName(version.file.name);
 
   // Si ya estaba instalado, quita el archivo viejo (actualización).
-  const previous = list.find((r) => r.source === source && r.projectId === projectId);
+  // Un mismo proyecto puede estar como mod y como datapack (p. ej. Terralith): se compara el tipo.
+  const recKind = (r) => r.kind || (server.type === 'vanilla' ? 'datapack' : 'main');
+  const wantKind = profile.kind === 'datapack' ? 'datapack' : 'main';
+  const previous = list.find((r) => r.source === source && r.projectId === projectId && recKind(r) === wantKind);
   if (previous) {
     for (const f of [previous.filename, `${previous.filename}.disabled`]) fs.rmSync(path.join(dir, f), { force: true });
     list.splice(list.indexOf(previous), 1);
@@ -318,15 +329,17 @@ export async function install(id, { source = 'modrinth', projectId, versionId, t
     filename: fileName,
     installedAt: new Date().toISOString(),
     dependency: depth > 0,
+    ...(profile.kind === 'datapack' ? { kind: 'datapack', world: profile.folder.split('/')[0] } : {}),
   });
   db.save();
-  done.push({ projectId, title: info.title || projectId, version: version.number, file: fileName, dependency: depth > 0 });
+  const worldgen = profile.kind === 'datapack' ? datapackInfo(path.join(dir, fileName)).worldgen : false;
+  done.push({ projectId, title: info.title || projectId, version: version.number, file: fileName, dependency: depth > 0, worldgen });
 
   if (depth < 4) {
     for (const dep of version.dependencies) {
       if (list.some((r) => r.projectId === dep.projectId) || done.some((d) => d.projectId === dep.projectId)) continue;
       try {
-        await install(id, { source, projectId: dep.projectId, versionId: dep.versionId || undefined }, depth + 1, done);
+        await install(id, { source, projectId: dep.projectId, versionId: dep.versionId || undefined, kind }, depth + 1, done);
       } catch (err) {
         done.push({ projectId: dep.projectId, title: dep.projectId, error: `Dependencia no instalada: ${err.message}`, dependency: true });
       }
@@ -341,23 +354,60 @@ function sha1(file) {
   return crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex');
 }
 
-export function listInstalled(id) {
+/**
+ * Lo que hace un datapack: si trae generación de mundo (biomas, estructuras, dimensiones) solo se
+ * aplica al reiniciar y únicamente en las zonas que todavía no se exploran.
+ */
+const WORLDGEN_RE = /^data\/[^/]+\/(worldgen|dimension|dimension_type)\//;
+export function datapackInfo(target) {
+  let names = [];
+  try {
+    if (fs.statSync(target).isDirectory()) {
+      const walk = (dir, rel = '') => {
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+          const r = rel ? `${rel}/${e.name}` : e.name;
+          if (e.isDirectory()) {
+            names.push(`${r}/`); // data/<ns>/worldgen/ basta para saberlo
+            if (r.split('/').length < 4) walk(path.join(dir, e.name), r);
+          } else names.push(r);
+          if (names.length > 5000) return;
+        }
+      };
+      walk(target);
+    } else {
+      names = new AdmZip(target).getEntries().map((e) => e.entryName);
+    }
+  } catch {
+    return { worldgen: false, valid: false };
+  }
+  return { worldgen: names.some((n) => WORLDGEN_RE.test(n)), valid: names.includes('pack.mcmeta') };
+}
+
+export function listInstalled(id, kind = null) {
   const server = requireServer(id);
-  const profile = contentProfile(server);
+  const profile = contentProfile(server, kind);
   const dir = safeJoin(serverDir(server.id), profile.folder);
   const list = records(server);
   if (!fs.existsSync(dir)) return { kind: profile.kind, folder: profile.folder, items: [] };
+  const isPack = profile.kind === 'datapack';
   const items = fs
     .readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isFile() && (e.name.endsWith(profile.ext) || e.name.endsWith(`${profile.ext}.disabled`)))
+    .filter(
+      (e) =>
+        (e.isFile() && (e.name.endsWith(profile.ext) || e.name.endsWith(`${profile.ext}.disabled`))) ||
+        // Los datapacks también pueden ser una carpeta con pack.mcmeta.
+        (isPack && e.isDirectory() && fs.existsSync(path.join(dir, e.name, 'pack.mcmeta')))
+    )
     .map((e) => {
-      const enabled = !e.name.endsWith('.disabled');
+      const folder = e.isDirectory();
+      const enabled = folder || !e.name.endsWith('.disabled');
       const filename = enabled ? e.name : e.name.replace(/\.disabled$/, '');
       const rec = list.find((r) => r.filename === filename);
       return {
         filename,
         enabled,
-        size: fs.statSync(path.join(dir, e.name)).size,
+        folder,
+        size: folder ? null : fs.statSync(path.join(dir, e.name)).size,
         title: rec?.title || filename.replace(/\.(jar|zip)$/, ''),
         icon: rec?.icon || null,
         source: rec?.source || 'manual',
@@ -365,26 +415,31 @@ export function listInstalled(id) {
         versionName: rec?.versionName || null,
         dependency: rec?.dependency || false,
         managedBy: rec?.managedBy || null,
+        ...(isPack ? { worldgen: datapackInfo(path.join(dir, e.name)).worldgen } : {}),
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
   return { kind: profile.kind, folder: profile.folder, items };
 }
 
-export function toggle(id, filename, enabled) {
+export function toggle(id, filename, enabled, kind = null) {
   const server = requireServer(id);
-  const dir = safeJoin(serverDir(server.id), contentProfile(server).folder);
+  const dir = safeJoin(serverDir(server.id), contentProfile(server, kind).folder);
   const on = safeJoin(dir, filename);
   const off = `${on}.disabled`;
+  if (fs.existsSync(on) && fs.statSync(on).isDirectory()) {
+    throw new HttpError(400, 'Los datapacks en carpeta no se pueden desactivar; desinstálalo o comprímelo en .zip desde Archivos');
+  }
   if (enabled && fs.existsSync(off)) fs.renameSync(off, on);
   if (!enabled && fs.existsSync(on)) fs.renameSync(on, off);
 }
 
-export function uninstall(id, filename) {
+export function uninstall(id, filename, kind = null) {
   const server = requireServer(id);
-  const dir = safeJoin(serverDir(server.id), contentProfile(server).folder);
+  const dir = safeJoin(serverDir(server.id), contentProfile(server, kind).folder);
   const file = safeJoin(dir, filename);
-  fs.rmSync(file, { force: true });
+  if (file === path.resolve(dir)) throw new HttpError(400, 'Elige qué desinstalar');
+  fs.rmSync(file, { force: true, recursive: true });
   fs.rmSync(`${file}.disabled`, { force: true });
   server.content = records(server).filter((r) => r.filename !== filename);
   db.save();
@@ -394,12 +449,12 @@ export function uninstall(id, filename) {
  * Busca actualizaciones en Modrinth usando el hash SHA-1 de cada archivo,
  * así también detecta mods que se subieron a mano.
  */
-export async function checkUpdates(id) {
+export async function checkUpdates(id, kind = null) {
   const server = requireServer(id);
-  const profile = contentProfile(server);
+  const profile = contentProfile(server, kind);
   const dir = safeJoin(serverDir(server.id), profile.folder);
   if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(profile.ext));
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith(profile.ext) && fs.statSync(path.join(dir, f)).isFile());
   const hashes = new Map(files.map((f) => [sha1(path.join(dir, f)), f]));
   if (!hashes.size) return [];
   const res = await fetch(rewriteUrl(`${MODRINTH}/version_files/update`), {
@@ -421,14 +476,14 @@ export async function checkUpdates(id) {
 }
 
 /** Aplica una actualización detectada por checkUpdates. */
-export async function applyUpdate(id, { filename, projectId, versionId }) {
+export async function applyUpdate(id, { filename, projectId, versionId, kind = null }) {
   const server = requireServer(id);
-  const dir = safeJoin(serverDir(server.id), contentProfile(server).folder);
+  const dir = safeJoin(serverDir(server.id), contentProfile(server, kind).folder);
   const list = records(server);
   const rec = list.find((r) => r.filename === filename);
   if (!rec) {
     // Archivo subido a mano: se reemplaza registrándolo como de Modrinth.
     fs.rmSync(safeJoin(dir, filename), { force: true });
   }
-  return install(id, { source: 'modrinth', projectId, versionId, title: rec?.title, icon: rec?.icon });
+  return install(id, { source: 'modrinth', projectId, versionId, title: rec?.title, icon: rec?.icon, kind });
 }

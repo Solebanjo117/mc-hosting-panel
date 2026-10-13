@@ -36,8 +36,8 @@ manageRouter.post('/worlds/switch', async (req, res) => {
 });
 
 manageRouter.post('/worlds', async (req, res) => {
-  worlds.createWorld(req.params.id, req.body || {});
-  res.json(await worlds.listWorlds(req.params.id));
+  const created = worlds.createWorld(req.params.id, req.body || {});
+  res.json({ ...(await worlds.listWorlds(req.params.id)), ...created });
 });
 
 manageRouter.post('/worlds/import', upload.single('file'), async (req, res) => {

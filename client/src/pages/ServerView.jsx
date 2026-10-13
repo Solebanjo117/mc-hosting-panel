@@ -36,7 +36,12 @@ function sections(contentLabel) {
         { path: 'actividad', label: 'Actividad y ranking' },
       ],
     },
-    { id: 'contenido', label: contentLabel, items: [{ path: 'contenido', label: contentLabel }] },
+    {
+      id: 'contenido',
+      label: contentLabel,
+      // Los datapacks funcionan en cualquier servidor; en Vanilla son lo único que hay.
+      items: contentLabel === 'Datapacks' ? [{ path: 'contenido', label: 'Datapacks' }] : [{ path: 'contenido', label: contentLabel }, { path: 'datapacks', label: 'Datapacks' }],
+    },
     {
       id: 'mundo',
       label: 'Mundo',
@@ -168,6 +173,7 @@ export default function ServerView() {
       <Routes>
         <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
         <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
+        <Route path="datapacks" element={<ContentTab key="datapacks" server={server} label="Datapacks" kind="datapack" />} />
         <Route path="jugadores" element={<PlayersTab server={server} runtime={rt} />} />
         <Route path="archivos" element={<FilesTab server={server} state={state} />} />
         <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
