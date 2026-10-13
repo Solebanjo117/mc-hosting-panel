@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, qs, formatDate, formatNumber, TYPE_LABEL } from '../api.js';
 import { useLive } from '../live.jsx';
 import { Modal } from '../ui.jsx';
 
 const LOADER_LABEL = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt' };
 
-export default function ImportModpack() {
-  const [mode, setMode] = useState('buscar');
-  const [choice, setChoice] = useState(null); // { kind: 'modrinth', project, version } | { kind: 'file', file, plan }
+const SITE_LABEL = { modrinth: 'Modrinth', curseforge: 'CurseForge' };
 
+export default function ImportModpack() {
+  const [mode, setMode] = useState('modrinth');
+  const [choice, setChoice] = useState(null); // { kind: 'store', source, project, version } | { kind: 'file', file, plan }
+
+  const tab = (id, label) => (
+    <button className={mode === id ? 'on' : ''} onClick={() => setMode(id)} role="tab" aria-selected={mode === id}>
+      {label}
+    </button>
+  );
   return (
     <div className="page" style={{ maxWidth: 980 }}>
       <div className="page-head">
@@ -17,25 +24,22 @@ export default function ImportModpack() {
           <h1>Crear desde un modpack</h1>
           <p className="muted" style={{ marginTop: '0.4rem', maxWidth: '70ch' }}>
             El panel instala el loader y la versión de Minecraft que pide el modpack, descarga todos sus mods y copia su configuración. Los mods que solo
-            sirven en el juego (shaders, minimapas) se omiten.
+            sirven en el juego (shaders, minimapas) se omiten en el servidor; después puedes descargar el modpack para tus jugadores desde la pestaña Mods.
           </p>
         </div>
       </div>
       <div className="segmented" role="tablist" style={{ marginBottom: '1.25rem' }}>
-        <button className={mode === 'buscar' ? 'on' : ''} onClick={() => setMode('buscar')} role="tab" aria-selected={mode === 'buscar'}>
-          Buscar en Modrinth
-        </button>
-        <button className={mode === 'subir' ? 'on' : ''} onClick={() => setMode('subir')} role="tab" aria-selected={mode === 'subir'}>
-          Subir archivo .mrpack
-        </button>
+        {tab('modrinth', 'Modrinth')}
+        {tab('curseforge', 'CurseForge')}
+        {tab('subir', 'Subir archivo')}
       </div>
-      {mode === 'buscar' ? <Search onPick={setChoice} /> : <Upload onPick={setChoice} />}
+      {mode === 'subir' ? <Upload onPick={setChoice} /> : <Search key={mode} source={mode} onPick={setChoice} />}
       {choice && <Confirm choice={choice} onClose={() => setChoice(null)} />}
     </div>
   );
 }
 
-function Search({ onPick }) {
+function Search({ source, onPick }) {
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [data, setData] = useState(null);
@@ -52,17 +56,26 @@ function Search({ onPick }) {
     const ctrl = new AbortController();
     setLoading(true);
     setError('');
-    api(`/integrations/modpacks/search?${qs({ query: debounced, limit: 20 })}`, { signal: ctrl.signal })
+    api(`/integrations/modpacks/search?${qs({ source, query: debounced, limit: 20 })}`, { signal: ctrl.signal })
       .then(setData)
-      .catch((err) => err.name !== 'AbortError' && setError(err.message))
+      .catch((err) => err.name !== 'AbortError' && setError(err))
       .finally(() => setLoading(false));
     return () => ctrl.abort();
-  }, [debounced]);
+  }, [debounced, source]);
 
   return (
     <div className="stack">
       <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar modpacks (p. ej. Cobblemon, All the Mods, Fabulously…)" aria-label="Buscar modpacks" />
-      {error && <div className="error-box">No se pudo buscar en Modrinth: {error}</div>}
+      {error &&
+        (error.status === 409 ? (
+          <div className="note">
+            Para buscar modpacks de CurseForge agrega tu clave gratuita de CurseForge en <Link to="/ajustes">Ajustes del panel</Link>.
+          </div>
+        ) : (
+          <div className="error-box">
+            No se pudo buscar en {SITE_LABEL[source]}: {error.message}
+          </div>
+        ))}
       <div className="results" aria-busy={loading}>
         {data?.results.length === 0 && <p className="muted">Sin resultados.</p>}
         {data?.results.map((p) => (
@@ -80,6 +93,7 @@ function Search({ onPick }) {
               <p>{p.description}</p>
               <div className="faint small" style={{ marginTop: '0.2rem' }}>
                 {formatNumber(p.downloads)} descargas · {p.loaders.map((l) => LOADER_LABEL[l] || l).join(', ')} · Minecraft {p.versions.join(', ')}
+                {p.blocked && ' · se descarga a mano desde CurseForge'}
               </div>
             </div>
             <div>
@@ -92,11 +106,12 @@ function Search({ onPick }) {
       </div>
       {versionsFor && (
         <Versions
+          source={source}
           project={versionsFor}
           onClose={() => setVersionsFor(null)}
           onPick={(version) => {
             setVersionsFor(null);
-            onPick({ kind: 'modrinth', project: versionsFor, version });
+            onPick({ kind: 'store', source, project: versionsFor, version });
           }}
         />
       )}
@@ -104,19 +119,22 @@ function Search({ onPick }) {
   );
 }
 
-function Versions({ project, onClose, onPick }) {
+function Versions({ source, project, onClose, onPick }) {
   const [list, setList] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
-    api(`/integrations/modpacks/${project.id}/versions`)
+    api(`/integrations/modpacks/${project.id}/versions?${qs({ source })}`)
       .then(setList)
       .catch((err) => setError(err.message));
-  }, [project.id]);
+  }, [project.id, source]);
   return (
     <Modal title={`Versiones de ${project.title}`} onClose={onClose} wide>
       {error && <div className="error-box">{error}</div>}
       {!list && !error && <p className="muted">Cargando…</p>}
       {list?.length === 0 && <p className="muted">No hay versiones para Fabric, Forge o NeoForge.</p>}
+      {source === 'curseforge' && list?.some((v) => !v.file) && (
+        <p className="note">El autor de este modpack no permite descargarlo desde otras apps. Bájalo de CurseForge y súbelo en la pestaña Subir archivo.</p>
+      )}
       {list?.length > 0 && (
         <div className="table-wrap">
           <table className="table">
@@ -139,9 +157,15 @@ function Versions({ project, onClose, onPick }) {
                   <td className="muted">{v.loaders.map((l) => LOADER_LABEL[l] || l).join(', ')}</td>
                   <td className="muted">{formatDate(v.date)}</td>
                   <td className="actions">
-                    <button className="btn-sm btn-go" onClick={() => onPick(v)}>
-                      Usar esta
-                    </button>
+                    {v.file || source !== 'curseforge' ? (
+                      <button className="btn-sm btn-go" onClick={() => onPick(v)}>
+                        Usar esta
+                      </button>
+                    ) : (
+                      <a className="btn btn-sm" href={v.externalUrl} target="_blank" rel="noreferrer" title="El autor no permite descargarlo desde otras apps: bájalo y súbelo en Subir archivo">
+                        Bajar de CurseForge
+                      </a>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -176,11 +200,11 @@ function Upload({ onPick }) {
   return (
     <div className="empty">
       <p className="muted" style={{ maxWidth: '65ch' }}>
-        Sube el archivo .mrpack del modpack (en Modrinth, botón de descarga de la versión). Los modpacks de CurseForge (.zip) no son compatibles; busca
-        si el mismo modpack está en Modrinth.
+        Sube el modpack: el archivo <span className="mono">.mrpack</span> de Modrinth o el <span className="mono">.zip</span> de CurseForge (el que se
+        importa en el CurseForge App, no el "server pack"). Los de CurseForge necesitan tu clave de CurseForge en Ajustes del panel.
       </p>
       <button className="btn-go" disabled={busy} onClick={() => ref.current.click()}>
-        {busy ? 'Revisando…' : 'Elegir archivo .mrpack'}
+        {busy ? 'Revisando…' : 'Elegir archivo'}
       </button>
       <input ref={ref} type="file" accept=".mrpack,.zip" hidden onChange={(e) => inspect(e.target.files[0])} />
       {error && <div className="error-box">{error}</div>}
@@ -200,9 +224,9 @@ function Confirm({ choice, onClose }) {
   const [error, setError] = useState('');
 
   const summary = isFile
-    ? `${TYPE_LABEL[choice.plan.type]} ${choice.plan.loaderVersion}, Minecraft ${choice.plan.mcVersion}, ${choice.plan.serverFiles} archivos para el servidor${
-        choice.plan.skippedClientFiles ? ` (${choice.plan.skippedClientFiles} solo de cliente se omiten)` : ''
-      }`
+    ? `${choice.plan.format === 'curseforge' ? 'CurseForge · ' : ''}${TYPE_LABEL[choice.plan.type]} ${choice.plan.loaderVersion}, Minecraft ${choice.plan.mcVersion}, ${
+        choice.plan.serverFiles
+      } archivos${choice.plan.skippedClientFiles ? ` (${choice.plan.skippedClientFiles} solo de cliente se omiten)` : choice.plan.format === 'curseforge' ? ' (los que solo sirven en el juego se omiten al instalar)' : ''}`
     : `Versión ${choice.version.number}, Minecraft ${choice.version.gameVersions.join(', ')}, ${choice.version.loaders.map((l) => LOADER_LABEL[l] || l).join(', ')}`;
 
   async function create() {
@@ -214,6 +238,7 @@ function Confirm({ choice, onClose }) {
     form.append('eula', String(eula));
     if (isFile) form.append('file', choice.file);
     else {
+      form.append('source', choice.source);
       form.append('projectId', choice.project.id);
       form.append('versionId', choice.version.id);
     }

@@ -10,7 +10,9 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg.
 - **Dominio para cada servidor** con **deSEC**, **DuckDNS** o **Cloudflare**: apunta a la IP de tu casa o al túnel de playit, y el panel crea y actualiza los registros (A y SRV). Con deSEC o Cloudflare tus amigos de Java entran solo con el nombre, sin puerto, aunque uses playit.
-- **Modpacks de Modrinth:** busca un modpack o sube un `.mrpack` y el panel crea el servidor con el loader, la versión, los mods (solo los de servidor) y la configuración.
+- **Modpacks de Modrinth y CurseForge:** búscalo o sube el `.mrpack` / `.zip` y el panel crea el servidor con el loader, la versión, los mods y la configuración. Los mods que solo sirven en el juego se omiten en el servidor (en CurseForge se revisa cada jar).
+- **Actualizar el modpack** a otra versión en el mismo servidor, con respaldo antes; el mundo y tus mods se quedan.
+- **Modpack para los jugadores:** un archivo con el modpack completo, los mods que agregaste y tu servidor ya puesto en Multijugador, para importarlo en Modrinth App, CurseForge App o Prism Launcher.
 - **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
 - **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
 - **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
@@ -63,7 +65,7 @@ data/
   metrics/         historial de rendimiento (7 días)
   activity/        entradas, salidas y eventos de cada servidor (90 días)
   cache/gamedata/  listas de objetos y nombres en español por versión
-  modpacks/        archivos .mrpack importados
+  modpacks/        el modpack de cada servidor (.mrpack o .zip de CurseForge)
   playit/          agente de playit.gg y su llave (playit.toml)
   servers/<id>/    cada servidor: mundos, mods, plugins, configuración
   backups/<id>/    respaldos .zip
@@ -114,7 +116,7 @@ server/
     geyserConfig.js     ajusta el puerto y la autenticación en el config.yml de Geyser
     playit.js           agente de playit.gg: vinculación, túneles por servidor (API de playit)
     dns.js              dominio por servidor (DuckDNS, deSEC, Cloudflare) hacia tu IP o el túnel de playit
-    modpack.js          importa .mrpack: loader, mods del lado del servidor y overrides
+    modpack.js          modpacks de Modrinth y CurseForge: importar, actualizar y archivo para jugadores
     scheduler.js        tareas programadas con avisos en el chat
     metrics.js          historial de CPU, RAM, TPS y jugadores
     worlds.js           varios mundos por servidor
@@ -186,3 +188,5 @@ notan), Minecraft de verdad con mods reales, y los archivos `.bat` de Windows.
 - CurseForge necesita una clave de API propia (gratis en console.curseforge.com). Los mods cuyo autor no permite descargas desde otras apps se bajan desde CurseForge y se suben en **Archivos**.
 - Algunos plugins de Hangar se publican solo como enlace externo; el panel te muestra el enlace en lugar de instalarlos.
 - Forge para versiones anteriores a 1.17 se instala, pero conviene probar cada modpack antiguo.
+- Los modpacks de CurseForge no dicen qué mods son solo del juego: el panel revisa cada jar y conoce los más comunes, pero si el servidor se cae al arrancar, la pestaña Logs dice qué mod quitar.
+- Algunos modpacks y mods de CurseForge no permiten descargarse desde otras apps; el panel te da el enlace para bajarlos y subirlos a mano.

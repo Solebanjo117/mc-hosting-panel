@@ -13,6 +13,7 @@ import { externalCheck, publicIp } from '../services/network.js';
 import * as bedrock from '../services/bedrock.js';
 import * as playit from '../services/playit.js';
 import * as dns from '../services/dns.js';
+import { removePack } from '../services/modpack.js';
 import { gameList } from '../services/gameData.js';
 import * as worldMap from '../services/worldMap.js';
 import { healthCheck } from '../services/health.js';
@@ -99,7 +100,7 @@ serversRouter.delete('/:id', async (req, res) => {
   await dns.forgetServer(server.id);
   if (server.playit?.enabled) await playit.disableForServer(server.id).catch(() => {});
   fs.rmSync(serverDir(server.id), { recursive: true, force: true });
-  fs.rmSync(path.join(DATA_DIR, 'modpacks', `${server.id}.mrpack`), { force: true });
+  removePack(server.id);
   removeMetrics(server.id);
   removeActivity(server.id);
   if (req.query.keepBackups !== 'true') fs.rmSync(backupDir(server.id), { recursive: true, force: true });

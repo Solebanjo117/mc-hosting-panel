@@ -9,6 +9,8 @@ import { HttpError } from '../lib/util.js';
 import * as worlds from '../services/worlds.js';
 import * as logs from '../services/logs.js';
 import * as scheduler from '../services/scheduler.js';
+import * as modpack from '../services/modpack.js';
+import { bus } from '../lib/bus.js';
 import { getMetrics } from '../services/metrics.js';
 import { audit, applyFix, defaultProtection } from '../services/security.js';
 import { protectionStatus, endLockdown } from '../services/floodGuard.js';
@@ -62,6 +64,30 @@ manageRouter.get('/worlds/:name/download', (req, res) => {
 manageRouter.delete('/worlds/:name', async (req, res) => {
   worlds.deleteWorld(req.params.id, req.params.name);
   res.json(await worlds.listWorlds(req.params.id));
+});
+
+// --- Modpack: versión instalada, actualizar y archivo para los jugadores -----------
+
+manageRouter.get('/modpack', async (req, res) => res.json(await modpack.modpackStatus(req.params.id)));
+
+/** Con { versionId } descarga esa versión; con un archivo subido, usa ese. */
+manageRouter.post('/modpack/update', upload.single('file'), async (req, res) => {
+  let uploadedPath;
+  if (req.file) {
+    uploadedPath = `${req.file.path}.pack`;
+    fs.renameSync(req.file.path, uploadedPath);
+  }
+  const result = await modpack.updateModpack(req.params.id, { versionId: req.body?.versionId, uploadedPath });
+  bus.emit('servers');
+  res.json(result);
+});
+
+manageRouter.get('/modpack/players', async (req, res) => {
+  const pack = await modpack.playersPack(req.params.id);
+  res.setHeader('X-Pack-Summary', encodeURIComponent(JSON.stringify({ address: pack.address, ...pack.summary })));
+  res.attachment(pack.filename);
+  res.type(pack.format === 'curseforge' ? 'application/zip' : 'application/x-modrinth-modpack+zip');
+  res.send(pack.buffer);
 });
 
 // --- Logs ----------------------------------------------------------------------

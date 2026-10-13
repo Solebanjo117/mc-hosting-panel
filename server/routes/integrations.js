@@ -35,12 +35,16 @@ integrationsRouter.put('/curseforge', async (req, res) => res.json(await cursefo
 
 // --- Modpacks ------------------------------------------------------------------
 
-integrationsRouter.get('/modpacks/search', async (req, res) => res.json(await modpack.searchModpacks(req.query)));
-integrationsRouter.get('/modpacks/:projectId/versions', async (req, res) => res.json(await modpack.modpackVersions(req.params.projectId)));
+const packSource = (v) => (v === 'curseforge' ? 'curseforge' : 'modrinth');
 
-/** Revisa un .mrpack subido y devuelve qué servidor se va a crear. */
+integrationsRouter.get('/modpacks/search', async (req, res) => res.json(await modpack.searchModpacks({ ...req.query, source: packSource(req.query.source) })));
+integrationsRouter.get('/modpacks/:projectId/versions', async (req, res) =>
+  res.json(await modpack.modpackVersions(req.params.projectId, packSource(req.query.source)))
+);
+
+/** Revisa un modpack subido (.mrpack o .zip de CurseForge) y devuelve qué servidor se va a crear. */
 integrationsRouter.post('/modpacks/inspect', upload.single('file'), (req, res) => {
-  if (!req.file) throw new HttpError(400, 'Falta el archivo .mrpack');
+  if (!req.file) throw new HttpError(400, 'Falta el archivo del modpack');
   try {
     res.json(modpack.inspect(req.file.path));
   } finally {
@@ -59,14 +63,15 @@ integrationsRouter.post('/modpacks/import', upload.single('file'), async (req, r
   let packPath;
   let source = null;
   if (req.file) {
-    packPath = `${req.file.path}.mrpack`;
+    packPath = `${req.file.path}.pack`;
     fs.renameSync(req.file.path, packPath);
   } else if (body.projectId) {
-    const dl = await modpack.downloadFromModrinth(body.projectId, body.versionId);
+    const site = packSource(body.source);
+    const dl = await modpack.downloadPack(site, String(body.projectId), body.versionId);
     packPath = dl.path;
-    source = { projectId: body.projectId, versionId: dl.version.id };
+    source = { site, projectId: String(body.projectId), versionId: dl.version.id, ...(site === 'curseforge' ? { url: dl.version.externalUrl.replace(/\/files\/\d+$/, '') } : {}) };
   } else {
-    throw new HttpError(400, 'Sube un .mrpack o elige un modpack de Modrinth');
+    throw new HttpError(400, 'Sube un modpack o elige uno de Modrinth o CurseForge');
   }
   try {
     const server = await modpack.createFromPack(packPath, { ...opts, source });

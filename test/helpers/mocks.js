@@ -36,6 +36,7 @@ const MODRINTH_PROJECTS = {
   viaversion: { title: 'ViaVersion', type: 'plugin', loaders: ['paper'] },
   'terralith-pack': { title: 'Terralith', type: 'datapack', loaders: ['datapack'] },
   'cool-pack': { title: 'Cool Pack', type: 'modpack', loaders: ['fabric'] },
+  servercore: { title: 'ServerCore', type: 'mod', loaders: ['fabric'], clientSide: 'unsupported' },
 };
 
 const resolveProject = (id) => (MODRINTH_PROJECTS[id]?.alias ? MODRINTH_PROJECTS[id].alias : id);
@@ -57,7 +58,46 @@ export async function startMocks() {
     modrinthUpdates: {}, // sha1 -> { project, version }
     mcsrvstatOnline: true,
     files: {}, // nombre -> contenido extra para /files/
+    cf: { mods: {}, files: {} },
   };
+  const cfMod = (id, slug, name, extra = {}) => ({
+    id,
+    slug,
+    name,
+    summary: name,
+    downloadCount: 100,
+    dateModified: new Date().toISOString(),
+    authors: [{ name: 'tester' }],
+    logo: { thumbnailUrl: null },
+    screenshots: [],
+    categories: [],
+    links: { websiteUrl: `https://www.curseforge.com/minecraft/${extra.classId === 4471 ? 'modpacks' : 'mc-mods'}/${slug}` },
+    classId: 6,
+    allowModDistribution: true,
+    ...extra,
+  });
+  const cfFile = (id, modId, fileName, extra = {}) => ({
+    id,
+    modId,
+    displayName: fileName,
+    fileName,
+    releaseType: 1,
+    fileDate: new Date(Date.now() - (10000 - id) * 1000).toISOString(),
+    downloadCount: 1,
+    downloadUrl: `${base}/files/${fileName}`,
+    fileLength: 10,
+    hashes: [],
+    gameVersions: ['1.21.4'],
+    dependencies: [],
+    isAvailable: true,
+    ...extra,
+  });
+  state.cfMod = cfMod;
+  state.cfFile = cfFile;
+  Object.assign(state.cf.mods, {
+    1001: cfMod(1001, 'jei', 'Just Enough Items', { summary: 'Recetas', authors: [{ name: 'mezz' }], categories: [{ name: 'Utility' }] }),
+    1002: cfMod(1002, 'bloqueado', 'Mod Bloqueado', { summary: 'Sin descargas externas', logo: null, allowModDistribution: false }),
+  });
 
   // DNS simulado: las direcciones de playit son nombres (Java usa un registro SRV con el puerto).
   state.dnsRecords = new Map();
@@ -195,6 +235,27 @@ export async function startMocks() {
         }));
       return send({ total_hits: hits.length, hits });
     }
+    if (p === '/modrinth/projects') {
+      const ids = JSON.parse(u.searchParams.get('ids') || '[]');
+      return send(
+        ids
+          .map((id) => {
+            const slug = resolveProject(id);
+            const d = MODRINTH_PROJECTS[slug];
+            return d && { id: d.id || slug, slug, title: d.title, client_side: d.clientSide || (d.clientOnly ? 'required' : 'optional'), server_side: d.clientOnly ? 'unsupported' : 'required' };
+          })
+          .filter(Boolean)
+      );
+    }
+    if (p === '/modrinth/versions') {
+      const ids = JSON.parse(u.searchParams.get('ids') || '[]');
+      return send(
+        ids
+          .map((id) => id.match(/^v-(.+)-(\d+)$/))
+          .filter(Boolean)
+          .map(([id, slug, n]) => ({ id, project_id: slug, files: [{ primary: true, url: `${base}/files/${slug}-${n}.0.0.jar`, filename: `${slug}-${n}.0.0.jar` }] }))
+      );
+    }
     if (p === '/modrinth/version_files/update' && req.method === 'POST') {
       const { hashes } = JSON.parse(body || '{}');
       const out = {};
@@ -285,24 +346,31 @@ export async function startMocks() {
     if (p.startsWith('/hangar/pages/main/')) return text('# Página principal');
 
     // --- CurseForge ------------------------------------------------------------------------
+    // state.cf.mods y state.cf.files se pueden ampliar desde las pruebas (modpacks y sus mods).
     if (p.startsWith('/curseforge/')) {
       if (req.headers['x-api-key'] !== state.curseforgeKey) return text('Forbidden', 403);
-      const cfMods = [
-        { id: 1001, slug: 'jei', name: 'Just Enough Items', summary: 'Recetas', downloadCount: 100, dateModified: new Date().toISOString(), authors: [{ name: 'mezz' }], logo: { thumbnailUrl: null }, screenshots: [], categories: [{ name: 'Utility' }], links: { websiteUrl: 'https://www.curseforge.com/minecraft/mc-mods/jei' }, classId: 6, allowModDistribution: true },
-        { id: 1002, slug: 'bloqueado', name: 'Mod Bloqueado', summary: 'Sin descargas externas', downloadCount: 50, dateModified: new Date().toISOString(), authors: [{ name: 'x' }], logo: null, screenshots: [], categories: [], links: { websiteUrl: 'https://www.curseforge.com/minecraft/mc-mods/bloqueado' }, classId: 6, allowModDistribution: false },
-      ];
+      const cf = state.cf;
       const q = p.slice('/curseforge'.length);
       if (q === '/games/432') return send({ data: { id: 432 } });
-      if (q === '/mods/search') return send({ data: cfMods, pagination: { totalCount: cfMods.length } });
+      if (q === '/mods/search') {
+        const classId = Number(u.searchParams.get('classId') || 6);
+        const list = Object.values(cf.mods).filter((x) => x.classId === classId);
+        return send({ data: list, pagination: { totalCount: list.length } });
+      }
+      if (q === '/mods/files' && req.method === 'POST') {
+        const { fileIds } = JSON.parse(body);
+        return send({ data: fileIds.map((id) => cf.files[id]).filter(Boolean) });
+      }
+      if (q === '/mods' && req.method === 'POST') {
+        const { modIds } = JSON.parse(body);
+        return send({ data: modIds.map((id) => cf.mods[id]).filter(Boolean) });
+      }
       m = q.match(/^\/mods\/(\d+)$/);
-      if (m) return send({ data: cfMods.find((x) => String(x.id) === m[1]) });
+      if (m) return cf.mods[m[1]] ? send({ data: cf.mods[m[1]] }) : text('not found', 404);
       m = q.match(/^\/mods\/(\d+)\/description$/);
       if (m) return send({ data: '<p>Descripción</p>' });
       m = q.match(/^\/mods\/(\d+)\/files$/);
-      if (m) {
-        const blocked = m[1] === '1002';
-        return send({ data: [{ id: 5001, displayName: 'jei-1.0.jar', fileName: 'jei-1.0.jar', releaseType: 1, fileDate: new Date().toISOString(), downloadCount: 1, downloadUrl: blocked ? null : `${base}/files/jei-1.0.jar`, fileLength: 10, hashes: [], gameVersions: ['1.21.4'], dependencies: [], isAvailable: true }] });
-      }
+      if (m) return send({ data: Object.values(cf.files).filter((f) => String(f.modId) === m[1]) });
       return text('not found', 404);
     }
 
@@ -406,6 +474,10 @@ export async function startMocks() {
 
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
+  Object.assign(state.cf.files, {
+    5001: cfFile(5001, 1001, 'jei-1.0.jar'),
+    5002: cfFile(5002, 1002, 'jei-1.0.jar', { downloadUrl: null }),
+  });
 
   const rewrite = {
     'https://piston-meta.mojang.com': `${base}/mojang`,

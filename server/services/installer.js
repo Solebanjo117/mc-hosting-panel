@@ -54,19 +54,31 @@ function runInstaller(javaPath, installerJar, cwd, report) {
  * Forge/NeoForge modernos crean un archivo de argumentos (win_args.txt / unix_args.txt)
  * o un "shim" jar. Las versiones viejas de Forge dejan un forge-x.jar ejecutable.
  */
-export function detectForgeLaunch(dir) {
-  const shim = fs.readdirSync(dir).find((f) => /-shim\.jar$/.test(f));
-  if (shim) return { type: 'jar', jar: shim };
+export function detectForgeLaunch(dir, loaderVersion = null) {
+  // Tras actualizar (un modpack, por ejemplo) quedan las carpetas de la versión anterior:
+  // se prefiere la que coincide con la versión instalada y, si no, la más reciente.
+  const matches = (n) => Boolean(loaderVersion) && (n === loaderVersion || n.endsWith(`-${loaderVersion}`) || n.includes(`-${loaderVersion}-`));
+  const prefer = (list, name) =>
+    [...list].sort((a, b) => {
+      const ma = matches(name(a)) ? 1 : 0;
+      const mb = matches(name(b)) ? 1 : 0;
+      return mb - ma || fs.statSync(path.join(dir, b.rel)).mtimeMs - fs.statSync(path.join(dir, a.rel)).mtimeMs;
+    });
 
+  const shims = fs.readdirSync(dir).filter((f) => /-shim\.jar$/.test(f)).map((f) => ({ rel: f, name: f }));
+  if (shims.length) return { type: 'jar', jar: prefer(shims, (x) => x.name)[0].rel };
+
+  const found = [];
   for (const base of ['libraries/net/neoforged/neoforge', 'libraries/net/minecraftforge/forge', 'libraries/net/neoforged/forge']) {
     const abs = path.join(dir, base);
     if (!fs.existsSync(abs)) continue;
     for (const ver of fs.readdirSync(abs)) {
       if (fs.existsSync(path.join(abs, ver, 'win_args.txt')) || fs.existsSync(path.join(abs, ver, 'unix_args.txt'))) {
-        return { type: 'args', argsDir: `${base}/${ver}` };
+        found.push({ rel: `${base}/${ver}`, name: ver });
       }
     }
   }
+  if (found.length) return { type: 'args', argsDir: prefer(found, (x) => x.name)[0].rel };
 
   const legacy = fs
     .readdirSync(dir)
@@ -156,7 +168,7 @@ async function doInstall(server, report) {
       fs.rmSync(installer, { force: true });
       fs.rmSync(path.join(dir, 'installer.jar.log'), { force: true });
       // run.bat / run.sh y user_jvm_args.txt no se usan: el panel controla la memoria.
-      launch = detectForgeLaunch(dir);
+      launch = detectForgeLaunch(dir, loaderVersion);
       break;
     }
     default:

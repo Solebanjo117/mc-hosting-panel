@@ -16,7 +16,8 @@ const CLASS = { mod: 6, plugin: 5, datapack: 6945 };
 const LOADER = { forge: 1, fabric: 4, quilt: 5, neoforge: 6 };
 const SORT = { downloads: 6, updated: 3, relevance: 2, newest: 11 };
 const RELEASE = { 1: 'release', 2: 'beta', 3: 'alpha' };
-const SECTION = { 6: 'mc-mods', 5: 'bukkit-plugins', 6945: 'data-packs' };
+const SECTION = { 6: 'mc-mods', 5: 'bukkit-plugins', 6945: 'data-packs', 4471: 'modpacks', 12: 'texture-packs', 6552: 'shaders' };
+export const CLASS_IDS = { mod: 6, modpack: 4471, resourcepack: 12, shader: 6552, datapack: 6945 };
 
 function settings() {
   if (!db.data.settings.curseforge) db.data.settings.curseforge = { apiKey: '' };
@@ -30,10 +31,12 @@ export function publicStatus() {
   return { hasKey: Boolean(k), hint: k ? `…${k.slice(-4)}` : null };
 }
 
-async function call(path, key = settings().apiKey) {
+async function call(path, key = settings().apiKey, { body } = {}) {
   if (!key) throw new HttpError(409, 'Agrega tu clave de CurseForge en Ajustes del panel');
+  const opts = { headers: { 'x-api-key': key }, timeout: 30000 };
+  if (body !== undefined) Object.assign(opts, { method: 'POST', body: JSON.stringify(body), headers: { ...opts.headers, 'Content-Type': 'application/json' } });
   try {
-    return await getJson(`${API}${path}`, { headers: { 'x-api-key': key }, timeout: 20000 });
+    return await getJson(`${API}${path}`, opts);
   } catch (err) {
     if (/ 40[13]/.test(err.message)) throw new HttpError(400, 'CurseForge no aceptó la clave. Revisa que la copiaste completa en Ajustes del panel.');
     throw err;
@@ -154,3 +157,77 @@ export async function details(modId) {
   };
 }
 
+
+// --- Modpacks ---------------------------------------------------------------------
+
+const PACK_LOADERS = { Forge: 'forge', NeoForge: 'neoforge', Fabric: 'fabric', Quilt: 'quilt' };
+
+export async function searchModpacks({ query = '', offset = 0, limit = 20, sort = 'downloads' }) {
+  const data = await call(
+    `/mods/search?${qs({ gameId: MINECRAFT, classId: CLASS_IDS.modpack, searchFilter: query, sortField: SORT[sort] || SORT.downloads, sortOrder: 'desc', index: Number(offset) || 0, pageSize: Math.min(Number(limit) || 20, 50) })}`
+  );
+  return {
+    total: data.pagination?.totalCount ?? data.data.length,
+    results: (data.data || []).map((m) => {
+      const versions = [...new Set((m.latestFilesIndexes || []).map((f) => f.gameVersion).filter(Boolean))];
+      const loaders = [...new Set((m.latestFilesIndexes || []).map((f) => ({ 1: 'forge', 4: 'fabric', 5: 'quilt', 6: 'neoforge' })[f.modLoader]).filter(Boolean))];
+      return {
+        source: 'curseforge',
+        id: String(m.id),
+        slug: m.slug,
+        title: m.name,
+        description: m.summary,
+        author: m.authors?.[0]?.name || '',
+        icon: m.logo?.thumbnailUrl || null,
+        downloads: m.downloadCount,
+        updated: m.dateModified,
+        versions: versions.slice(0, 3),
+        loaders,
+        url: projectUrl(m),
+        blocked: m.allowModDistribution === false,
+      };
+    }),
+  };
+}
+
+/** Versiones de un modpack de CurseForge (sin los "server packs", que son otra cosa). */
+export async function modpackFiles(modId) {
+  const [{ data: mod }, files] = await Promise.all([call(`/mods/${encodeURIComponent(modId)}`), call(`/mods/${encodeURIComponent(modId)}/files?${qs({ pageSize: 50 })}`)]);
+  const url = projectUrl(mod);
+  return (files.data || [])
+    .filter((f) => f.isAvailable !== false && !f.isServerPack)
+    .sort((a, b) => Date.parse(b.fileDate) - Date.parse(a.fileDate))
+    .map((f) => ({
+      id: String(f.id),
+      name: f.displayName,
+      number: f.displayName,
+      type: RELEASE[f.releaseType] || 'release',
+      date: f.fileDate,
+      gameVersions: (f.gameVersions || []).filter((v) => /^\d/.test(v)),
+      loaders: (f.gameVersions || []).map((v) => PACK_LOADERS[v]).filter(Boolean),
+      file: f.downloadUrl ? { url: f.downloadUrl, filename: f.fileName, size: f.fileLength } : null,
+      externalUrl: `${url}/files/${f.id}`,
+      projectTitle: mod.name,
+    }));
+}
+
+/** Datos de varios archivos y proyectos de una vez (para instalar los mods de un modpack). */
+export async function filesInfo(fileIds) {
+  const out = new Map();
+  for (let i = 0; i < fileIds.length; i += 500) {
+    const { data } = await call('/mods/files', undefined, { body: { fileIds: fileIds.slice(i, i + 500) } });
+    for (const f of data || []) out.set(f.id, f);
+  }
+  return out;
+}
+
+export async function modsInfo(modIds) {
+  const out = new Map();
+  for (let i = 0; i < modIds.length; i += 500) {
+    const { data } = await call('/mods', undefined, { body: { modIds: modIds.slice(i, i + 500) } });
+    for (const m of data || []) out.set(m.id, m);
+  }
+  return out;
+}
+
+export const fileUrl = (mod, fileId) => `${projectUrl(mod)}/files/${fileId}`;

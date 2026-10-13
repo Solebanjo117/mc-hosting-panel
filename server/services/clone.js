@@ -10,6 +10,7 @@ import { nextFreePort } from './serverFactory.js';
 import { nextBedrockPort } from './bedrock.js';
 import { nextMapPort } from './worldMap.js';
 import { GEYSER_CONFIG_PATHS } from './geyserConfig.js';
+import { copyPack } from './modpack.js';
 
 // Lo que se regenera solo o no debe copiarse al clon.
 const SKIP = new Set(['logs', 'crash-reports', 'cache', 'session.lock']);
@@ -73,6 +74,7 @@ export async function cloneServer(id, { name }) {
     fs.rmSync(path.join(ext, 'mcxboxbroadcast'), { recursive: true, force: true });
   }
 
+  copyPack(id, newId); // así la copia también puede actualizar el modpack y armar el de jugadores
   db.data.servers.push(clone);
   db.flush();
   writeProperties(newId, { 'server-port': port, 'query.port': port });

@@ -4,6 +4,7 @@ import DOMPurify from 'dompurify';
 import { Link } from 'react-router-dom';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
+import ModpackSection from './ModpackSection.jsx';
 
 /** "hace 3 días", "hace 2 meses"… */
 function ago(iso) {
@@ -45,6 +46,7 @@ export default function ContentTab({ server, label }) {
 
   return (
     <div className="stack" style={{ gap: '1.25rem' }}>
+      <ModpackSection server={server} />
       <div className="row">
         <div className="segmented" role="tablist">
           <button className={view === 'explorar' ? 'on' : ''} onClick={() => setView('explorar')} role="tab" aria-selected={view === 'explorar'}>
@@ -395,8 +397,8 @@ function Installed({ server, label }) {
                     </td>
                     <td className="muted">{item.versionName || '—'}</td>
                     <td className="muted">
-                      {{ manual: 'Subido a mano', hangar: 'Hangar', geysermc: 'GeyserMC' }[item.source] || 'Modrinth'}
-                      {item.managedBy === 'bedrock' ? ', para Bedrock' : ''}
+                      {{ manual: 'Subido a mano', hangar: 'Hangar', geysermc: 'GeyserMC', curseforge: 'CurseForge' }[item.source] || 'Modrinth'}
+                      {item.managedBy === 'bedrock' ? ', para Bedrock' : item.managedBy === 'modpack' ? ', del modpack' : ''}
                     </td>
                     <td>
                       <input

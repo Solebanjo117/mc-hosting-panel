@@ -146,7 +146,7 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
     assert.equal((await c.ok('GET', `${C(fabric)}/installed`)).items.find((i) => i.filename === 'jei-1.0.jar').title, 'Just Enough Items');
     const blocked = await c.post(`${C(fabric)}/install`, { source: 'curseforge', projectId: '1002' });
     assert.equal(blocked.status, 422);
-    assert.match(blocked.body.error, /no permite descargarlo desde otras apps.*curseforge\.com\/minecraft\/mc-mods\/bloqueado\/files\/5001/);
+    assert.match(blocked.body.error, /no permite descargarlo desde otras apps.*curseforge\.com\/minecraft\/mc-mods\/bloqueado\/files\/5002/);
     await c.ok('PUT', '/api/integrations/curseforge', { apiKey: '' });
     assert.equal((await c.ok('GET', '/api/integrations/curseforge')).hasKey, false);
   });
