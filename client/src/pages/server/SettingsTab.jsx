@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { Confirm, Modal, useAction } from '../../ui.jsx';
+import AppearanceEditor from './AppearanceEditor.jsx';
 
 // Ajustes de server.properties que la gente cambia más seguido.
 const COMMON = [
-  { key: 'motd', label: 'Mensaje en la lista de servidores', type: 'text', hint: 'Usa § y un código para colores, p. ej. §a verde.' },
   { key: 'max-players', label: 'Máximo de jugadores', type: 'number' },
   { key: 'gamemode', label: 'Modo de juego', type: 'select', options: [['survival', 'Supervivencia'], ['creative', 'Creativo'], ['adventure', 'Aventura'], ['spectator', 'Espectador']] },
   { key: 'difficulty', label: 'Dificultad', type: 'select', options: [['peaceful', 'Pacífico'], ['easy', 'Fácil'], ['normal', 'Normal'], ['hard', 'Difícil']] },
@@ -60,6 +60,7 @@ export default function SettingsTab({ server, state }) {
 
   return (
     <div className="stack" style={{ gap: '1.75rem', maxWidth: 920 }}>
+      <AppearanceEditor server={server} running={on} />
       <section className="panel stack">
         <div className="row">
           <h2 className="grow" style={{ margin: 0 }}>

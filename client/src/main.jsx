@@ -11,6 +11,9 @@ import '@fontsource/ibm-plex-sans/latin-ext-400.css';
 import '@fontsource/jetbrains-mono/latin-400.css';
 import '@fontsource/pixelify-sans/latin-500.css';
 import './styles.css';
+import { registerServiceWorker } from './notify.js';
+
+registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

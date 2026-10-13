@@ -18,6 +18,7 @@ import * as playit from './services/playit.js';
 import './services/metrics.js';
 import './services/scheduler.js';
 import './services/dns.js';
+import './services/activity.js';
 import { attachWebSocket } from './ws.js';
 import { guardHttp, securityHeaders, sameOrigin } from './lib/netguard.js';
 import { autoStartServers, stopAll } from './services/processManager.js';

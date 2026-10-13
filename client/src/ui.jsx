@@ -138,3 +138,32 @@ export function CopyButton({ text, label = 'Copiar' }) {
     </button>
   );
 }
+
+/**
+ * Cara del jugador (de mc-heads.net). Si no carga (sin internet o nombre de Bedrock),
+ * se muestra un cuadro con la inicial.
+ */
+export function PlayerHead({ name, uuid, size = 24, body = false, className = '', title }) {
+  const [failed, setFailed] = useState(false);
+  const who = uuid || name || '';
+  if (failed || !who) {
+    return (
+      <span className={`head-fallback ${className}`} style={{ width: size, height: body ? size * 2 : size, fontSize: Math.max(9, size * 0.5) }} title={title || name} aria-hidden="true">
+        {(name || '?').replace(/^[.*]/, '')[0]?.toUpperCase() || '?'}
+      </span>
+    );
+  }
+  return (
+    <img
+      className={className}
+      src={`https://mc-heads.net/${body ? 'body' : 'avatar'}/${encodeURIComponent(who)}/${size}`}
+      width={body ? undefined : size}
+      height={body ? size * 2 : size}
+      alt={title ? '' : ''}
+      title={title || name}
+      style={{ imageRendering: 'pixelated', borderRadius: body ? 0 : 3 }}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}

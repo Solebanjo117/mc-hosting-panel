@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api.js';
-import { useAction } from '../../ui.jsx';
+import { PlayerHead, useAction } from '../../ui.jsx';
 
-const avatar = (name) => `https://mc-heads.net/avatar/${encodeURIComponent(name)}/32`;
 
 export default function PlayersTab({ server, runtime }) {
   const [data, setData] = useState(null);
@@ -129,7 +128,7 @@ export default function PlayersTab({ server, runtime }) {
 function Player({ name, noAvatar }) {
   return (
     <span className="row" style={{ gap: '0.55rem', flexWrap: 'nowrap' }}>
-      {!noAvatar && <img src={avatar(name)} alt="" width={24} height={24} style={{ imageRendering: 'pixelated', borderRadius: 3 }} />}
+      {!noAvatar && <PlayerHead name={name} size={24} />}
       <span>{name}</span>
     </span>
   );

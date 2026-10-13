@@ -8,6 +8,7 @@ import { ensureJava, requiredJava } from './java.js';
 import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
+import { applyConfig as applyMapConfig } from './worldMap.js';
 import { analyze } from './crashAnalyzer.js';
 import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
 import { compareVersions } from '../lib/util.js';
@@ -77,6 +78,7 @@ class Instance {
       this.crashCount = 0;
       this.setStatus('running');
       if (this.geyserPending) this.finishGeyserSetup();
+      if (this.mapPending) this.finishMapSetup();
     }
     let m = line.match(/: ([A-Za-z0-9_.]{2,17}) joined the game/);
     if (m) {
@@ -191,6 +193,27 @@ class Instance {
     if (this.proc) this.panelLine('Geyser no creó su configuración. Revisa que el plugin/mod de Geyser se haya cargado sin errores.');
   }
 
+  /** BlueMap crea su configuración en el primer arranque: el panel la ajusta y lo recarga. */
+  async finishMapSetup() {
+    this.mapPending = false;
+    for (let attempt = 0; attempt < 20 && this.proc; attempt++) {
+      await sleep(3000);
+      const server = getServer(this.id);
+      if (!server?.map?.enabled) return;
+      const result = applyMapConfig(server);
+      if (result === 'missing') continue;
+      if (result === 'changed') {
+        this.panelLine(`Configurando el mapa (BlueMap) en el puerto ${server.map.port}, solo para esta PC…`);
+        try {
+          this.send('bluemap reload');
+        } catch {
+          /* el servidor se apagó */
+        }
+      }
+      return;
+    }
+  }
+
   /** Espera una línea que cumpla la expresión (útil para backups). */
   waitForLine(regex, timeoutMs) {
     return new Promise((resolve) => {
@@ -252,6 +275,9 @@ class Instance {
       if (geyser === 'missing') this.geyserPending = true;
       else if (geyser === 'changed') this.panelLine(`Geyser configurado en el puerto UDP ${server.bedrock.port}.`);
     }
+
+    this.mapPending = false;
+    if (server.map?.enabled && applyMapConfig(server) === 'missing') this.mapPending = true;
 
     this.panelLine(`Iniciando: java ${args.join(' ')}`);
     const proc = spawn(javaPath, args, { cwd: serverDir(this.id), windowsHide: true });

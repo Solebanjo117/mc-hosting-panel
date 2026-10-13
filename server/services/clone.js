@@ -8,6 +8,7 @@ import { instance, isRunning } from './processManager.js';
 import { writeProperties } from './properties.js';
 import { nextFreePort } from './serverFactory.js';
 import { nextBedrockPort } from './bedrock.js';
+import { nextMapPort } from './worldMap.js';
 import { GEYSER_CONFIG_PATHS } from './geyserConfig.js';
 
 // Lo que se regenera solo o no debe copiarse al clon.
@@ -54,6 +55,7 @@ export async function cloneServer(id, { name }) {
     clonedFrom: id,
     playit: { enabled: false },
     dns: undefined, // el dominio es del original; la copia se configura aparte
+    map: src.map?.enabled ? { enabled: true, port: nextMapPort(id) } : undefined,
     lastAutoBackup: null,
     scheduleLog: [],
     protectionState: null,

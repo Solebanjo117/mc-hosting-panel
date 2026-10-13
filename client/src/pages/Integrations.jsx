@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useLive } from '../live.jsx';
 import { Confirm, useAction, useToast } from '../ui.jsx';
+import { askPermission, canInstall, notifyPrefs, notifySupported, onInstallChange, promptInstall, setNotifyPrefs } from '../notify.js';
 
 const AGENT_STATUS = {
   stopped: 'Detenido',
@@ -307,6 +308,82 @@ export function DnsSettings() {
           onConfirm={unlink}
         />
       )}
+    </section>
+  );
+}
+
+/** Notificaciones de este navegador e instalar el panel como app. */
+export function AppSettings() {
+  const [prefs, setPrefs] = useState(notifyPrefs);
+  const [perm, setPerm] = useState(() => (notifySupported() ? Notification.permission : 'unsupported'));
+  const [installable, setInstallable] = useState(canInstall);
+  const toast = useToast();
+  useEffect(() => onInstallChange(setInstallable), []);
+  const standalone = typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches;
+
+  const update = (patch) => {
+    const next = { ...prefs, ...patch };
+    setPrefs(next);
+    setNotifyPrefs(next);
+  };
+
+  return (
+    <section className="panel stack">
+      <h2 style={{ margin: 0 }}>Notificaciones y app</h2>
+      {perm === 'unsupported' ? (
+        <p className="muted small" style={{ maxWidth: '75ch' }}>
+          Este navegador no permite notificaciones aquí. Los navegadores solo las dan en páginas seguras: abre el panel como{' '}
+          <span className="mono">http://localhost:{location.port || 80}</span> en esta PC, o por HTTPS (por ejemplo con <span className="mono">tailscale serve</span>)
+          desde el celular.
+        </p>
+      ) : (
+        <>
+          <p className="muted small" style={{ maxWidth: '75ch' }}>
+            Avisos del sistema cuando no estás viendo el panel. Se configuran por navegador: actívalos en cada equipo donde los quieras.
+          </p>
+          <label className="row small" style={{ gap: '0.5rem' }}>
+            <input
+              type="checkbox"
+              checked={prefs.enabled && perm === 'granted'}
+              onChange={async (e) => {
+                if (!e.target.checked) return update({ enabled: false });
+                const p = await askPermission();
+                setPerm(p);
+                if (p === 'granted') {
+                  update({ enabled: true });
+                  toast('Notificaciones activadas');
+                } else toast('El navegador bloqueó las notificaciones. Permítelas en el candado de la barra de direcciones.', 'error');
+              }}
+            />
+            Activar notificaciones en este navegador
+          </label>
+          {prefs.enabled && perm === 'granted' && (
+            <div className="stack" style={{ gap: '0.3rem', paddingLeft: '1.6rem' }}>
+              <label className="row small" style={{ gap: '0.5rem' }}>
+                <input type="checkbox" checked={prefs.joins} onChange={(e) => update({ joins: e.target.checked })} />
+                Cuando alguien entra a un servidor
+              </label>
+              <label className="row small" style={{ gap: '0.5rem' }}>
+                <input type="checkbox" checked={prefs.crash} onChange={(e) => update({ crash: e.target.checked })} />
+                Cuando un servidor se cae
+              </label>
+            </div>
+          )}
+          {perm === 'denied' && <p className="note small">Bloqueaste las notificaciones para esta página. Permítelas desde el candado de la barra de direcciones.</p>}
+        </>
+      )}
+      <div className="row">
+        {standalone ? (
+          <span className="muted small">Estás usando el panel como app.</span>
+        ) : installable ? (
+          <button onClick={() => promptInstall()}>Instalar el panel como app</button>
+        ) : (
+          <span className="faint small" style={{ maxWidth: '75ch' }}>
+            Para tenerlo como app: en Chrome o Edge, menú ⋮ → <strong>Instalar MC Hosting Panel</strong> (o “Agregar a pantalla de inicio” en el celular). En
+            iPhone: Safari → Compartir → <strong>Agregar a inicio</strong>.
+          </span>
+        )}
+      </div>
     </section>
   );
 }

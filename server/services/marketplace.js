@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { serverDir, USER_AGENT } from '../config.js';
 import { db, getServer } from '../db.js';
-import { download, getJson } from '../lib/http.js';
+import { download, getJson, getText } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
 import { readProperties } from './properties.js';
 
@@ -13,7 +13,7 @@ import { readProperties } from './properties.js';
  *  - Hangar (hangar.papermc.io/api/v1): repositorio oficial de plugins de PaperMC.
  */
 
-const MODRINTH = 'https://api.modrinth.com/v2';
+const MODRINTH = process.env.MODRINTH_API || 'https://api.modrinth.com/v2';
 const HANGAR = 'https://hangar.papermc.io/api/v1';
 
 /** Qué tipo de contenido y qué loaders acepta cada tipo de servidor. */
@@ -68,6 +68,9 @@ async function searchModrinth(server, profile, { query, offset, limit, sort }) {
       categories: h.display_categories || h.categories || [],
       clientOnly: h.server_side === 'unsupported',
       url: `https://modrinth.com/${h.project_type}/${h.slug}`,
+      banner: h.featured_gallery || h.gallery?.[0] || null,
+      color: typeof h.color === 'number' ? `#${h.color.toString(16).padStart(6, '0')}` : null,
+      follows: h.follows ?? null,
     })),
   };
 }
@@ -108,6 +111,65 @@ export async function search(id, { source = 'modrinth', query = '', offset = 0, 
   const opts = { query, offset: Number(offset) || 0, limit: Math.min(Number(limit) || 20, 50), sort };
   const res = source === 'hangar' ? await searchHangar(server, opts) : await searchModrinth(server, profile, opts);
   return { ...res, kind: profile.kind, sources: profile.sources };
+}
+
+// --- Detalle de un proyecto (descripción completa y galería) -------------------
+
+export async function projectDetails(source, projectId) {
+  if (source === 'hangar') {
+    const p = await getJson(`${HANGAR}/projects/${encodeURIComponent(projectId)}`);
+    let body = p.description || '';
+    try {
+      body = await getText(`${HANGAR}/pages/main/${encodeURIComponent(projectId)}`);
+    } catch {
+      /* sin página principal */
+    }
+    return {
+      source,
+      id: projectId,
+      title: p.name,
+      author: p.namespace?.owner,
+      description: p.description,
+      icon: p.avatarUrl || null,
+      body,
+      gallery: [],
+      downloads: p.stats?.downloads ?? null,
+      follows: p.stats?.stars ?? null,
+      updated: p.lastUpdated,
+      license: p.settings?.license?.name || null,
+      links: (p.settings?.links || []).flatMap((g) => g.links || []).map((l) => ({ label: l.name, url: l.url })),
+      url: `https://hangar.papermc.io/${p.namespace?.owner}/${p.namespace?.slug}`,
+    };
+  }
+  const p = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}`);
+  const links = [
+    ['Código fuente', p.source_url],
+    ['Reportar problemas', p.issues_url],
+    ['Wiki', p.wiki_url],
+    ['Discord', p.discord_url],
+  ]
+    .filter(([, url]) => url)
+    .map(([label, url]) => ({ label, url }));
+  return {
+    source,
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    icon: p.icon_url || null,
+    body: p.body || '',
+    gallery: (p.gallery || [])
+      .sort((a, b) => Number(b.featured) - Number(a.featured) || (a.ordering ?? 0) - (b.ordering ?? 0))
+      .map((g) => ({ url: g.url, raw: g.raw_url || g.url, title: g.title || '', description: g.description || '' })),
+    downloads: p.downloads,
+    follows: p.followers,
+    updated: p.updated,
+    license: p.license?.name || p.license?.id || null,
+    categories: p.categories || [],
+    clientSide: p.client_side,
+    serverSide: p.server_side,
+    links,
+    url: `https://modrinth.com/${p.project_type}/${p.slug}`,
+  };
 }
 
 // --- Versiones de un proyecto ------------------------------------------------

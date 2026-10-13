@@ -283,7 +283,7 @@ async function agentId(refresh = false) {
 function asciiName(text) {
   return String(text)
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\x20-\x7e]/g, '')
     .trim()
     .slice(0, 40) || 'Minecraft';

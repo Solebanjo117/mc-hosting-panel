@@ -14,6 +14,9 @@ import * as bedrock from '../services/bedrock.js';
 import * as playit from '../services/playit.js';
 import * as dns from '../services/dns.js';
 import { gameList } from '../services/gameData.js';
+import * as worldMap from '../services/worldMap.js';
+import { healthCheck } from '../services/health.js';
+import { activity, playerStats, removeActivity } from '../services/activity.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
@@ -97,6 +100,7 @@ serversRouter.delete('/:id', async (req, res) => {
   fs.rmSync(serverDir(server.id), { recursive: true, force: true });
   fs.rmSync(path.join(DATA_DIR, 'modpacks', `${server.id}.mrpack`), { force: true });
   removeMetrics(server.id);
+  removeActivity(server.id);
   if (req.query.keepBackups !== 'true') fs.rmSync(backupDir(server.id), { recursive: true, force: true });
   db.data.servers = db.data.servers.filter((s) => s.id !== server.id);
   db.flush();
@@ -253,6 +257,55 @@ serversRouter.post('/:id/playit', async (req, res) => {
   bus.emit('servers');
   res.json(result);
 });
+
+// --- Actividad y estadísticas de jugadores --------------------------------------------
+
+serversRouter.get('/:id/activity', (req, res) => {
+  res.json(activity(load(req).id, { limit: Number(req.query.limit) || 100, before: req.query.before || null, filter: String(req.query.filter || 'all') }));
+});
+serversRouter.get('/:id/stats', (req, res) => res.json(playerStats(load(req).id)));
+
+// --- Revisión general, ícono del servidor -----------------------------------------------
+
+serversRouter.get('/:id/health', async (req, res) => res.json(await healthCheck(load(req).id)));
+
+serversRouter.get('/:id/icon', (req, res) => {
+  const file = path.join(serverDir(load(req).id), 'server-icon.png');
+  if (!fs.existsSync(file)) throw new HttpError(404, 'Sin ícono');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.type('png').send(fs.readFileSync(file));
+});
+
+/** Recibe el ícono ya recortado a 64×64 en el navegador (PNG en base64). */
+serversRouter.put('/:id/icon', (req, res) => {
+  const server = load(req);
+  const file = path.join(serverDir(server.id), 'server-icon.png');
+  if (req.body?.remove) {
+    fs.rmSync(file, { force: true });
+    bus.emit('servers');
+    return res.json({ ok: true, restartRequired: isRunning(server.id) });
+  }
+  const buf = Buffer.from(String(req.body?.png || '').replace(/^data:image\/png;base64,/, ''), 'base64');
+  const isPng = buf.length > 24 && buf.readUInt32BE(0) === 0x89504e47 && buf.toString('ascii', 12, 16) === 'IHDR';
+  if (!isPng) throw new HttpError(400, 'El ícono debe ser una imagen PNG');
+  if (buf.readUInt32BE(16) !== 64 || buf.readUInt32BE(20) !== 64) throw new HttpError(400, 'El ícono debe medir 64×64 píxeles');
+  if (buf.length > 256 * 1024) throw new HttpError(400, 'El ícono es demasiado grande');
+  fs.writeFileSync(file, buf);
+  updateServer(server.id, { iconAt: Date.now() });
+  bus.emit('servers');
+  res.json({ ok: true, restartRequired: isRunning(server.id) });
+});
+
+// --- Mapa del mundo (BlueMap) -------------------------------------------------------
+
+serversRouter.get('/:id/map', (req, res) => res.json(worldMap.status(load(req).id)));
+serversRouter.post('/:id/map', async (req, res) => {
+  const server = load(req);
+  const result = req.body?.enabled === false ? worldMap.disable(server.id) : await worldMap.enable(server.id);
+  bus.emit('servers');
+  res.json({ ...result, restartRequired: isRunning(server.id) });
+});
+serversRouter.use('/:id/map/view', (req, res) => worldMap.proxy(req, res));
 
 // --- Listas del juego para los comandos rápidos (objetos, efectos…) ---------------
 

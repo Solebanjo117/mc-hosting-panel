@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, formatBytes, formatDate } from '../../api.js';
-import { Confirm, Modal, useAction, useToast } from '../../ui.jsx';
+import { Confirm, Modal, PlayerHead, useAction, useToast } from '../../ui.jsx';
 import NbtEditor from './NbtEditor.jsx';
+import InventoryEditor from './InventoryEditor.jsx';
 
 export default function WorldsTab({ server, state }) {
   const [data, setData] = useState(null);
@@ -10,6 +11,7 @@ export default function WorldsTab({ server, state }) {
   const [uploading, setUploading] = useState(false);
   const [nbt, setNbt] = useState(null);
   const [playersOf, setPlayersOf] = useState(null);
+  const [inventory, setInventory] = useState(null);
   const fileRef = useRef(null);
   const [run, busy] = useAction();
   const toast = useToast();
@@ -126,6 +128,20 @@ export default function WorldsTab({ server, state }) {
             setPlayersOf(null);
             setNbt({ path: p.path, title: `Datos de ${p.name || p.uuid}` });
           }}
+          onInventory={(p) => {
+            setPlayersOf(null);
+            setInventory({ path: p.path, title: `Inventario de ${p.name || p.uuid}` });
+          }}
+        />
+      )}
+      {inventory && (
+        <InventoryEditor
+          serverId={server.id}
+          version={server.mcVersion}
+          path={inventory.path}
+          title={inventory.title}
+          running={on}
+          onClose={() => setInventory(null)}
         />
       )}
       {creating && <CreateWorld base={base} seed={data.seed} onClose={() => setCreating(false)} onDone={setData} />}
@@ -187,7 +203,7 @@ function CreateWorld({ base, onClose, onDone }) {
   );
 }
 
-function PlayerData({ serverId, world, onClose, onOpen }) {
+function PlayerData({ serverId, world, onClose, onOpen, onInventory }) {
   const [list, setList] = useState(null);
   const [error, setError] = useState('');
   useEffect(() => {
@@ -211,14 +227,17 @@ function PlayerData({ serverId, world, onClose, onOpen }) {
               <tr key={p.uuid}>
                 <td>
                   <span className="row" style={{ gap: '0.5rem', flexWrap: 'nowrap' }}>
-                    {p.name && <img src={`https://mc-heads.net/avatar/${p.uuid}/24`} alt="" width={24} height={24} style={{ imageRendering: 'pixelated', borderRadius: 3 }} />}
+                    {p.name && <PlayerHead uuid={p.uuid} name={p.name} size={24} />}
                     <span>{p.name || <span className="mono small">{p.uuid}</span>}</span>
                   </span>
                 </td>
                 <td className="muted small">{formatDate(p.mtime)}</td>
                 <td className="actions">
-                  <button className="btn-sm btn-go" onClick={() => onOpen(p)}>
-                    Editar
+                  <button className="btn-sm btn-go" onClick={() => onInventory(p)}>
+                    Inventario
+                  </button>{' '}
+                  <button className="btn-sm" onClick={() => onOpen(p)}>
+                    Todos los datos
                   </button>
                 </td>
               </tr>

@@ -3,8 +3,9 @@
 Panel web propio para crear y administrar servidores de **Minecraft Java** en tu PC con Windows, y que tus amigos se conecten desde su casa.
 
 - Crea servidores **Paper, Fabric, Forge, NeoForge o Vanilla** eligiendo tipo y versión; el panel descarga el servidor y el **Java correcto** (Eclipse Temurin) sin que instales nada.
-- **Consola en vivo** con historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido, y **comandos rápidos configurables**: agrega, quita y ordena botones; con huecos como `{jugador}` u `{objeto}` el panel te pregunta el dato con la lista de jugadores conectados o un buscador de objetos, efectos, encantamientos y criaturas con su nombre en español.
-- **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC), filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
+- **Tablero de inicio** con una tarjeta por servidor: su ícono, las caras de los jugadores conectados, mini gráficas de la última hora (jugadores, RAM, TPS) y un indicador de salud.
+- **Consola en vivo** con los colores reales de Minecraft, filtros (chat, avisos y errores, comandos), búsqueda, nombres de jugador que se tocan para darles objetos, cambiar su modo, curarlos, hacerlos operador o expulsarlos, historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido, y **comandos rápidos configurables**: agrega, quita y ordena botones; con huecos como `{jugador}` u `{objeto}` el panel te pregunta el dato con la lista de jugadores conectados o un buscador de objetos, efectos, encantamientos y criaturas con su nombre en español.
+- **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC) en tarjetas con imagen, descargas y fecha, y una ficha con galería y descripción completa; filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg.
@@ -13,6 +14,12 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
 - **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
 - **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
+- **Inventario visual** de cada jugador como en el juego (armadura, mano secundaria, inventario, barra rápida y cofre de Ender): arrastra objetos, cambia cantidades o pon objetos nuevos con el buscador.
+- **Mapa del mundo en 3D** con BlueMap dentro del panel, con los jugadores en vivo (Paper, Fabric, Forge y NeoForge).
+- **Actividad:** ranking de jugadores (tiempo jugado, bloques minados, distancia, mobs, muertes…), mapa de calor de cuándo se juega y línea de tiempo de entradas, salidas, caídas y respaldos.
+- **Cómo se ve en la lista de servidores:** editor del mensaje (MOTD) con colores y formato, y del ícono de 64×64, con vista previa idéntica a la de Minecraft.
+- **Revisión general** de cada servidor en una lista con palomitas: Java, puerto, firewall, túnel, dominio, respaldos, disco, memoria y seguridad.
+- **Notificaciones del navegador** cuando alguien entra o un servidor se cae, y el panel se puede **instalar como app**.
 - **Mundos:** varios mundos por servidor, crear con semilla y tipo, importar desde .zip, descargar y cambiar entre ellos.
 - **Logs y diagnóstico:** búsqueda en todos los logs (también los antiguos .gz), lectura de crash reports y explicación en español de las causas comunes (falta de memoria, mods que faltan o chocan, Java incorrecto, puerto ocupado…).
 - **Seguridad:** revisión por servidor con arreglos de un clic, protección contra oleadas de bots (bloqueo temporal de IP y lista blanca de emergencia), panel limitado a tu red, historial de inicios de sesión, y una guía sobre DDoS (qué se puede y qué no se puede hacer desde casa).
@@ -53,6 +60,8 @@ Todo vive en la carpeta `data/` (no se sube a Git):
 data/
   db.json          cuenta, ajustes, servidores, tareas programadas
   metrics/         historial de rendimiento (7 días)
+  activity/        entradas, salidas y eventos de cada servidor (90 días)
+  cache/gamedata/  listas de objetos y nombres en español por versión
   modpacks/        archivos .mrpack importados
   playit/          agente de playit.gg y su llave (playit.toml)
   servers/<id>/    cada servidor: mundos, mods, plugins, configuración
@@ -109,6 +118,9 @@ server/
     metrics.js          historial de CPU, RAM, TPS y jugadores
     worlds.js           varios mundos por servidor
     quickCommands.js    comandos rápidos de la consola (plantillas con huecos)
+    worldMap.js         mapa con BlueMap: instalación, configuración y proxy dentro del panel
+    activity.js         línea de tiempo, mapa de calor y estadísticas de jugadores
+    health.js           revisión general de cada servidor
     gameData.js         listas de objetos, efectos, encantamientos y entidades por versión, con nombres en español
   lib/nbt.js            lectura y escritura de NBT (gzip, zlib o sin comprimir; UTF-8 modificado de Java)
     logs.js             lectura y búsqueda de logs y crash reports
@@ -122,6 +134,11 @@ docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ```
 
 ## Limitaciones conocidas
+
+- El inventario y los datos de jugadores se guardan con el servidor apagado (mientras corre, Minecraft reescribe esos archivos).
+- BlueMap tarda en dibujar el mapa la primera vez y usa CPU mientras lo hace; solo dibuja lo ya explorado.
+- Las notificaciones y la app instalable solo funcionan en páginas seguras: `http://localhost` en la PC del servidor, o HTTPS (por ejemplo con `tailscale serve`). Por la IP de la red local (`http://192.168…`) el navegador no las permite.
+- Los nombres en español de objetos y criaturas vienen del archivo de idioma oficial de Mojang; los objetos de mods se muestran con su ID.
 
 - Los servidores son de Java Edition; Bedrock entra a través de Geyser, que no existe para Forge ni puede ir en Vanilla. En Fabric y NeoForge, Geyser solo sigue la versión más reciente de Minecraft.
 - playit.gg se controla con la API que usa su agente oficial (v1.0.x). Si playit cambia esa API, la creación de túneles podría fallar; en ese caso los túneles se pueden crear a mano en playit.gg.

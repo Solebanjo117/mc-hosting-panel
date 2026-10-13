@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
+import { notify } from './notify.js';
 
 /**
  * Estado en vivo del panel: lista de servidores, estado de cada proceso,
@@ -17,6 +18,14 @@ export function LiveProvider({ children }) {
   const consoles = useRef(new Map()); // id -> { lines, listeners:Set }
   const wsRef = useRef(null);
   const subs = useRef(new Map()); // id -> contador de vistas suscritas
+  const runtimeRef = useRef({});
+  const serversRef = useRef([]);
+  useEffect(() => {
+    runtimeRef.current = runtime;
+  }, [runtime]);
+  useEffect(() => {
+    serversRef.current = servers;
+  }, [servers]);
 
   const refresh = useCallback(async () => {
     try {
@@ -58,7 +67,17 @@ export function LiveProvider({ children }) {
         const msg = JSON.parse(ev.data);
         if (msg.type === 'status') {
           const { type: _t, id, ...snap } = msg;
-          setRuntime((prev) => ({ ...prev, [id]: snap }));
+          const prev = runtimeRef.current[id];
+          const name = serversRef.current.find((s) => s.id === id)?.name || 'el servidor';
+          if (prev) {
+            const before = new Set(prev.players || []);
+            for (const p of snap.players || []) if (!before.has(p)) notify('joins', `${p} entró`, `Se conectó a ${name}.`, `/servidor/${id}`);
+            if (snap.status === 'crashed' && prev.status !== 'crashed') {
+              notify('crash', `${name} se cayó`, snap.lastCrash?.findings?.[0]?.title || 'Abre el panel para ver la causa.', `/servidor/${id}`);
+            }
+          }
+          runtimeRef.current = { ...runtimeRef.current, [id]: snap };
+          setRuntime((p) => ({ ...p, [id]: snap }));
         } else if (msg.type === 'servers') {
           refresh();
         } else if (msg.type === 'playit') {

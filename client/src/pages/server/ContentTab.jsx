@@ -1,6 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
+
+/** "hace 3 días", "hace 2 meses"… */
+function ago(iso) {
+  if (!iso) return '';
+  const s = (Date.now() - Date.parse(iso)) / 1000;
+  const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
+  for (const [unit, sec] of [
+    ['year', 31536000],
+    ['month', 2592000],
+    ['week', 604800],
+    ['day', 86400],
+    ['hour', 3600],
+  ]) {
+    if (s >= sec) return rtf.format(-Math.floor(s / sec), unit);
+  }
+  return 'hace un momento';
+}
+
+// Las descripciones vienen de otros sitios: se limpian antes de mostrarlas.
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noreferrer noopener');
+  }
+  if (node.tagName === 'IMG') node.setAttribute('loading', 'lazy');
+});
+const renderBody = (md) => DOMPurify.sanitize(marked.parse(md || ''), { FORBID_TAGS: ['style', 'form', 'input', 'iframe'], FORBID_ATTR: ['style'] });
 
 const SOURCE_LABEL = { modrinth: 'Modrinth', hangar: 'Hangar (PaperMC)' };
 const PAGE = 20;
@@ -49,6 +78,7 @@ function Explore({ server, label, onInstalled }) {
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState(null);
   const [picker, setPicker] = useState(null);
+  const [details, setDetails] = useState(null);
   const [installed, setInstalled] = useState(new Set());
   const toast = useToast();
 
@@ -131,35 +161,60 @@ function Explore({ server, label, onInstalled }) {
 
       {error && <div className="error-box">No se pudo buscar en {SOURCE_LABEL[source]}: {error}</div>}
 
-      <div className="results" aria-busy={loading}>
+      <div className="mcards" aria-busy={loading}>
         {data?.results.length === 0 && !loading && <p className="muted">Sin resultados para esta versión. Prueba con otras palabras.</p>}
         {data?.results.map((item) => (
-          <article key={`${item.source}-${item.id}`} className="result">
-            {item.icon ? <img src={item.icon} alt="" loading="lazy" /> : <div className="noicon" aria-hidden="true" />}
-            <div style={{ minWidth: 0 }}>
-              <h3>
-                <a href={item.url} target="_blank" rel="noreferrer">
-                  {item.title}
-                </a>{' '}
-                <span className="faint small" style={{ fontWeight: 400 }}>
-                  de {item.author}
-                </span>
-              </h3>
-              <p>{item.description}</p>
-              <div className="faint small" style={{ marginTop: '0.2rem' }}>
-                {formatNumber(item.downloads)} descargas
-                {item.updated ? `, actualizado ${formatDate(item.updated).split(',')[0]}` : ''}
-                {item.clientOnly && <span style={{ color: 'var(--gold)' }}> · Solo funciona en el cliente</span>}
+          <article key={`${item.source}-${item.id}`} className="mcard">
+            <button
+              type="button"
+              className="mcard-banner"
+              onClick={() => setDetails(item)}
+              aria-label={`Ver detalles de ${item.title}`}
+              style={
+                item.banner
+                  ? { backgroundImage: `url("${item.banner}")` }
+                  : { background: `linear-gradient(135deg, ${item.color || 'var(--slate-3)'}55, var(--slate-2))` }
+              }
+            />
+            <div className="mcard-body">
+              <div className="mcard-head">
+                {item.icon ? <img src={item.icon} alt="" loading="lazy" className="mcard-icon" /> : <div className="mcard-icon noicon" aria-hidden="true" />}
+                <div style={{ minWidth: 0 }}>
+                  <h3 className="mcard-title">
+                    <button type="button" className="link-btn" onClick={() => setDetails(item)}>
+                      {item.title}
+                    </button>
+                  </h3>
+                  <div className="faint small">de {item.author}</div>
+                </div>
+                {installed.has(item.id) && <span className="chip mcard-installed">Instalado</span>}
               </div>
+              <p className="mcard-desc">{item.description}</p>
+              {item.categories?.length > 0 && (
+                <div className="mcard-tags">
+                  {item.categories.slice(0, 3).map((c) => (
+                    <span key={c}>{c}</span>
+                  ))}
+                </div>
+              )}
+              <div className="mcard-stats faint small">
+                <span title="Descargas">⤓ {formatNumber(item.downloads)}</span>
+                {item.follows != null && <span title="Seguidores">♥ {formatNumber(item.follows)}</span>}
+                {item.updated && <span title={formatDate(item.updated)}>Actualizado {ago(item.updated)}</span>}
+              </div>
+              {item.clientOnly && <div className="small" style={{ color: 'var(--gold)' }}>Solo funciona en el cliente, no en el servidor</div>}
             </div>
-            <div className="row" style={{ gap: '0.4rem', justifyContent: 'flex-end' }}>
+            <footer className="mcard-foot">
+              <button className="btn-sm btn-ghost" onClick={() => setDetails(item)}>
+                Detalles
+              </button>
               <button className="btn-sm" onClick={() => setPicker(item)} disabled={installing === item.id}>
                 Versiones
               </button>
               <button className="btn-sm btn-go" onClick={() => install(item)} disabled={installing === item.id}>
                 {installing === item.id ? 'Instalando…' : installed.has(item.id) ? 'Reinstalar' : 'Instalar'}
               </button>
-            </div>
+            </footer>
           </article>
         ))}
       </div>
@@ -178,6 +233,20 @@ function Explore({ server, label, onInstalled }) {
         </div>
       )}
 
+      {details && (
+        <ProjectDetails
+          server={server}
+          item={details}
+          installed={installed.has(details.id)}
+          installing={installing === details.id}
+          onClose={() => setDetails(null)}
+          onInstall={() => install(details)}
+          onVersions={() => {
+            setPicker(details);
+            setDetails(null);
+          }}
+        />
+      )}
       {picker && (
         <VersionPicker
           server={server}
@@ -375,5 +444,82 @@ function Installed({ server, label }) {
         </div>
       )}
     </div>
+  );
+}
+
+function ProjectDetails({ server, item, installed, installing, onClose, onInstall, onVersions }) {
+  const [p, setP] = useState(null);
+  const [error, setError] = useState('');
+  const [shot, setShot] = useState(0);
+  useEffect(() => {
+    api(`/servers/${server.id}/content/project?${qs({ source: item.source, projectId: item.id })}`)
+      .then(setP)
+      .catch((err) => setError(err.message));
+  }, [server.id, item]);
+  const html = useMemo(() => (p ? renderBody(p.body) : ''), [p]);
+  const g = p?.gallery || [];
+
+  return (
+    <Modal title={item.title} onClose={onClose} wide>
+      <div className="stack" style={{ gap: '1rem' }}>
+        <div className="row" style={{ gap: '0.9rem', flexWrap: 'nowrap' }}>
+          {item.icon ? <img src={item.icon} alt="" width={64} height={64} className="mcard-icon" style={{ width: 64, height: 64 }} /> : null}
+          <div className="grow" style={{ minWidth: 0 }}>
+            <div className="muted small">de {item.author}</div>
+            <p style={{ margin: '0.2rem 0 0' }}>{item.description}</p>
+            <div className="mcard-stats faint small" style={{ marginTop: '0.4rem' }}>
+              <span>⤓ {formatNumber(p?.downloads ?? item.downloads)} descargas</span>
+              {(p?.follows ?? item.follows) != null && <span>♥ {formatNumber(p?.follows ?? item.follows)}</span>}
+              {(p?.updated || item.updated) && <span>Actualizado {ago(p?.updated || item.updated)}</span>}
+              {p?.license && <span>Licencia {p.license}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <button className="btn-go" disabled={installing} onClick={onInstall}>
+            {installing ? 'Instalando…' : installed ? 'Reinstalar' : 'Instalar la versión recomendada'}
+          </button>
+          <button onClick={onVersions}>Elegir versión</button>
+          <span className="grow" />
+          <a className="btn btn-ghost" href={item.url} target="_blank" rel="noreferrer">
+            Abrir en {item.source === 'hangar' ? 'Hangar' : 'Modrinth'}
+          </a>
+        </div>
+        {error && <div className="error-box">{error}</div>}
+        {!p && !error && <p className="muted">Cargando detalles…</p>}
+        {g.length > 0 && (
+          <div className="gallery">
+            <figure className="gallery-main">
+              <img src={g[shot].raw || g[shot].url} alt={g[shot].title || ''} />
+              {(g[shot].title || g[shot].description) && (
+                <figcaption className="small muted">
+                  {g[shot].title}
+                  {g[shot].description ? ` — ${g[shot].description}` : ''}
+                </figcaption>
+              )}
+            </figure>
+            {g.length > 1 && (
+              <div className="gallery-thumbs">
+                {g.map((x, i) => (
+                  <button key={x.url} type="button" className={i === shot ? 'on' : ''} onClick={() => setShot(i)} aria-label={`Imagen ${i + 1}`}>
+                    <img src={x.url} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {p?.links?.length > 0 && (
+          <div className="row small" style={{ gap: '0.8rem' }}>
+            {p.links.map((l) => (
+              <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )}
+        {html && <div className="doc project-body" dangerouslySetInnerHTML={{ __html: html }} />}
+      </div>
+    </Modal>
   );
 }

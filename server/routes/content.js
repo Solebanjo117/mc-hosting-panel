@@ -14,6 +14,10 @@ contentRouter.get('/search', async (req, res) => {
   res.json(await market.search(id(req), req.query));
 });
 
+contentRouter.get('/project', async (req, res) => {
+  res.json(await market.projectDetails(String(req.query.source || 'modrinth'), String(req.query.projectId || '')));
+});
+
 contentRouter.get('/versions', async (req, res) => {
   const { source = 'modrinth', projectId } = req.query;
   if (!projectId) throw new HttpError(400, 'Falta projectId');

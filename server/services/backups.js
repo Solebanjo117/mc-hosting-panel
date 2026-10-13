@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import archiver from 'archiver';
+import { record } from './activity.js';
 import AdmZip from 'adm-zip';
 import { serverDir, backupDir } from '../config.js';
 import { db, getServer } from '../db.js';
@@ -73,6 +74,7 @@ export async function createBackup(id, mode = 'completo', reason = 'manual') {
     });
     fs.renameSync(`${dest}.part`, dest);
     if (running) inst.panelLine(`Respaldo creado: ${file}`);
+    record(id, 'backup', { detail: reason === 'manual' ? 'manual' : reason === 'auto' ? 'automático' : reason });
     pruneBackups(id);
     return listBackups(id).find((b) => b.file === file);
   } finally {

@@ -1,13 +1,22 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
-import { CopyButton, useToast } from '../../ui.jsx';
+import { Confirm, CopyButton, PlayerHead, useToast } from '../../ui.jsx';
+import { parseConsole, segStyle } from '../../mcText.js';
 import { Findings } from './LogsTab.jsx';
-import QuickCommands from './QuickCommands.jsx';
+import QuickCommands, { RunCommand } from './QuickCommands.jsx';
 
-// Quita códigos de color ANSI y de Minecraft (§a, §l…).
-const clean = (line) => line.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/§[0-9a-fk-or]/gi, '');
+const FILTERS = [
+  { id: 'all', label: 'Todo' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'problems', label: 'Avisos y errores' },
+  { id: 'cmd', label: 'Comandos' },
+];
+const plain = (line) => line.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/§[0-9a-fk-or]/gi, '');
+const isChat = (l) => /<[A-Za-z0-9_.]{2,17}> |\[Not Secure\] |\[Server\]|joined the game|left the game/.test(l);
+const isProblem = (l) => /(WARN|ERROR|FATAL|Exception|SEVERE)/.test(l);
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 function lineClass(line) {
   if (line.startsWith('> ')) return 'l-cmd';
@@ -26,6 +35,11 @@ export default function ConsoleTab({ server, runtime, state }) {
   const [history, setHistory] = useState([]);
   const [hIndex, setHIndex] = useState(-1);
   const [lanIp, setLanIp] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [menu, setMenu] = useState(null); // { name, x, y }
+  const [giveFor, setGiveFor] = useState(null); // { cmd, player }
+  const [kick, setKick] = useState(null);
   const outRef = useRef(null);
   const stick = useRef(true);
   const [, tick] = useState(0);
@@ -73,6 +87,62 @@ export default function ConsoleTab({ server, runtime, state }) {
     }
   }
 
+  // Nombres que se pueden tocar: los conectados y los que aparecen entrando o saliendo.
+  const known = useMemo(() => {
+    const set = new Set(runtime?.players || []);
+    for (const l of lines.slice(-600)) {
+      const m = plain(l).match(/: ([A-Za-z0-9_.]{2,17}) (joined|left) the game/);
+      if (m) set.add(m[1]);
+    }
+    return [...set].sort((a, b) => b.length - a.length);
+  }, [lines, runtime?.players]);
+  const nameRe = useMemo(() => (known.length ? new RegExp(`\\b(${known.map(escapeRe).join('|')})\\b`, 'g') : null), [known]);
+
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return lines.filter((l) => {
+      const p = plain(l);
+      if (filter === 'chat' && !isChat(p)) return false;
+      if (filter === 'problems' && !isProblem(p)) return false;
+      if (filter === 'cmd' && !p.startsWith('> ')) return false;
+      return !q || p.toLowerCase().includes(q);
+    });
+  }, [lines, filter, search]);
+
+  const renderText = (text, key) => {
+    if (!nameRe) return text;
+    const parts = text.split(nameRe);
+    return parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <button
+          key={`${key}-${i}`}
+          type="button"
+          className="player-link"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setMenu({ name: part, x: r.left, y: r.bottom + 4 });
+          }}
+        >
+          {part}
+        </button>
+      ) : (
+        <Fragment key={`${key}-${i}`}>{part}</Fragment>
+      )
+    );
+  };
+
+  async function openGive(name) {
+    setMenu(null);
+    try {
+      const { commands } = await api('/system/quick-commands');
+      const cmd = commands.find((c) => /^give\s/.test(c.template) && c.params.some((p) => p.type === 'player'));
+      if (cmd) setGiveFor({ cmd, player: name });
+      else toast('No hay un comando rápido de "give". Agrégalo con Editar en Comandos rápidos.', 'error');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
   const stats = runtime?.stats;
   const memPct = stats ? Math.min(100, (stats.memoryMb / server.memoryMb) * 100) : 0;
   const players = runtime?.players || [];
@@ -95,6 +165,16 @@ export default function ConsoleTab({ server, runtime, state }) {
       )}
     <div className="console-layout">
       <section className="terminal" aria-label="Consola del servidor">
+        <div className="terminal-bar">
+          <div className="terminal-filters" role="radiogroup" aria-label="Mostrar">
+            {FILTERS.map((f) => (
+              <button key={f.id} type="button" className={filter === f.id ? 'on' : ''} onClick={() => setFilter(f.id)}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <input className="terminal-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar…" aria-label="Buscar en la consola" />
+        </div>
         <div
           className="terminal-out"
           ref={outRef}
@@ -108,9 +188,14 @@ export default function ConsoleTab({ server, runtime, state }) {
               {server.installState === 'ready' ? 'La consola aparecerá aquí cuando enciendas el servidor.' : 'Esperando a que termine la instalación.'}
             </span>
           )}
-          {lines.map((l, i) => (
-            <div key={i} className={lineClass(l)}>
-              {clean(l)}
+          {lines.length > 0 && shown.length === 0 && <span className="faint">Ninguna línea coincide con el filtro.</span>}
+          {shown.map((l, i) => (
+            <div key={i} className={lineClass(plain(l))}>
+              {parseConsole(l).map((seg, j) => (
+                <span key={j} style={segStyle(seg)}>
+                  {renderText(seg.text, `${i}-${j}`)}
+                </span>
+              ))}
             </div>
           ))}
         </div>
@@ -193,6 +278,100 @@ export default function ConsoleTab({ server, runtime, state }) {
         <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} />
       </aside>
     </div>
+      {menu && (
+        <PlayerMenu
+          menu={menu}
+          running={state === 'running'}
+          online={players.includes(menu.name)}
+          onClose={() => setMenu(null)}
+          onGive={() => openGive(menu.name)}
+          onSend={(c) => {
+            setMenu(null);
+            send(c);
+          }}
+          onKick={() => {
+            setKick(menu.name);
+            setMenu(null);
+          }}
+        />
+      )}
+      {giveFor && <RunCommand server={server} cmd={giveFor.cmd} player={giveFor.player} players={players} onClose={() => setGiveFor(null)} onSend={send} />}
+      {kick && (
+        <Confirm
+          title={`Expulsar a ${kick}`}
+          message="Lo saca del servidor; puede volver a entrar. Para que no vuelva, usa la pestaña Jugadores (banear)."
+          confirmLabel="Expulsar"
+          danger
+          onClose={() => setKick(null)}
+          onConfirm={() => send(`kick ${kick}`)}
+        />
+      )}
+    </div>
+  );
+}
+
+const GAMEMODE_LABEL = { survival: 'Supervivencia', creative: 'Creativo', spectator: 'Espectador' };
+
+/** Menú que aparece al tocar el nombre de un jugador en la consola. */
+function PlayerMenu({ menu, running, online, onClose, onGive, onSend, onKick }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const close = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    };
+    const esc = (e) => e.key === 'Escape' && onClose();
+    // Solo se cierra si se mueve la página; la consola puede seguir escribiendo debajo.
+    window.addEventListener('mousedown', close);
+    window.addEventListener('keydown', esc);
+    window.addEventListener('scroll', onClose);
+    window.addEventListener('resize', onClose);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', esc);
+      window.removeEventListener('scroll', onClose);
+      window.removeEventListener('resize', onClose);
+    };
+  }, [onClose]);
+  const x = Math.min(menu.x, window.innerWidth - 230);
+  const y = Math.min(menu.y, window.innerHeight - 300);
+  const n = menu.name;
+  return (
+    <div ref={ref} className="player-menu" style={{ left: x, top: y }} role="menu" aria-label={`Acciones para ${n}`}>
+      <div className="player-menu-head">
+        <PlayerHead name={n} size={24} />
+        <strong>{n}</strong>
+        <span className="faint small">{online ? 'en línea' : 'desconectado'}</span>
+      </div>
+      <button type="button" role="menuitem" disabled={!running} onClick={onGive}>
+        Dar objeto…
+      </button>
+      {Object.entries(GAMEMODE_LABEL).map(([mode, label]) => (
+        <button key={mode} type="button" role="menuitem" disabled={!running || !online} onClick={() => onSend(`gamemode ${mode} ${n}`)}>
+          Modo {label.toLowerCase()}
+        </button>
+      ))}
+      <button type="button" role="menuitem" disabled={!running || !online} onClick={() => onSend(`effect give ${n} minecraft:instant_health 1 10`)}>
+        Curar
+      </button>
+      <button type="button" role="menuitem" disabled={!running} onClick={() => onSend(`op ${n}`)}>
+        Hacer operador
+      </button>
+      <button type="button" role="menuitem" disabled={!running} onClick={() => onSend(`deop ${n}`)}>
+        Quitar operador
+      </button>
+      <button type="button" role="menuitem" className="danger" disabled={!running || !online} onClick={onKick}>
+        Expulsar…
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          navigator.clipboard?.writeText(n).catch(() => {});
+          onClose();
+        }}
+      >
+        Copiar nombre
+      </button>
     </div>
   );
 }

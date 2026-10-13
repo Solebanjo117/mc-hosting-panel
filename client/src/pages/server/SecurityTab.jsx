@@ -47,6 +47,7 @@ export default function SecurityTab({ server }) {
 
   return (
     <div className="stack" style={{ gap: '1.5rem', maxWidth: 960 }}>
+      <HealthPanel server={server} />
       {lockdown && (
         <section className="panel" style={{ borderColor: 'rgba(232,182,75,0.6)' }}>
           <div className="row">
@@ -63,7 +64,7 @@ export default function SecurityTab({ server }) {
         </section>
       )}
 
-      <section className="stack" style={{ gap: '0.75rem' }}>
+      <section className="stack" style={{ gap: '0.75rem' }} id="hallazgos">
         <div className="row">
           <h2 className="grow" style={{ margin: 0 }}>
             Revisión de seguridad
@@ -204,5 +205,72 @@ export default function SecurityTab({ server }) {
         defensa es que no conozcan tu IP. <Link to="/guia#13-seguridad-y-ataques-ddos">Lee la sección de seguridad de la guía</Link>.
       </p>
     </div>
+  );
+}
+
+const HEALTH_ICON = { ok: '✓', info: 'i', warn: '!', bad: '✕' };
+const TAB_LABEL = {
+  ajustes: 'Ajustes',
+  conexion: 'Conexión',
+  respaldos: 'Respaldos',
+  logs: 'Logs',
+  rendimiento: 'Rendimiento',
+};
+
+/** Revisión general: todo lo que hace falta para que el servidor funcione bien, en una lista. */
+function HealthPanel({ server }) {
+  const [h, setH] = useState(null);
+  const [showOk, setShowOk] = useState(false);
+  const load = useCallback(() => api(`/servers/${server.id}/health`).then(setH), [server.id]);
+  useEffect(() => {
+    load().catch(() => {});
+    const t = setInterval(() => load().catch(() => {}), 30_000);
+    return () => clearInterval(t);
+  }, [load]);
+  if (!h) return null;
+  const pending = h.checks.filter((c) => c.level === 'bad' || c.level === 'warn');
+  const rest = h.checks.filter((c) => !(c.level === 'bad' || c.level === 'warn'));
+  const shown = showOk ? h.checks : pending.length ? pending : [];
+
+  return (
+    <section className="panel stack" style={{ gap: '0.75rem' }}>
+      <div className="row">
+        <h2 className="grow" style={{ margin: 0 }}>
+          Revisión general
+        </h2>
+        <span className={`health-chip ${h.level === 'info' ? 'ok' : h.level}`}>
+          <i aria-hidden="true" />
+          {pending.length ? `${pending.length} por revisar` : 'Todo en orden'}
+        </span>
+      </div>
+      {!pending.length && !showOk && <p className="muted small">Instalación, Java, puerto, conexión, respaldos, disco, memoria y seguridad están bien.</p>}
+      <ul className="health-list">
+        {shown.map((c) => (
+          <li key={c.id} className={`health-item ${c.level}`}>
+            <span className="health-icon" aria-hidden="true">
+              {HEALTH_ICON[c.level]}
+            </span>
+            <div className="grow">
+              <div>{c.title}</div>
+              {c.detail && <div className="muted small">{c.detail}</div>}
+            </div>
+            {c.tab &&
+              c.level !== 'ok' &&
+              (c.tab === 'seguridad' ? (
+                <a className="btn btn-sm" href="#hallazgos">
+                  Ver abajo
+                </a>
+              ) : (
+                <Link className="btn btn-sm" to={`/servidor/${server.id}/${c.tab}`}>
+                  Ir a {TAB_LABEL[c.tab] || c.tab}
+                </Link>
+              ))}
+          </li>
+        ))}
+      </ul>
+      <button className="btn-ghost btn-sm" style={{ justifySelf: 'start', width: 'max-content' }} onClick={() => setShowOk((v) => !v)}>
+        {showOk ? 'Ocultar lo que está bien' : `Ver todo (${rest.length} en orden)`}
+      </button>
+    </section>
   );
 }

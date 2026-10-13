@@ -8,9 +8,31 @@ import { listVersions, SERVER_TYPES } from '../services/versions.js';
 import { installedJavas, ensureJava } from '../services/java.js';
 import { localIps, publicIp } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
+import { healthCheck } from '../services/health.js';
+import { getMetrics } from '../services/metrics.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
 
 export const systemRouter = express.Router();
+
+// --- Tablero de inicio: salud y mini gráficas de cada servidor --------------------------
+
+systemRouter.get('/dashboard', async (_req, res) => {
+  const out = await Promise.all(
+    db.data.servers.map(async (s) => {
+      let health = null;
+      try {
+        const h = await healthCheck(s.id);
+        health = { level: h.level, counts: h.counts, top: h.checks.filter((c) => c.level === 'bad' || c.level === 'warn').slice(0, 2) };
+      } catch {
+        /* sin revisión */
+      }
+      const m = getMetrics(s.id, '1h');
+      const pick = (k) => m.points.map((p) => p[k]);
+      return { id: s.id, health, spark: { players: pick('players'), mem: pick('mem'), cpu: pick('cpu'), tps: pick('tps'), memoryLimitMb: m.memoryLimitMb } };
+    })
+  );
+  res.json({ servers: out });
+});
 
 // --- Comandos rápidos de la consola ------------------------------------------------
 

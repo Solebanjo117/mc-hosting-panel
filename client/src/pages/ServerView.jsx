@@ -15,6 +15,8 @@ import WorldsTab from './server/WorldsTab.jsx';
 import SchedulesTab from './server/SchedulesTab.jsx';
 import LogsTab from './server/LogsTab.jsx';
 import SecurityTab from './server/SecurityTab.jsx';
+import MapTab from './server/MapTab.jsx';
+import ActivityTab from './server/ActivityTab.jsx';
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -115,11 +117,17 @@ export default function ServerView() {
         <NavLink to={`${base}/jugadores`} className="tab">
           Jugadores
         </NavLink>
+        <NavLink to={`${base}/actividad`} className="tab">
+          Actividad
+        </NavLink>
         <NavLink to={`${base}/archivos`} className="tab">
           Archivos
         </NavLink>
         <NavLink to={`${base}/mundos`} className="tab">
           Mundos
+        </NavLink>
+        <NavLink to={`${base}/mapa`} className="tab">
+          Mapa
         </NavLink>
         <NavLink to={`${base}/respaldos`} className="tab">
           Respaldos
@@ -140,7 +148,7 @@ export default function ServerView() {
           Bedrock
         </NavLink>
         <NavLink to={`${base}/seguridad`} className="tab">
-          Seguridad
+          Revisión
         </NavLink>
         <NavLink to={`${base}/ajustes`} className="tab">
           Ajustes
@@ -155,6 +163,8 @@ export default function ServerView() {
         <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
         <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
         <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
+        <Route path="actividad" element={<ActivityTab server={server} state={state} />} />
+        <Route path="mapa" element={<MapTab server={server} state={state} />} />
         <Route path="tareas" element={<SchedulesTab server={server} />} />
         <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
         <Route path="logs" element={<LogsTab server={server} />} />
