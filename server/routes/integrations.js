@@ -20,6 +20,11 @@ integrationsRouter.post('/playit/claim', (_req, res) => res.json(playit.startCla
 integrationsRouter.post('/playit/enabled', async (req, res) => res.json(await playit.setEnabled(Boolean(req.body?.enabled))));
 integrationsRouter.post('/playit/reinstall', async (_req, res) => res.json(await playit.installAgent()));
 integrationsRouter.post('/playit/unlink', async (_req, res) => res.json(await playit.unlink()));
+integrationsRouter.post('/playit/use-agent', async (req, res) => {
+  const result = await playit.useExistingAgent({ secret: req.body?.secret, source: req.body?.source });
+  bus.emit('servers');
+  res.json(result);
+});
 integrationsRouter.get('/playit/tunnels', async (_req, res) => res.json(await playit.agentTunnels()));
 
 // --- Dominio (DuckDNS, deSEC o Cloudflare) --------------------------------------

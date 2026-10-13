@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { DATA_DIR, IS_WINDOWS, VERSION } from '../config.js';
@@ -22,6 +23,8 @@ const API = process.env.PLAYIT_API || 'https://api.playit.gg';
 const AGENT_VERSION = 'v1.0.12';
 const DIR = path.join(DATA_DIR, 'playit');
 const SECRET_FILE = path.join(DIR, 'playit.toml');
+// Al desvincular, la clave se guarda aquí para poder volver a usar el mismo agente.
+const PREVIOUS_FILE = path.join(DIR, 'playit.anterior.toml');
 const BIN = path.join(DIR, IS_WINDOWS ? 'playitd.exe' : 'playitd');
 const ASSET = IS_WINDOWS ? 'playit-windows-x86_64-signed.exe' : process.arch === 'arm64' ? 'playit-linux-aarch64' : 'playit-linux-amd64';
 fs.mkdirSync(DIR, { recursive: true });
@@ -31,12 +34,13 @@ const ERRORS = {
   RequiresVerifiedAccount: 'Verifica tu correo en playit.gg para poder crear túneles.',
   RequiresPlayitPremium: 'Esa opción requiere playit Premium.',
   RegionRequiresPlayitPremium: 'Elegir región requiere playit Premium.',
-  AgentNotSelfManaged: 'Este agente no se vinculó desde el panel. Desvincúlalo y vuelve a vincularlo.',
+  AgentNotSelfManaged:
+    'Este agente lo creó el programa oficial de playit, así que el panel no puede crear túneles con él. Créalos en playit.gg asignados a este agente y usa "Usar un túnel que ya creé", o vincula el panel con un agente propio.',
   AgentVersionTooOld: 'El agente de playit es muy viejo; usa "Reinstalar agente".',
   TunnelNotFound: 'El túnel ya no existe en playit.gg.',
   CodeExpired: 'El enlace de vinculación caducó. Vuelve a intentarlo.',
   InvalidCode: 'Código de vinculación inválido.',
-  UserRejected: 'Rechazaste la vinculación en playit.gg.',
+  UserRejected: 'Rechazaste la vinculación en playit.gg. Si ya tienes un agente, úsalo abajo en vez de crear otro.',
   TunnelNameIsNotAscii: 'El nombre del túnel no es válido.',
 };
 
@@ -78,9 +82,11 @@ function setStatus(s) {
 }
 
 export function status() {
+  const claimed = Boolean(readSecret());
   return {
     installed: fs.existsSync(BIN),
-    claimed: Boolean(readSecret()),
+    claimed,
+    detected: claimed ? [] : detectAgents(),
     enabled: Boolean(settings().enabled),
     status: state.status,
     claim: state.claim,
@@ -119,10 +125,10 @@ function describeError(json, httpStatus) {
   return [json?.status === 'fail' ? 400 : 502, ERRORS[code] || `playit.gg: ${code}`];
 }
 
-async function call(apiPath, body = {}, { auth = true } = {}) {
+async function call(apiPath, body = {}, { auth = true, key = null } = {}) {
   const headers = { 'Content-Type': 'application/json', 'User-Agent': `mc-hosting-panel/${VERSION}` };
   if (auth) {
-    const secret = readSecret();
+    const secret = key || readSecret();
     if (!secret) throw new HttpError(409, 'Primero vincula playit.gg con tu cuenta');
     headers.Authorization = `Agent-Key ${secret}`;
   }
@@ -279,7 +285,8 @@ export function startClaim() {
 
 export async function unlink() {
   await stopAgent();
-  fs.rmSync(SECRET_FILE, { force: true });
+  // No se borra: se guarda para poder volver a usar el mismo agente sin crear otro.
+  if (fs.existsSync(SECRET_FILE)) fs.renameSync(SECRET_FILE, PREVIOUS_FILE);
   state.claim = null;
   state.agentId = null;
   settings().enabled = false;
@@ -287,6 +294,81 @@ export async function unlink() {
   db.flush();
   bus.emit('servers');
   return status();
+}
+
+// --- Usar un agente que ya existe ------------------------------------------------
+
+/** Saca la clave de un playit.toml (o la clave sola, si se pegó así). */
+export function parseSecret(text) {
+  const t = String(text || '').trim();
+  const m = t.match(/secret_key\s*=\s*["']([0-9a-fA-F]{32,})["']/) || t.match(/^([0-9a-fA-F]{32,})$/);
+  return m ? m[1] : null;
+}
+
+/** Dónde guarda su clave el programa oficial de playit en esta PC. */
+function officialAgentFiles() {
+  if (process.env.PLAYIT_OFFICIAL_TOML) return [process.env.PLAYIT_OFFICIAL_TOML]; // pruebas
+  if (IS_WINDOWS) return process.env.LOCALAPPDATA ? [path.join(process.env.LOCALAPPDATA, 'playit_gg', 'playit.toml')] : [];
+  return [path.join(os.homedir(), '.config', 'playit_gg', 'playit.toml'), '/etc/playit/playit.toml'];
+}
+
+function detectWithSecrets() {
+  const out = [];
+  const add = (id, label, file) => {
+    try {
+      const secret = parseSecret(fs.readFileSync(file, 'utf8'));
+      if (secret && secret !== readSecret() && !out.some((x) => x.secret === secret)) out.push({ id, label, file, secret });
+    } catch {
+      /* no existe */
+    }
+  };
+  add('previous', 'El agente que el panel usaba antes', PREVIOUS_FILE);
+  for (const f of officialAgentFiles()) add('official', 'El agente del programa oficial de playit en esta PC', f);
+  return out;
+}
+
+/** Agentes encontrados en esta PC (sin la clave, solo el final para reconocerla). */
+export function detectAgents() {
+  return detectWithSecrets().map(({ id, label, file, secret }) => ({ id, label, file, hint: `…${secret.slice(-4)}` }));
+}
+
+/**
+ * Usa un agente que ya existe en tu cuenta de playit (su clave) en vez de crear uno nuevo.
+ * source: 'previous' | 'official' (detectado en esta PC) o secret: la clave pegada / el playit.toml.
+ */
+export async function useExistingAgent({ secret, source } = {}) {
+  const detected = source ? detectWithSecrets().find((d) => d.id === source) : null;
+  if (source && !detected) throw new HttpError(404, 'Ya no se encuentra ese agente en esta PC');
+  const key = detected ? detected.secret : parseSecret(secret);
+  if (!key) {
+    throw new HttpError(400, 'Eso no parece la clave de un agente de playit. Pega lo que va entre comillas en secret_key (dentro de playit.toml) o el archivo completo.');
+  }
+  let data;
+  try {
+    data = await call('/v1/agents/rundata', {}, { key });
+  } catch (err) {
+    if (err.status === 409 || err.status === 400) {
+      throw new HttpError(400, 'playit.gg no aceptó esa clave: puede que ese agente se haya borrado de tu cuenta. Revisa en playit.gg → Agents.');
+    }
+    throw err;
+  }
+  await stopAgent();
+  const current = readSecret();
+  if (current && current !== key) fs.copyFileSync(SECRET_FILE, PREVIOUS_FILE);
+  fs.writeFileSync(SECRET_FILE, `secret_key = "${key}"\n`, { mode: 0o600 });
+  if (detected?.id === 'previous') fs.rmSync(PREVIOUS_FILE, { force: true });
+  state.claim = null;
+  state.agentId = data.agent_id;
+  settings().enabled = true;
+  db.flush();
+  const warnings = [];
+  if (detected?.id === 'official') {
+    warnings.push('Cierra el programa oficial de playit y quítalo del inicio de Windows: si los dos usan el mismo agente a la vez, se desconectan entre ellos.');
+  }
+  await startAgent().catch((err) => warnings.push(err.message));
+  log(`Se usa el agente ${String(data.agent_id).slice(0, 8)} que ya existía (${(data.tunnels || []).length} túnel(es)).`);
+  bus.emit('playit', status());
+  return { ...status(), warnings, tunnels: (data.tunnels || []).length };
 }
 
 async function agentId(refresh = false) {

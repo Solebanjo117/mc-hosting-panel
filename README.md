@@ -8,7 +8,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Marketplace** de mods, plugins y datapacks desde **Modrinth**, **Hangar** (PaperMC) y **CurseForge** (con tu clave gratis) en tarjetas con imagen, descargas y fecha, y una ficha con galería y descripción completa; filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
-- **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg.
+- **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg y **usar un agente que ya tienes** (el del programa oficial, que el panel detecta solo, o pegando su clave) en vez de crear uno nuevo.
 - **Dominio para cada servidor** con **deSEC**, **DuckDNS** o **Cloudflare**: apunta a la IP de tu casa o al túnel de playit, y el panel crea y actualiza los registros (A y SRV). Con deSEC o Cloudflare tus amigos de Java entran solo con el nombre, sin puerto, aunque uses playit.
 - **Datapacks en cualquier servidor** (Vanilla, Paper, Fabric, Forge, NeoForge): búscalos en Modrinth o CurseForge, aplícalos sin reiniciar (`minecraft:reload`), el panel avisa cuáles cambian la generación del mundo y al crear un mundo nuevo puedes copiarle los datapacks.
 - **Modpacks de Modrinth y CurseForge:** búscalo o sube el `.mrpack` / `.zip` y el panel crea el servidor con el loader, la versión, los mods y la configuración. Los mods que solo sirven en el juego se omiten en el servidor (en CurseForge se revisa cada jar).
@@ -67,7 +67,7 @@ data/
   activity/        entradas, salidas y eventos de cada servidor (90 días)
   cache/gamedata/  listas de objetos y nombres en español por versión
   modpacks/        el modpack de cada servidor (.mrpack o .zip de CurseForge)
-  playit/          agente de playit.gg y su llave (playit.toml)
+  playit/          agente de playit.gg y su llave (playit.toml; al desvincular queda en playit.anterior.toml)
   servers/<id>/    cada servidor: mundos, mods, plugins, configuración
   backups/<id>/    respaldos .zip
   java/<versión>/  Java descargado automáticamente

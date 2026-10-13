@@ -380,10 +380,13 @@ export async function startMocks() {
     if (p.startsWith('/playit/')) {
       const q = p.slice('/playit'.length);
       const pl = state.playit;
-      if (q === '/claim/setup') return send({ status: 'success', data: pl.claim.accepted ? 'UserAccepted' : 'WaitingForUser' });
+      if (q === '/claim/setup') return send({ status: 'success', data: pl.claim.rejected ? 'UserRejected' : pl.claim.accepted ? 'UserAccepted' : 'WaitingForUser' });
       if (q === '/claim/exchange') return send({ status: 'success', data: { secret_key: 'abcdef0123456789abcdef0123456789' } });
       if (!/^Agent-Key /.test(req.headers.authorization || '')) return send({ status: 'error', data: { type: 'auth', message: 'AuthRequired' } }, 401);
-      if (q === '/v1/agents/rundata') return send({ status: 'success', data: { agent_id: pl.agentId, tunnels: pl.tunnels, pending: pl.pending, notices: [] } });
+      // pl.keys (opcional): clave -> id de agente; una clave que no está ahí ya no vale.
+      const key = (req.headers.authorization || '').slice('Agent-Key '.length);
+      if (pl.keys && !pl.keys[key]) return send({ status: 'error', data: { type: 'auth', message: 'InvalidAgentKey' } }, 401);
+      if (q === '/v1/agents/rundata') return send({ status: 'success', data: { agent_id: pl.keys?.[key] || pl.agentId, tunnels: pl.tunnels, pending: pl.pending, notices: [] } });
       if (q === '/v1/tunnels/create') {
         if (pl.createError) return send(pl.createError);
         const b = JSON.parse(body);

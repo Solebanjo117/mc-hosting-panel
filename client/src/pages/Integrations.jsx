@@ -63,17 +63,24 @@ export function PlayitSettings() {
             <p className="muted small">{claim.state === 'visited' ? 'Esperando a que aceptes en playit.gg…' : 'Esperando a que abras el enlace…'}</p>
           </div>
         ) : (
-          <div className="stack" style={{ gap: '0.5rem' }}>
+          <div className="stack" style={{ gap: '0.75rem' }}>
             {claim?.state === 'error' && <div className="error-box">{claim.error}</div>}
-            <div>
+            <ExistingAgent detected={s.detected || []} onDone={setStatus} />
+            <div className="row">
               <button className="btn-go" disabled={busy} onClick={() => run(() => api('/integrations/playit/claim', { method: 'POST' }).then(setStatus))}>
-                Vincular con mi cuenta de playit.gg
+                Vincular con un agente nuevo
               </button>
+              <span className="faint small grow">Crea otro agente en tu cuenta de playit.gg. Úsalo solo si no tienes ninguno.</span>
             </div>
           </div>
         )
       ) : (
         <div className="row">
+          {s.agentId && (
+            <span className="faint small" title={s.agentId}>
+              Agente <span className="mono">{s.agentId.slice(0, 8)}</span>
+            </span>
+          )}
           <label className="check">
             <input
               type="checkbox"
@@ -93,7 +100,7 @@ export function PlayitSettings() {
             className="btn-sm btn-stop"
             disabled={busy}
             onClick={() =>
-              confirm('Se desvincula el panel de tu cuenta de playit y se apagan los túneles. ¿Continuar?') &&
+              confirm('Se apaga el agente y los túneles de los servidores. La clave se guarda para que puedas volver a usar este mismo agente sin crear otro. ¿Continuar?') &&
               run(() => api('/integrations/playit/unlink', { method: 'POST' }).then(setStatus), 'playit.gg desvinculado')
             }
           >
@@ -103,6 +110,67 @@ export function PlayitSettings() {
       )}
       {showLogs && <pre className="logview" style={{ maxHeight: 260 }}>{(status?.logs || []).join('\n') || 'Sin mensajes todavía.'}</pre>}
     </section>
+  );
+}
+
+/** Usar un agente de playit que ya existe (detectado en esta PC o pegando su clave). */
+function ExistingAgent({ detected, onDone }) {
+  const [open, setOpen] = useState(false);
+  const [secret, setSecret] = useState('');
+  const [run, busy] = useAction();
+  const toast = useToast();
+  const use = (body) =>
+    run(async () => {
+      const r = await api('/integrations/playit/use-agent', { method: 'POST', body });
+      for (const w of r.warnings || []) toast(w);
+      setSecret('');
+      onDone(r);
+      return r;
+    }, 'Listo: el panel usa tu agente de playit');
+  return (
+    <div className="login-code stack" style={{ gap: '0.6rem' }}>
+      <strong>¿Ya tienes un agente de playit?</strong>
+      <p className="muted small" style={{ margin: 0 }}>
+        Úsalo en vez de crear otro: así no se acumulan agentes en tu cuenta y conservas sus túneles.
+      </p>
+      {detected.map((d) => (
+        <div key={d.id} className="row">
+          <span className="grow small">
+            {d.label} <span className="mono faint">{d.hint}</span>
+          </span>
+          <button className="btn-sm btn-go" disabled={busy} onClick={() => use({ source: d.id })}>
+            Usar este agente
+          </button>
+        </div>
+      ))}
+      {!open ? (
+        <div>
+          <button className="link-btn" style={{ fontSize: 'var(--step--1)', color: 'var(--prismarine)', fontWeight: 500 }} onClick={() => setOpen(true)}>
+            Pegar la clave de un agente
+          </button>
+        </div>
+      ) : (
+        <div className="stack" style={{ gap: '0.5rem' }}>
+          <label className="field">
+            <span>Clave secreta del agente</span>
+            <input type="password" autoComplete="off" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder='secret_key = "…" o solo la clave' />
+            <span>
+              Está en el archivo <span className="mono">playit.toml</span>. Con el programa oficial de Windows: abre <span className="mono">%LOCALAPPDATA%\playit_gg</span>{' '}
+              (pégalo en la barra del Explorador), abre playit.toml con el Bloc de notas y copia la línea de secret_key. Si no lo encuentras, en una terminal
+              ejecuta <span className="mono">playit secret-path</span>.
+            </span>
+          </label>
+          <div className="row">
+            <button className="btn-sm btn-go" disabled={busy || !secret.trim()} onClick={() => use({ secret })}>
+              Usar este agente
+            </button>
+            <button className="btn-sm btn-ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
