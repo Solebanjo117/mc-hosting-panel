@@ -168,6 +168,31 @@ function tilesRoot(server) {
 }
 
 /**
+ * Al borrar un mundo: quita los mapas de BlueMap que lo mostraban (también Nether y End)
+ * y lo que tenían dibujado, para que no queden mapas de un mundo que ya no existe.
+ * Devuelve cuántos mapas quitó.
+ */
+export function forgetWorld(server, world) {
+  const dir = configDir(server);
+  const mapsDir = dir && path.join(dir, 'maps');
+  if (!mapsDir || !fs.existsSync(mapsDir)) return 0;
+  const tiles = tilesRoot(server);
+  let removed = 0;
+  for (const f of fs.readdirSync(mapsDir).filter((x) => x.endsWith('.conf'))) {
+    const file = path.join(mapsDir, f);
+    const m = fs.readFileSync(file, 'utf8').match(WORLD_LINE);
+    if (!m) continue;
+    const folder = m[3].trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
+    if (folder.replace(DIM_SUFFIX, '') !== world) continue;
+    fs.rmSync(file, { force: true });
+    const rendered = path.join(tiles, f.slice(0, -5));
+    if (rendered.startsWith(tiles + path.sep)) fs.rmSync(rendered, { recursive: true, force: true });
+    removed++;
+  }
+  return removed;
+}
+
+/**
  * BlueMap crea sus mapas apuntando a la carpeta del mundo que había al activarlo ("world").
  * Si después creas o cambias de mundo, seguiría mostrando el anterior: aquí se apuntan los mapas
  * al mundo activo (con su Nether y su End) y se borra lo dibujado para que lo vuelva a dibujar.

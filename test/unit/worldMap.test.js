@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { serverDir } from '../../server/config.js';
-import { followActiveWorld } from '../../server/services/worldMap.js';
+import { followActiveWorld, forgetWorld } from '../../server/services/worldMap.js';
 
 /** Un servidor Paper con BlueMap ya configurado para el mundo "world" y algo dibujado. */
 function setup(id, { level = 'nuevo', extraMaps = {}, mapWorld = 'world' } = {}) {
@@ -65,5 +65,16 @@ describe('El mapa sigue al mundo activo', () => {
     fs.writeFileSync(path.join(serverDir('srv-e'), 'server.properties'), 'level-name=otro\n');
     assert.equal(followActiveWorld({ id: 'srv-e', type: 'paper', map: { enabled: true, port: 8100, world: 'world' } }), null);
     assert.equal(followActiveWorld({ id: 'srv-e', type: 'vanilla', map: { enabled: true } }), null);
+  });
+
+  it('al borrar un mundo quita sus mapas y lo dibujado (y deja los demás)', () => {
+    const server = setup('srv-f', { level: 'world', extraMaps: { creativo: 'world: "creativo"\n', creativo_nether: 'world: "creativo_nether"\n' } });
+    assert.equal(forgetWorld(server, 'creativo'), 2);
+    const maps = fs.readdirSync(path.join(serverDir('srv-f'), 'plugins', 'BlueMap', 'maps')).sort();
+    assert.deepEqual(maps, ['world.conf', 'world_nether.conf', 'world_the_end.conf']);
+    assert.ok(!drawn('srv-f', 'creativo'));
+    assert.ok(!drawn('srv-f', 'creativo_nether'));
+    assert.ok(drawn('srv-f', 'world'), 'el mapa del mundo activo sigue');
+    assert.equal(forgetWorld(server, 'no-existe'), 0);
   });
 });

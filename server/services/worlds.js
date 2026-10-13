@@ -6,6 +6,7 @@ import { getServer } from '../db.js';
 import { HttpError, dirSize, safeJoin } from '../lib/util.js';
 import { isRunning } from './processManager.js';
 import { readProperties, writeProperties } from './properties.js';
+import { forgetWorld } from './worldMap.js';
 
 /**
  * Mundos de un servidor. Cada mundo es una carpeta con level.dat; Paper/Spigot
@@ -115,6 +116,9 @@ export function deleteWorld(id, name) {
   const n = validName(name);
   if ((readProperties(id)['level-name'] || 'world') === n) throw new HttpError(409, 'No puedes borrar el mundo activo; cambia a otro primero');
   for (const f of folders(id, n)) fs.rmSync(safeJoin(serverDir(id), f), { recursive: true, force: true });
+  // Si el mapa (BlueMap) tenía un mapa de ese mundo, se quita junto con lo dibujado.
+  const server = getServer(id);
+  return { removedMaps: server.map?.enabled ? forgetWorld(server, n) : 0 };
 }
 
 export function worldFolders(id, name) {

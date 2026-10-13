@@ -124,6 +124,14 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       await panel.waitConsole(paper.id, /El mapa ahora muestra el mundo "world"/);
       await panel.stop(paper.id);
       assert.match(fs.readFileSync(path.join(maps, 'world.conf'), 'utf8'), /^world: "world"$/m);
+
+      // Al borrar el mundo "Regenerado", se van también los mapas que lo mostraban y lo dibujado.
+      fs.writeFileSync(path.join(maps, 'extra.conf'), 'world: "Regenerado"\n');
+      fs.mkdirSync(path.join(dir, 'bluemap', 'web', 'maps', 'extra'), { recursive: true });
+      await c.ok('DELETE', `/api/servers/${paper.id}/worlds/Regenerado`);
+      assert.deepEqual(fs.readdirSync(maps), ['world.conf'], 'queda solo el mapa del mundo activo');
+      assert.ok(!fs.existsSync(path.join(dir, 'bluemap', 'web', 'maps', 'extra')));
+      assert.ok(!fs.existsSync(path.join(dir, 'Regenerado')));
     });
   });
 
