@@ -100,6 +100,33 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
     });
   });
 
+  describe('Mapa al cambiar de mundo', () => {
+    it('si creas un mundo nuevo, el mapa pasa a mostrarlo y se vuelve a dibujar', async () => {
+      const dir = panel.serverDir(paper.id);
+      const maps = path.join(dir, 'plugins', 'BlueMap', 'maps');
+      fs.mkdirSync(maps, { recursive: true });
+      fs.writeFileSync(path.join(maps, 'world.conf'), 'world: "world"\ndimension: "minecraft:overworld"\n');
+      const tiles = path.join(dir, 'bluemap', 'web', 'maps', 'world');
+      fs.mkdirSync(tiles, { recursive: true });
+      fs.writeFileSync(path.join(tiles, 'viejo.png'), 'mundo anterior');
+
+      await c.ok('POST', `/api/servers/${paper.id}/worlds`, { name: 'Regenerado' });
+      await panel.start(paper.id);
+      await panel.waitConsole(paper.id, /El mapa ahora muestra el mundo "Regenerado"/);
+      await panel.stop(paper.id);
+      assert.match(fs.readFileSync(path.join(maps, 'world.conf'), 'utf8'), /^world: "Regenerado"$/m);
+      assert.ok(!fs.existsSync(tiles), 'borró lo dibujado del mundo anterior');
+      assert.equal(panel.readDb().servers.find((x) => x.id === paper.id).map.world, 'Regenerado');
+
+      // Y al volver al mundo original, también.
+      await c.ok('POST', `/api/servers/${paper.id}/worlds/switch`, { name: 'world' });
+      await panel.start(paper.id);
+      await panel.waitConsole(paper.id, /El mapa ahora muestra el mundo "world"/);
+      await panel.stop(paper.id);
+      assert.match(fs.readFileSync(path.join(maps, 'world.conf'), 'utf8'), /^world: "world"$/m);
+    });
+  });
+
   describe('Revisión general', () => {
     it('revisa instalación, puerto, respaldos, disco, RAM, seguridad y optimización', async () => {
       const h = await c.ok('GET', `/api/servers/${paper.id}/health`);

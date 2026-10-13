@@ -8,7 +8,7 @@ import { ensureJava, requiredJava } from './java.js';
 import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
-import { applyConfig as applyMapConfig } from './worldMap.js';
+import { applyConfig as applyMapConfig, followActiveWorld } from './worldMap.js';
 import { aikarFlags } from './optimize.js';
 import { analyze } from './crashAnalyzer.js';
 import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
@@ -280,7 +280,15 @@ class Instance {
     }
 
     this.mapPending = false;
-    if (server.map?.enabled && applyMapConfig(server) === 'missing') this.mapPending = true;
+    if (server.map?.enabled) {
+      try {
+        const moved = followActiveWorld(server);
+        if (moved) this.panelLine(moved);
+      } catch (err) {
+        this.panelLine(`No se pudo ajustar el mapa al mundo actual: ${err.message}`);
+      }
+      if (applyMapConfig(server) === 'missing') this.mapPending = true;
+    }
 
     this.panelLine(`Iniciando: java ${args.join(' ')}`);
     const proc = spawn(javaPath, args, { cwd: serverDir(this.id), windowsHide: true });
