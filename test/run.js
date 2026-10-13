@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 /**
  * Corre las pruebas: `npm test` (unitarias + casos de uso), `npm run test:unit`,
@@ -27,5 +27,9 @@ if (!files.length) {
   console.error(`No hay pruebas en: ${wanted.join(', ')}`);
   process.exit(1);
 }
-const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', '--test-reporter=spec', ...files], { stdio: 'inherit' });
+const reporters = ['--test-reporter=spec', '--test-reporter-destination=stdout'];
+if (process.env.GITHUB_ACTIONS) {
+  reporters.push(`--test-reporter=${pathToFileURL(path.join(ROOT, 'reporters', 'github.js')).href}`, '--test-reporter-destination=stdout');
+}
+const r = spawnSync(process.execPath, ['--test', '--test-concurrency=1', ...reporters, ...files], { stdio: 'inherit' });
 process.exit(r.status ?? 1);
