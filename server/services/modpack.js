@@ -168,6 +168,18 @@ function extractFolder(zip, prefix, dest) {
   return count;
 }
 
+// Dominios que permite el formato .mrpack de Modrinth: un modpack no puede hacer que el panel
+// descargue de cualquier sitio (ni de equipos de tu red).
+const ALLOWED_HOSTS = new Set(['cdn.modrinth.com', 'github.com', 'raw.githubusercontent.com', 'gitlab.com']);
+function allowedDownload(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && ALLOWED_HOSTS.has(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** Descarga los mods del modpack y copia sus overrides en la carpeta del servidor. */
 export async function applyModpack(id, report = () => {}) {
   const server = getServer(id);
@@ -181,11 +193,19 @@ export async function applyModpack(id, report = () => {}) {
   const failed = [];
   const records = [];
   await pool(files, 6, async (file) => {
-    const target = safeJoin(dir, file.path);
+    let target;
+    try {
+      target = safeJoin(dir, file.path);
+    } catch {
+      failed.push(`${file.path}: ruta no permitida`);
+      done++;
+      return;
+    }
     fs.mkdirSync(path.dirname(target), { recursive: true });
     let ok = false;
     for (const url of file.downloads || []) {
       try {
+        if (!allowedDownload(url)) throw new Error('enlace no permitido (solo Modrinth, GitHub o GitLab)');
         await download(url, target);
         if (file.hashes?.sha1 && sha1(target) !== file.hashes.sha1) throw new Error('el archivo descargado no coincide (hash)');
         ok = true;

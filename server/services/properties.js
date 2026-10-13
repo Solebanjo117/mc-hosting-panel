@@ -16,11 +16,15 @@ function unescape(value) {
   });
 }
 
-function escape(value) {
+function escape(value, isKey = false) {
   let out = '';
-  for (const ch of String(value)) {
-    const code = ch.charCodeAt(0);
+  const str = String(value);
+  // Por unidades UTF-16: un emoji se escribe como dos \uXXXX (par sustituto), igual que Java.
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    const code = str.charCodeAt(i);
     if (ch === '\\') out += '\\\\';
+    else if (isKey && ch === ' ') out += '\\ ';
     else if (ch === ':' || ch === '=') out += `\\${ch}`;
     else if (ch === '\n') out += '\\n';
     else if (code > 0x7e || code < 0x20) out += `\\u${code.toString(16).padStart(4, '0')}`;
@@ -51,7 +55,7 @@ export function parseProperties(text) {
 export function serializeProperties(entries) {
   return (
     entries
-      .map((e) => (e.key !== undefined ? `${e.key}=${escape(e.value)}` : e.raw))
+      .map((e) => (e.key !== undefined ? `${escape(e.key, true)}=${escape(e.value)}` : e.raw))
       .join('\n')
       .replace(/\n+$/, '') + '\n'
   );

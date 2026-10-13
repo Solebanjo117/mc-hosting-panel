@@ -3,6 +3,7 @@ import net from 'node:net';
 import { db, getServer } from '../db.js';
 import { bus } from '../lib/bus.js';
 import { USER_AGENT } from '../config.js';
+import { rewriteUrl } from '../lib/http.js';
 import { HttpError } from '../lib/util.js';
 import { publicIp } from './network.js';
 import * as playit from './playit.js';
@@ -162,7 +163,7 @@ export async function unlink() {
 async function request(url, { method = 'GET', headers = {}, body, provider } = {}) {
   let res;
   try {
-    res = await fetch(url, {
+    res = await fetch(rewriteUrl(url), {
       method,
       headers: { 'User-Agent': USER_AGENT, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),

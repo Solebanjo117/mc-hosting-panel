@@ -83,7 +83,9 @@ systemRouter.put('/settings', (req, res) => {
     db.data.settings.javaPaths = clean;
   }
   db.flush();
-  res.json({ settings: db.data.settings, restartRequired: panelPort !== undefined });
+  // Solo lo que se puede cambiar aquí: los tokens de DNS o CurseForge nunca salen del panel.
+  const { panelPort: port, javaPaths: paths, remoteAccess: access } = db.data.settings;
+  res.json({ settings: { panelPort: port, javaPaths: paths || {}, remoteAccess: access || 'lan' }, restartRequired: panelPort !== undefined });
 });
 
 const DOCS = { puertos: 'ABRIR-PUERTOS.md' };

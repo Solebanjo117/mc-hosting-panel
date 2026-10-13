@@ -55,7 +55,7 @@ export async function cloneServer(id, { name }) {
     clonedFrom: id,
     playit: { enabled: false },
     dns: undefined, // el dominio es del original; la copia se configura aparte
-    map: src.map?.enabled ? { enabled: true, port: nextMapPort(id) } : undefined,
+    map: src.map?.enabled ? { enabled: true, port: nextMapPort(newId) } : undefined, // newId: cuenta también el puerto del original
     lastAutoBackup: null,
     scheduleLog: [],
     protectionState: null,
@@ -63,7 +63,7 @@ export async function cloneServer(id, { name }) {
     // Las tareas se copian apagadas para que el clon no reinicie a la misma hora que el original.
     schedules: (src.schedules || []).map((t) => ({ ...t, id: crypto.randomUUID().slice(0, 8), enabled: false, lastRun: null, lastRunKey: null })),
   };
-  if (src.bedrock?.enabled) clone.bedrock = { ...src.bedrock, port: nextBedrockPort(id), xboxGamertag: null };
+  if (src.bedrock?.enabled) clone.bedrock = { ...src.bedrock, port: nextBedrockPort(newId), xboxGamertag: null };
 
   // La sesión de Xbox de MCXboxBroadcast no debe compartirse entre dos servidores.
   const geyserDir = GEYSER_CONFIG_PATHS[src.type];

@@ -125,16 +125,52 @@ server/
     optimize.js         optimización de un clic (Aikar, server.properties, Paper, mods de rendimiento)
     curseforge.js       búsqueda e instalación desde CurseForge
     gameData.js         listas de objetos, efectos, encantamientos y entidades por versión, con nombres en español
-  lib/nbt.js            lectura y escritura de NBT (gzip, zlib o sin comprimir; UTF-8 modificado de Java)
     logs.js             lectura y búsqueda de logs y crash reports
     crashAnalyzer.js    explica en español las causas de un crash
     clone.js            copia un servidor con otros puertos
     security.js         revisión de seguridad y arreglos de un clic
     floodGuard.js       protección contra oleadas de conexiones
   lib/netguard.js       quién puede abrir el panel, cabeceras y protección CSRF
+  lib/nbt.js            lectura y escritura de NBT (gzip, zlib o sin comprimir; UTF-8 modificado de Java)
 client/                 React + Vite
+test/                   pruebas automáticas (ver abajo)
 docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 ```
+
+### Pruebas
+
+```bash
+npm test             # unitarias + casos de uso (unos 3 minutos)
+npm run test:unit    # solo las unitarias (segundos, no necesitan Java)
+npm run test:api     # solo los casos de uso
+node test/run.js api/files   # un solo archivo
+npm run test:e2e     # en el navegador (opcional, ver abajo)
+```
+
+Las pruebas de casos de uso arrancan el panel de verdad (`node server/index.js`) con una carpeta de datos temporal
+y recorren lo que haría una persona: crear e instalar cada tipo de servidor, encender y apagar, consola,
+jugadores, archivos, mundos, respaldos, marketplace, modpacks, Bedrock, playit.gg, dominios, tareas programadas,
+seguridad, mapa, optimización, copias, ícono, comandos rápidos, sesión y WebSocket.
+
+- **Sin internet:** `test/helpers/mocks.js` simula Mojang, PaperMC, Fabric, Forge, NeoForge, Modrinth, Hangar,
+  CurseForge, playit.gg, DuckDNS, deSEC, Cloudflare, mcsrvstat, GitHub y un DNS propio. El panel los usa gracias a
+  la variable `MCP_URL_REWRITE` (solo para pruebas).
+- **Necesitan Java 8 o más nuevo** en el PATH (o `JAVA_HOME`): el "servidor de Minecraft" es un programa pequeño
+  (`test/fixtures/java/FakeServer.java`) que imprime lo mismo que uno real y responde a `join`, `leave`, `crash`,
+  `flood`, `args`, etc. Si cambias los `.java`, recompila los `.jar`:
+
+  ```bash
+  cd test/fixtures/java
+  javac --release 8 -d out FakeServer.java FakeInstaller.java
+  jar cfe fake-server.jar FakeServer -C out FakeServer.class
+  jar cfe fake-installer.jar FakeInstaller -C out .
+  ```
+- **En el navegador:** `npm run build`, luego `npm i --no-save playwright` y `npx playwright install chromium`,
+  y `npm run test:e2e`. Sin Playwright esas pruebas se omiten.
+- GitHub Actions (`.github/workflows/pruebas.yml`) corre todo en Ubuntu y Windows en cada push.
+
+Lo que no cubren: los servicios reales (si Modrinth, playit.gg o DuckDNS cambian su API, las pruebas no lo
+notan), Minecraft de verdad con mods reales, y los archivos `.bat` de Windows.
 
 ## Limitaciones conocidas
 

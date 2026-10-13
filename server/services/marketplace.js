@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { serverDir, USER_AGENT } from '../config.js';
 import { db, getServer } from '../db.js';
-import { download, getJson, getText } from '../lib/http.js';
+import { download, getJson, getText, rewriteUrl } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
 import { readProperties } from './properties.js';
 import * as curseforge from './curseforge.js';
@@ -402,7 +402,7 @@ export async function checkUpdates(id) {
   const files = fs.readdirSync(dir).filter((f) => f.endsWith(profile.ext));
   const hashes = new Map(files.map((f) => [sha1(path.join(dir, f)), f]));
   if (!hashes.size) return [];
-  const res = await fetch(`${MODRINTH}/version_files/update`, {
+  const res = await fetch(rewriteUrl(`${MODRINTH}/version_files/update`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'User-Agent': USER_AGENT },
     body: JSON.stringify({ hashes: [...hashes.keys()], algorithm: 'sha1', loaders: profile.loaders, game_versions: [server.mcVersion] }),

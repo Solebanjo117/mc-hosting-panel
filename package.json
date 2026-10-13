@@ -1,6 +1,6 @@
 {
   "name": "mc-hosting-panel",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Panel propio de hosting de Minecraft Java: crea, administra y comparte servidores desde tu PC con Windows.",
   "private": true,
   "type": "module",
@@ -11,7 +11,11 @@
     "dev": "node --watch server/index.js",
     "dev:client": "vite",
     "build": "vite build",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test": "node test/run.js",
+    "test:unit": "node test/run.js unit",
+    "test:api": "node test/run.js api",
+    "test:e2e": "node test/run.js e2e"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

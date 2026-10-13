@@ -4,11 +4,29 @@ import { pipeline } from 'node:stream/promises';
 import { USER_AGENT } from '../config.js';
 import { HttpError } from './util.js';
 
+/**
+ * Solo para pruebas: MCP_URL_REWRITE={"https://api.modrinth.com":"http://127.0.0.1:1234/modrinth", ...}
+ * redirige las llamadas a internet hacia servicios simulados.
+ */
+const REWRITE = (() => {
+  try {
+    return Object.entries(JSON.parse(process.env.MCP_URL_REWRITE || '{}'));
+  } catch {
+    return [];
+  }
+})();
+
+export function rewriteUrl(url) {
+  for (const [from, to] of REWRITE) if (url.startsWith(from)) return to + url.slice(from.length);
+  return url;
+}
+
 function headers(extra = {}) {
   return { 'User-Agent': USER_AGENT, ...extra };
 }
 
-async function request(url, { timeout = 20000, ...opts } = {}) {
+async function request(rawUrl, { timeout = 20000, ...opts } = {}) {
+  const url = rewriteUrl(rawUrl);
   let res;
   try {
     res = await fetch(url, {

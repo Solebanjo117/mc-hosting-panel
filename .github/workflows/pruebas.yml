@@ -1,0 +1,43 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    name: Pruebas (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # El servidor de Minecraft de las pruebas es un programa Java pequeño (test/fixtures/java).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Unitarias y casos de uso
+        run: npm test
+
+      - name: Navegador (Playwright)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+          npm run test:e2e

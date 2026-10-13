@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { DATA_DIR, IS_WINDOWS, VERSION } from '../config.js';
 import { db, getServer } from '../db.js';
 import { bus } from '../lib/bus.js';
-import { download } from '../lib/http.js';
+import { download, rewriteUrl } from '../lib/http.js';
 import { HttpError, sleep } from '../lib/util.js';
 
 /**
@@ -128,7 +128,7 @@ async function call(apiPath, body = {}, { auth = true } = {}) {
   }
   let res;
   try {
-    res = await fetch(`${API}${apiPath}`, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(20000) });
+    res = await fetch(rewriteUrl(`${API}${apiPath}`), { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(20000) });
   } catch (err) {
     throw new HttpError(502, `No se pudo conectar con playit.gg: ${err.cause?.code || err.message}`);
   }
