@@ -3,6 +3,7 @@ import { api } from '../../api.js';
 import { MC_COLORS, MC_FORMATS, parseMc, plainMc, segStyle } from '../../mcText.js';
 import { useAction, useToast } from '../../ui.jsx';
 import { ServerIcon } from '../Home.jsx';
+import IconCropper, { readImage } from './IconCropper.jsx';
 
 const MAX_VISIBLE = 45; // aprox. lo que cabe en una línea de la lista de servidores
 
@@ -19,37 +20,13 @@ function McLine({ text }) {
 }
 
 /** Recorta al centro y escala a 64×64. Si la imagen es chica (pixel art), sin suavizar. */
-function toIcon(file) {
-  return new Promise((resolve, reject) => {
-    // Se lee como data: (la política de seguridad del panel no permite imágenes blob:).
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const side = Math.min(img.width, img.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = side > 64;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, 64, 64);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => reject(new Error('Ese archivo no es una imagen que el navegador pueda abrir'));
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function AppearanceEditor({ server, running }) {
   const [lines, setLines] = useState(null);
   const [saved, setSaved] = useState(null);
   const [maxPlayers, setMaxPlayers] = useState('20');
   const [focus, setFocus] = useState(0);
   const [preview, setPreview] = useState(null); // ícono nuevo sin guardar
+  const [cropping, setCropping] = useState(null); // foto elegida, antes de recortar
   const refs = [useRef(null), useRef(null)];
   const fileRef = useRef(null);
   const caret = useRef(null); // { i, pos } para dejar el cursor después del código insertado
@@ -189,7 +166,7 @@ export default function AppearanceEditor({ server, running }) {
             e.target.value = '';
             if (!f) return;
             try {
-              setPreview(await toIcon(f));
+              setCropping(await readImage(f));
             } catch (err) {
               toast(err.message, 'error');
             }
@@ -222,8 +199,18 @@ export default function AppearanceEditor({ server, running }) {
           </>
         )}
       </div>
+      {cropping && (
+        <IconCropper
+          image={cropping}
+          onCancel={() => setCropping(null)}
+          onDone={(png) => {
+            setPreview(png);
+            setCropping(null);
+          }}
+        />
+      )}
       <p className="faint small" style={{ margin: 0 }}>
-        El ícono se recorta al centro y se ajusta a 64×64. Cualquier imagen sirve (PNG, JPG, GIF…). Los cambios se ven en Minecraft al reiniciar el
+        Eliges qué parte de la foto usar y el panel la ajusta a 64×64. Cualquier imagen sirve (PNG, JPG, GIF…). Los cambios se ven en Minecraft al reiniciar el
         servidor.
       </p>
     </section>

@@ -11,6 +11,7 @@ import { listBackups } from './backups.js';
 import { audit } from './security.js';
 import * as playit from './playit.js';
 import { systemInfo } from './procstats.js';
+import { status as optimizeStatus } from './optimize.js';
 
 /**
  * Revisión general de un servidor en una sola lista: lo que falta para que funcione
@@ -149,6 +150,17 @@ export async function healthCheck(id) {
   // Estado en vivo
   if (inst.lastCrash && Date.now() - Date.parse(inst.lastCrash.at || 0) < DAY) add('warn', 'crash', 'El servidor se cayó en las últimas 24 horas', 'Revisa la causa en Logs.', 'logs');
   if (running && inst.tps?.value != null && inst.tps.value < 15) add('warn', 'tps', `TPS bajo: ${inst.tps.value}`, 'El servidor va lento. Revisa Rendimiento.', 'rendimiento');
+
+  // Optimización de un clic
+  if (server.installState === 'ready') {
+    try {
+      const o = optimizeStatus(id);
+      if (o.pending) add('info', 'optimize', `${o.pending} ${o.pending === 1 ? 'ajuste' : 'ajustes'} de rendimiento sin aplicar`, 'Aplícalos con un clic en Ajustes → Optimización.', 'ajustes');
+      else add('ok', 'optimize', 'Servidor optimizado');
+    } catch {
+      /* sin datos */
+    }
+  }
 
   // Seguridad (resumen de la otra revisión)
   try {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { useAction, useToast } from '../ui.jsx';
-import { AppSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
+import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 
 const JAVA_VERSIONS = [
@@ -35,6 +35,7 @@ export default function PanelSettings() {
 
       <PlayitSettings />
       <DnsSettings />
+      <CurseForgeSettings />
       <AppSettings />
 
       <section className="panel stack">

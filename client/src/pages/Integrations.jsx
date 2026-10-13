@@ -387,3 +387,69 @@ export function AppSettings() {
     </section>
   );
 }
+
+/** Clave de API de CurseForge para buscar e instalar desde ahí. */
+export function CurseForgeSettings() {
+  const [s, setS] = useState(null);
+  const [key, setKey] = useState('');
+  const [run, busy] = useAction();
+  useEffect(() => {
+    api('/integrations/curseforge').then(setS).catch(() => {});
+  }, []);
+  if (!s) return null;
+  const save = (value) =>
+    run(async () => {
+      setS(await api('/integrations/curseforge', { method: 'PUT', body: { apiKey: value } }));
+      setKey('');
+    }, value ? 'Clave de CurseForge guardada' : 'CurseForge desactivado');
+
+  return (
+    <section className="panel stack">
+      <div className="row">
+        <h2 className="grow" style={{ margin: 0 }}>
+          CurseForge
+        </h2>
+        {s.hasKey && <span className="chip">Activo</span>}
+      </div>
+      <p className="muted small" style={{ maxWidth: '75ch' }}>
+        Agrega CurseForge como otra fuente en la pestaña de mods y plugins. CurseForge pide una clave propia (gratis):
+      </p>
+      <ol className="small stack" style={{ gap: '0.3rem', margin: 0, paddingLeft: '1.2rem', maxWidth: '75ch' }}>
+        <li>
+          Entra a{' '}
+          <a href="https://console.curseforge.com" target="_blank" rel="noreferrer">
+            console.curseforge.com
+          </a>{' '}
+          e inicia sesión con tu cuenta de CurseForge (o crea una).
+        </li>
+        <li>
+          Ve a <strong>API keys</strong> y copia tu clave. Si te pide llenar un formulario, describe el uso como “panel personal para administrar mis servidores de Minecraft”.
+        </li>
+        <li>Pégala aquí y guarda. El panel comprueba que funcione.</li>
+      </ol>
+      <div className="row" style={{ alignItems: 'flex-end' }}>
+        <label className="field grow" style={{ maxWidth: 420 }}>
+          <span>Clave de API</span>
+          <input
+            type="password"
+            autoComplete="off"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder={s.hasKey ? `Guardada (${s.hint}); escribe otra para cambiarla` : '$2a$10$…'}
+          />
+        </label>
+        <button className="btn-go" disabled={busy || !key.trim()} onClick={() => save(key)}>
+          {busy ? 'Comprobando…' : 'Guardar'}
+        </button>
+        {s.hasKey && (
+          <button className="btn-ghost" disabled={busy} onClick={() => save('')}>
+            Quitar
+          </button>
+        )}
+      </div>
+      <p className="faint small" style={{ margin: 0 }}>
+        Algunos autores no permiten descargar sus mods desde otras apps; en esos casos el panel te da el enlace para bajarlo y subirlo en Archivos.
+      </p>
+    </section>
+  );
+}

@@ -6,6 +6,7 @@ import { db, getServer } from '../db.js';
 import { download, getJson, getText } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
 import { readProperties } from './properties.js';
+import * as curseforge from './curseforge.js';
 
 /**
  * Marketplace de mods, plugins y datapacks.
@@ -16,8 +17,13 @@ import { readProperties } from './properties.js';
 const MODRINTH = process.env.MODRINTH_API || 'https://api.modrinth.com/v2';
 const HANGAR = 'https://hangar.papermc.io/api/v1';
 
-/** Qué tipo de contenido y qué loaders acepta cada tipo de servidor. */
+/** Qué tipo de contenido y qué loaders acepta cada tipo de servidor (CurseForge solo si hay clave). */
 export function contentProfile(server) {
+  const p = baseProfile(server);
+  return curseforge.hasKey() ? { ...p, sources: [...p.sources, 'curseforge'] } : p;
+}
+
+function baseProfile(server) {
   switch (server.type) {
     case 'paper':
       return { kind: 'plugin', folder: 'plugins', ext: '.jar', loaders: ['paper', 'spigot', 'bukkit', 'purpur'], sources: ['modrinth', 'hangar'] };
@@ -109,13 +115,19 @@ export async function search(id, { source = 'modrinth', query = '', offset = 0, 
   const profile = contentProfile(server);
   if (!profile.sources.includes(source)) throw new HttpError(400, `${source} no aplica para servidores ${server.type}`);
   const opts = { query, offset: Number(offset) || 0, limit: Math.min(Number(limit) || 20, 50), sort };
-  const res = source === 'hangar' ? await searchHangar(server, opts) : await searchModrinth(server, profile, opts);
+  const res =
+    source === 'hangar'
+      ? await searchHangar(server, opts)
+      : source === 'curseforge'
+        ? await curseforge.search(server, profile, opts)
+        : await searchModrinth(server, profile, opts);
   return { ...res, kind: profile.kind, sources: profile.sources };
 }
 
 // --- Detalle de un proyecto (descripción completa y galería) -------------------
 
 export async function projectDetails(source, projectId) {
+  if (source === 'curseforge') return curseforge.details(projectId);
   if (source === 'hangar') {
     const p = await getJson(`${HANGAR}/projects/${encodeURIComponent(projectId)}`);
     let body = p.description || '';
@@ -227,6 +239,7 @@ async function hangarVersions(server, slug) {
 export async function projectVersions(id, source, projectId) {
   const server = requireServer(id);
   const profile = contentProfile(server);
+  if (source === 'curseforge') return curseforge.versions(server, profile, projectId);
   return source === 'hangar' ? hangarVersions(server, projectId) : modrinthVersions(server, profile, projectId);
 }
 
@@ -245,6 +258,13 @@ function records(server) {
 
 async function projectInfo(source, projectId) {
   if (source === 'hangar') return { title: projectId, icon: null };
+  if (source === 'curseforge') {
+    try {
+      return await curseforge.info(projectId);
+    } catch {
+      return { title: projectId, icon: null };
+    }
+  }
   try {
     const p = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}`);
     return { title: p.title, icon: p.icon_url, slug: p.slug, projectType: p.project_type };
@@ -269,7 +289,10 @@ export async function install(id, { source = 'modrinth', projectId, versionId, t
   const version = versionId ? versions.find((v) => v.id === versionId) : versions.find((v) => v.type === 'release') || versions[0];
   if (!version) throw new HttpError(404, 'Esa versión ya no está disponible');
   if (!version.file) {
-    if (version.externalUrl) throw new HttpError(422, `Este plugin se descarga desde un sitio externo: ${version.externalUrl}`);
+    if (version.externalUrl) {
+      const why = source === 'curseforge' ? 'Su autor no permite descargarlo desde otras apps' : 'Se descarga desde un sitio externo';
+      throw new HttpError(422, `${why}. Bájalo de ${version.externalUrl} y súbelo en Archivos (carpeta ${profile.folder}).`);
+    }
     throw new HttpError(422, 'Esta versión no tiene archivo descargable');
   }
 

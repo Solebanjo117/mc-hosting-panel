@@ -9,6 +9,7 @@ import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
 import { applyConfig as applyMapConfig } from './worldMap.js';
+import { aikarFlags } from './optimize.js';
 import { analyze } from './crashAnalyzer.js';
 import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
 import { compareVersions } from '../lib/util.js';
@@ -257,8 +258,10 @@ class Instance {
 
     const mem = Math.max(512, Number(server.memoryMb) || 2048);
     const args = [
-      `-Xms${Math.min(mem, 1024)}M`,
+      // Con los parámetros de Aikar la memoria mínima y máxima son iguales (así lo recomienda Paper).
+      `-Xms${server.aikarFlags ? mem : Math.min(mem, 1024)}M`,
       `-Xmx${mem}M`,
+      ...(server.aikarFlags ? aikarFlags(mem) : []),
       '-Dfile.encoding=UTF-8',
       '-Dstdout.encoding=UTF-8',
       '-Dstderr.encoding=UTF-8',

@@ -17,6 +17,7 @@ import { gameList } from '../services/gameData.js';
 import * as worldMap from '../services/worldMap.js';
 import { healthCheck } from '../services/health.js';
 import { activity, playerStats, removeActivity } from '../services/activity.js';
+import * as optimize from '../services/optimize.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
@@ -256,6 +257,16 @@ serversRouter.post('/:id/playit', async (req, res) => {
   const result = await playit.enableForServer(server.id);
   bus.emit('servers');
   res.json(result);
+});
+
+// --- Optimización de un clic ---------------------------------------------------------
+
+serversRouter.get('/:id/optimize', (req, res) => res.json(optimize.status(load(req).id)));
+serversRouter.post('/:id/optimize', async (req, res) => {
+  const server = load(req);
+  const result = req.body?.undo ? optimize.undo(server.id) : await optimize.apply(server.id, Array.isArray(req.body?.only) ? req.body.only : null);
+  bus.emit('servers');
+  res.json({ ...result, restartRequired: isRunning(server.id) });
 });
 
 // --- Actividad y estadísticas de jugadores --------------------------------------------

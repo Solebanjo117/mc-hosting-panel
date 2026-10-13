@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import { Link } from 'react-router-dom';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
 
@@ -31,7 +32,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
 });
 const renderBody = (md) => DOMPurify.sanitize(marked.parse(md || ''), { FORBID_TAGS: ['style', 'form', 'input', 'iframe'], FORBID_ATTR: ['style'] });
 
-const SOURCE_LABEL = { modrinth: 'Modrinth', hangar: 'Hangar (PaperMC)' };
+const SOURCE_LABEL = { modrinth: 'Modrinth', hangar: 'Hangar (PaperMC)', curseforge: 'CurseForge' };
 const PAGE = 20;
 
 export default function ContentTab({ server, label }) {
@@ -154,12 +155,17 @@ function Explore({ server, label, onInstalled }) {
         <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ width: 'auto' }} aria-label="Ordenar">
           <option value="downloads">Más descargados</option>
           <option value="updated">Actualizados recientemente</option>
-          {source === 'modrinth' && <option value="relevance">Relevancia</option>}
-          {source === 'modrinth' && <option value="newest">Más nuevos</option>}
+          {source !== 'hangar' && <option value="relevance">{source === 'curseforge' ? 'Populares' : 'Relevancia'}</option>}
+          {source !== 'hangar' && <option value="newest">Más nuevos</option>}
         </select>
       </div>
 
       {error && <div className="error-box">No se pudo buscar en {SOURCE_LABEL[source]}: {error}</div>}
+      {data && !sources.includes('curseforge') && page === 0 && !debounced && (
+        <p className="faint small" style={{ margin: 0 }}>
+          ¿Buscas algo que solo está en CurseForge? Agrega tu clave gratis en <Link to="/ajustes">Ajustes del panel</Link> y aparecerá como otra fuente.
+        </p>
+      )}
 
       <div className="mcards" aria-busy={loading}>
         {data?.results.length === 0 && !loading && <p className="muted">Sin resultados para esta versión. Prueba con otras palabras.</p>}
@@ -203,6 +209,7 @@ function Explore({ server, label, onInstalled }) {
                 {item.updated && <span title={formatDate(item.updated)}>Actualizado {ago(item.updated)}</span>}
               </div>
               {item.clientOnly && <div className="small" style={{ color: 'var(--gold)' }}>Solo funciona en el cliente, no en el servidor</div>}
+              {item.blocked && <div className="small" style={{ color: 'var(--gold)' }}>El autor solo permite bajarlo desde CurseForge: se instala a mano</div>}
             </div>
             <footer className="mcard-foot">
               <button className="btn-sm btn-ghost" onClick={() => setDetails(item)}>
@@ -482,7 +489,7 @@ function ProjectDetails({ server, item, installed, installing, onClose, onInstal
           <button onClick={onVersions}>Elegir versión</button>
           <span className="grow" />
           <a className="btn btn-ghost" href={item.url} target="_blank" rel="noreferrer">
-            Abrir en {item.source === 'hangar' ? 'Hangar' : 'Modrinth'}
+            Abrir en {SOURCE_LABEL[item.source]?.replace(' (PaperMC)', '') || 'la página'}
           </a>
         </div>
         {error && <div className="error-box">{error}</div>}

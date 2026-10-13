@@ -5,7 +5,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - Crea servidores **Paper, Fabric, Forge, NeoForge o Vanilla** eligiendo tipo y versión; el panel descarga el servidor y el **Java correcto** (Eclipse Temurin) sin que instales nada.
 - **Tablero de inicio** con una tarjeta por servidor: su ícono, las caras de los jugadores conectados, mini gráficas de la última hora (jugadores, RAM, TPS) y un indicador de salud.
 - **Consola en vivo** con los colores reales de Minecraft, filtros (chat, avisos y errores, comandos), búsqueda, nombres de jugador que se tocan para darles objetos, cambiar su modo, curarlos, hacerlos operador o expulsarlos, historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido, y **comandos rápidos configurables**: agrega, quita y ordena botones; con huecos como `{jugador}` u `{objeto}` el panel te pregunta el dato con la lista de jugadores conectados o un buscador de objetos, efectos, encantamientos y criaturas con su nombre en español.
-- **Marketplace** de mods, plugins y datapacks desde **Modrinth** y **Hangar** (PaperMC) en tarjetas con imagen, descargas y fecha, y una ficha con galería y descripción completa; filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
+- **Marketplace** de mods, plugins y datapacks desde **Modrinth**, **Hangar** (PaperMC) y **CurseForge** (con tu clave gratis) en tarjetas con imagen, descargas y fecha, y una ficha con galería y descripción completa; filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
 - **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg.
@@ -17,7 +17,8 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Inventario visual** de cada jugador como en el juego (armadura, mano secundaria, inventario, barra rápida y cofre de Ender): arrastra objetos, cambia cantidades o pon objetos nuevos con el buscador.
 - **Mapa del mundo en 3D** con BlueMap dentro del panel, con los jugadores en vivo (Paper, Fabric, Forge y NeoForge).
 - **Actividad:** ranking de jugadores (tiempo jugado, bloques minados, distancia, mobs, muertes…), mapa de calor de cuándo se juega y línea de tiempo de entradas, salidas, caídas y respaldos.
-- **Cómo se ve en la lista de servidores:** editor del mensaje (MOTD) con colores y formato, y del ícono de 64×64, con vista previa idéntica a la de Minecraft.
+- **Cómo se ve en la lista de servidores:** editor del mensaje (MOTD) con colores y formato, y del ícono: subes cualquier foto, eliges la parte con zoom y arrastre, y queda en 64×64. Vista previa idéntica a la de Minecraft.
+- **Optimización de un clic:** parámetros de Java de Aikar, distancias y guardado de chunks, ajustes de Paper y mods de rendimiento (Lithium, FerriteCore, ModernFix) en Fabric, Forge y NeoForge. Se puede deshacer.
 - **Revisión general** de cada servidor en una lista con palomitas: Java, puerto, firewall, túnel, dominio, respaldos, disco, memoria y seguridad.
 - **Notificaciones del navegador** cuando alguien entra o un servidor se cae, y el panel se puede **instalar como app**.
 - **Mundos:** varios mundos por servidor, crear con semilla y tipo, importar desde .zip, descargar y cambiar entre ellos.
@@ -121,6 +122,8 @@ server/
     worldMap.js         mapa con BlueMap: instalación, configuración y proxy dentro del panel
     activity.js         línea de tiempo, mapa de calor y estadísticas de jugadores
     health.js           revisión general de cada servidor
+    optimize.js         optimización de un clic (Aikar, server.properties, Paper, mods de rendimiento)
+    curseforge.js       búsqueda e instalación desde CurseForge
     gameData.js         listas de objetos, efectos, encantamientos y entidades por versión, con nombres en español
   lib/nbt.js            lectura y escritura de NBT (gzip, zlib o sin comprimir; UTF-8 modificado de Java)
     logs.js             lectura y búsqueda de logs y crash reports
@@ -144,6 +147,6 @@ docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
 - playit.gg se controla con la API que usa su agente oficial (v1.0.x). Si playit cambia esa API, la creación de túneles podría fallar; en ese caso los túneles se pueden crear a mano en playit.gg.
 - MCXboxBroadcast es una herramienta no oficial: usa una cuenta de Microsoft secundaria.
 - Las consolas (Xbox, PlayStation, Switch) no permiten agregar servidores propios; la guía explica las alternativas.
-- CurseForge no está integrado porque su API exige una clave privada; los mods de CurseForge se pueden subir a mano desde **Archivos** (carpeta `mods`).
+- CurseForge necesita una clave de API propia (gratis en console.curseforge.com). Los mods cuyo autor no permite descargas desde otras apps se bajan desde CurseForge y se suben en **Archivos**.
 - Algunos plugins de Hangar se publican solo como enlace externo; el panel te muestra el enlace en lugar de instalarlos.
 - Forge para versiones anteriores a 1.17 se instala, pero conviene probar cada modpack antiguo.

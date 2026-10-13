@@ -2530,3 +2530,38 @@ label.check input {
     font-size: var(--step-2);
   }
 }
+
+/* Recortador del ícono */
+.cropper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+.crop-view {
+  width: 256px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: repeating-conic-gradient(#2a3348 0 25%, #222a3d 0 50%) 0 0 / 16px 16px;
+  cursor: grab;
+  touch-action: none;
+  outline: 2px solid var(--prismarine);
+  outline-offset: 2px;
+}
+.crop-view:active {
+  cursor: grabbing;
+}
+.crop-preview {
+  width: 64px;
+  height: 64px;
+  margin-top: 0.3rem;
+  image-rendering: pixelated;
+  border: 1px solid var(--line);
+  background: var(--night);
+}
+@media (max-width: 560px) {
+  .cropper {
+    grid-template-columns: 1fr;
+  }
+}

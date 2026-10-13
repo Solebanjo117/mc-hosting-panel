@@ -6,6 +6,7 @@ import { bus } from '../lib/bus.js';
 import { HttpError } from '../lib/util.js';
 import * as playit from '../services/playit.js';
 import * as dns from '../services/dns.js';
+import * as curseforge from '../services/curseforge.js';
 import * as modpack from '../services/modpack.js';
 
 /** playit.gg, DuckDNS y modpacks: funciones del panel que no son de un solo servidor. */
@@ -26,6 +27,11 @@ integrationsRouter.get('/playit/tunnels', async (_req, res) => res.json(await pl
 integrationsRouter.get('/dns', (_req, res) => res.json(dns.publicStatus()));
 integrationsRouter.put('/dns', async (req, res) => res.json(await dns.saveSettings(req.body || {})));
 integrationsRouter.post('/dns/unlink', async (_req, res) => res.json(await dns.unlink()));
+
+// --- CurseForge (clave de API del usuario) -----------------------------------------
+
+integrationsRouter.get('/curseforge', (_req, res) => res.json(curseforge.publicStatus()));
+integrationsRouter.put('/curseforge', async (req, res) => res.json(await curseforge.saveKey(req.body?.apiKey)));
 
 // --- Modpacks ------------------------------------------------------------------
 

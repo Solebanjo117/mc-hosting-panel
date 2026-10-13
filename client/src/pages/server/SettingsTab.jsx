@@ -4,6 +4,7 @@ import { api } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { Confirm, Modal, useAction } from '../../ui.jsx';
 import AppearanceEditor from './AppearanceEditor.jsx';
+import OptimizeSection from './OptimizeSection.jsx';
 
 // Ajustes de server.properties que la gente cambia más seguido.
 const COMMON = [
@@ -61,6 +62,7 @@ export default function SettingsTab({ server, state }) {
   return (
     <div className="stack" style={{ gap: '1.75rem', maxWidth: 920 }}>
       <AppearanceEditor server={server} running={on} />
+      <OptimizeSection server={server} running={on} />
       <section className="panel stack">
         <div className="row">
           <h2 className="grow" style={{ margin: 0 }}>
