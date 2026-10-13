@@ -75,7 +75,8 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       assert.equal(t.name, 'Tunel Nandu Java', 'sin acentos (playit no los acepta)');
       assert.equal(localPort(t), s.port);
       assert.equal(r.java.address, t.display_address);
-      assert.deepEqual(r.warnings, []);
+      // En Windows el agente de prueba no es un .exe real: el panel avisa pero crea el túnel igual.
+      assert.deepEqual(r.warnings.filter((w) => !/agente de playit/.test(w)), []);
       const req = mocks.requests('/playit/v1/tunnels/create').at(-1);
       assert.match(req.headers.authorization, /^Agent-Key abcdef/);
     });
@@ -131,6 +132,26 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       const r = await c.ok('POST', `/api/servers/${s2.id}/playit`, {});
       assert.equal(pl().tunnels.length, before, 'no creó otro');
       assert.equal(r.java.name, 'Mi tunel');
+    });
+
+    it('si el agente está dañado lo explica, no se queda "iniciando" y se arregla reinstalándolo', async () => {
+      await c.ok('POST', '/api/integrations/playit/enabled', { enabled: false });
+      const bin = path.join(panel.dataDir, 'playit', process.platform === 'win32' ? 'playitd.exe' : 'playitd');
+      fs.rmSync(bin, { force: true });
+      fs.writeFileSync(bin, 'archivo dañado', { mode: 0o644 });
+      const r = await c.post('/api/integrations/playit/enabled', { enabled: true });
+      if (r.status === 502) assert.match(r.body.error, /dañado o bloqueado por el antivirus/);
+      else assert.equal(r.status, 200);
+      const st = await waitFor(async () => {
+        const x = await c.ok('GET', '/api/integrations/playit');
+        return x.status === 'error' ? x : null;
+      }, { message: 'estado de error' });
+      assert.ok(st.logs.some((l) => /No se pudo iniciar el agente/.test(l)));
+      // Crear o reparar túneles sigue funcionando (es la API de playit, no el agente).
+      const t = await c.ok('POST', `/api/servers/${s2.id}/playit`, {});
+      assert.ok(t.java);
+      await c.ok('POST', '/api/integrations/playit/reinstall');
+      assert.notEqual(fs.readFileSync(bin, 'utf8'), 'archivo dañado');
     });
   });
 

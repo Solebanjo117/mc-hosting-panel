@@ -162,12 +162,23 @@ export async function installAgent() {
   return status();
 }
 
+const AGENT_BROKEN =
+  'No se pudo abrir el agente de playit: el archivo puede estar dañado o bloqueado por el antivirus. Reinstálalo en Ajustes del panel → Túneles de playit.gg.';
+
 export async function startAgent() {
   if (state.proc) return status();
   if (!readSecret()) throw new HttpError(409, 'Primero vincula playit.gg con tu cuenta');
   if (!fs.existsSync(BIN)) await installAgent();
   setStatus('starting');
-  const proc = spawn(BIN, ['--secret-path', SECRET_FILE], { cwd: DIR, windowsHide: true, env: { ...process.env, PLAYIT_LOG: 'info' } });
+  let proc;
+  try {
+    proc = spawn(BIN, ['--secret-path', SECRET_FILE], { cwd: DIR, windowsHide: true, env: { ...process.env, PLAYIT_LOG: 'info' } });
+  } catch (err) {
+    // En Windows un .exe dañado o bloqueado por el antivirus falla aquí mismo ("spawn UNKNOWN").
+    log(`No se pudo iniciar el agente: ${err.code || err.message}`);
+    setStatus('error');
+    throw new HttpError(502, AGENT_BROKEN);
+  }
   state.proc = proc;
   let partial = '';
   const onData = (d) => {
@@ -177,7 +188,14 @@ export async function startAgent() {
   };
   proc.stdout.on('data', onData);
   proc.stderr.on('data', onData);
-  proc.on('error', (err) => log(`No se pudo iniciar el agente: ${err.message}`));
+  proc.on('error', (err) => {
+    log(`No se pudo iniciar el agente: ${err.message}`);
+    if (proc.pid === undefined && state.proc === proc) {
+      // Nunca arrancó (no habrá evento "exit"): no se queda como "iniciando".
+      state.proc = null;
+      setStatus('error');
+    }
+  });
   proc.on('exit', (code) => {
     state.proc = null;
     log(`El agente se cerró (código ${code}).`);
@@ -249,7 +267,7 @@ export function startClaim() {
       state.claim = { ...state.claim, state: 'done' };
       settings().enabled = true;
       db.flush();
-      await startAgent();
+      await startAgent().catch((err) => log(err.message)); // la cuenta ya quedó vinculada
       await agentId(true);
     } catch (err) {
       if (state.claim?.code === code) state.claim = { ...state.claim, state: 'error', error: err.message };
@@ -406,7 +424,9 @@ export async function enableForServer(id) {
   const server = getServer(id);
   if (!server) throw new HttpError(404, 'Servidor no encontrado');
   if (!readSecret()) throw new HttpError(409, 'Primero vincula playit.gg en Ajustes del panel');
-  if (!state.proc) await startAgent();
+  const warnings = [];
+  // Los túneles se crean con la API; si el agente no abre, se avisa sin bloquear.
+  if (!state.proc) await startAgent().catch((err) => warnings.push(err.message));
   const { tunnels } = await listTunnels();
   const used = usedElsewhere(id);
   const p = {
@@ -432,7 +452,6 @@ export async function enableForServer(id) {
       p.owned[kind] = true;
     }
   };
-  const warnings = [];
   await ensure('java', 'javaTunnelId', server.port);
   if (server.bedrock?.enabled) {
     // Si falla el de Bedrock, el de Java se queda funcionando.
