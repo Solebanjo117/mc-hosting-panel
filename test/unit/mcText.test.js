@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMc, parseConsole, plainMc, segStyle } from '../../client/src/mcText.js';
+import { parseMc, parseConsole, plainMc, scramble, segStyle } from '../../client/src/mcText.js';
 
 /** Caso de uso: ver el MOTD con colores y la consola con los colores del servidor. */
 describe('Colores de Minecraft', () => {
@@ -32,5 +32,12 @@ describe('Colores de Minecraft', () => {
 
   it('estilos para la página', () => {
     assert.deepEqual(segStyle({ bold: true, underline: true, strike: true, color: 'red' }), { color: 'red', fontWeight: 700, fontStyle: undefined, textDecoration: 'underline line-through' });
+  });
+
+  it('el texto mágico (§k) cambia cada letra por una al azar, conserva los espacios y el largo', () => {
+    const out = scramble('Iker se la come');
+    assert.equal(out.length, 'Iker se la come'.length);
+    assert.deepEqual([...out].map((c, i) => (c === ' ') === ('Iker se la come'[i] === ' ')), Array(15).fill(true));
+    assert.notEqual(scramble('abcdefghijklmnop'), 'abcdefghijklmnop');
   });
 });

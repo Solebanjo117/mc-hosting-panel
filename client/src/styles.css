@@ -1995,12 +1995,6 @@ label.check input {
 .mc-ping i:nth-child(3) { height: 7px; }
 .mc-ping i:nth-child(4) { height: 9px; }
 .mc-ping i:nth-child(5) { height: 11px; }
-.mc-obf {
-  animation: mc-obf 0.25s steps(2) infinite;
-}
-@keyframes mc-obf {
-  50% { opacity: 0.35; filter: blur(1px); }
-}
 .mc-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -2027,10 +2021,6 @@ label.check input {
   background: var(--line);
   margin: 0 4px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .mc-obf { animation: none; }
-}
-
 /* Actividad: ranking, mapa de calor, línea de tiempo */
 .chips {
   display: flex;

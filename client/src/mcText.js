@@ -26,7 +26,7 @@ export const MC_FORMATS = {
   o: { name: 'Cursiva', style: 'italic' },
   n: { name: 'Subrayado', style: 'underline' },
   m: { name: 'Tachado', style: 'strike' },
-  k: { name: 'Mágico (letras que cambian)', style: 'obf' },
+  k: { name: 'Mágico: cada letra se vuelve un símbolo al azar que cambia sin parar (no parpadea; el texto deja de leerse)', style: 'obf' },
   r: { name: 'Quitar formato', style: 'reset' },
 };
 
@@ -129,3 +129,13 @@ export function segStyle(s) {
 
 /** Texto visible sin códigos. */
 export const plainMc = (text) => String(text).replace(/§[0-9a-fk-or]/gi, '');
+
+// Caracteres que usa el juego para el texto mágico (§k): cambian cada fotograma.
+const OBF_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&?@*+=<>/\\{}[]~^';
+
+/** Texto mágico: cada letra (no los espacios) se cambia por una al azar. */
+export function scramble(text) {
+  let out = '';
+  for (const ch of text) out += ch === ' ' ? ' ' : OBF_CHARS[Math.floor(Math.random() * OBF_CHARS.length)];
+  return out;
+}

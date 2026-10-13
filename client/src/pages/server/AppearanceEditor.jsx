@@ -1,23 +1,49 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { api } from '../../api.js';
-import { MC_COLORS, MC_FORMATS, parseMc, plainMc, segStyle } from '../../mcText.js';
+import { MC_COLORS, MC_FORMATS, parseMc, plainMc, scramble, segStyle } from '../../mcText.js';
 import { useAction, useToast } from '../../ui.jsx';
 import { ServerIcon } from '../Home.jsx';
 import IconCropper, { readImage } from './IconCropper.jsx';
 
 const MAX_VISIBLE = 45; // aprox. lo que cabe en una línea de la lista de servidores
 
+/** Texto mágico (§k) como en el juego: letras al azar que cambian sin parar. */
+function Obfuscated({ text, style }) {
+  const [shown, setShown] = useState(() => scramble(text));
+  useEffect(() => {
+    setShown(scramble(text));
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const t = setInterval(() => setShown(scramble(text)), 70);
+    return () => clearInterval(t);
+  }, [text]);
+  return (
+    <span style={style} title={`Texto mágico: en el juego se ve así. Debajo dice "${text}"`}>
+      {shown}
+    </span>
+  );
+}
+
 function McLine({ text }) {
   return (
     <>
-      {parseMc(text, { color: '#AAAAAA' }).map((s, i) => (
-        <span key={i} style={segStyle(s)} className={s.obf ? 'mc-obf' : undefined}>
-          {s.text}
-        </span>
-      ))}
+      {parseMc(text, { color: '#AAAAAA' }).map((s, i) =>
+        s.obf ? (
+          <Obfuscated key={i} text={s.text} style={segStyle(s)} />
+        ) : (
+          <span key={i} style={segStyle(s)}>
+            {s.text}
+          </span>
+        )
+      )}
     </>
   );
 }
+
+/** ¿Todas las letras visibles de la línea son texto mágico? */
+const allMagic = (text) => {
+  const segs = parseMc(text).filter((x) => x.text.trim());
+  return segs.length > 0 && segs.every((x) => x.obf);
+};
 
 /** Recorta al centro y escala a 64×64. Si la imagen es chica (pixel art), sin suavizar. */
 export default function AppearanceEditor({ server, running }) {
@@ -113,7 +139,7 @@ export default function AppearanceEditor({ server, running }) {
               onClick={() => insert(code)}
               style={code === 'l' ? { fontWeight: 700 } : code === 'o' ? { fontStyle: 'italic' } : code === 'n' ? { textDecoration: 'underline' } : code === 'm' ? { textDecoration: 'line-through' } : undefined}
             >
-              {code === 'l' ? 'N' : code === 'o' ? 'C' : code === 'n' ? 'S' : code === 'm' ? 'T' : code === 'k' ? '?!' : 'Normal'}
+              {code === 'l' ? 'N' : code === 'o' ? 'C' : code === 'n' ? 'S' : code === 'm' ? 'T' : code === 'k' ? 'Mágico' : 'Normal'}
             </button>
           ))}
         </div>
@@ -127,6 +153,7 @@ export default function AppearanceEditor({ server, running }) {
               <span>
                 Línea {i + 1}
                 {visible > MAX_VISIBLE && <span className="faint"> · puede no caber completa ({visible} letras)</span>}
+                {allMagic(lines[i]) && <span style={{ color: 'var(--gold)' }}> · toda la línea es texto mágico: nadie podrá leerla</span>}
               </span>
               <input
                 ref={refs[i]}
