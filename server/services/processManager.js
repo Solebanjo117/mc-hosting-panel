@@ -8,7 +8,7 @@ import { ensureJava, requiredJava } from './java.js';
 import { launchArgs } from './installer.js';
 import { getStats } from './procstats.js';
 import { applyGeyserConfig } from './geyserConfig.js';
-import { applyConfig as applyMapConfig, followActiveWorld } from './worldMap.js';
+import { applyConfig as applyMapConfig, followActiveWorld, takePendingUpdates } from './worldMap.js';
 import { aikarFlags } from './optimize.js';
 import { analyze } from './crashAnalyzer.js';
 import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
@@ -80,6 +80,7 @@ class Instance {
       this.setStatus('running');
       if (this.geyserPending) this.finishGeyserSetup();
       if (this.mapPending) this.finishMapSetup();
+      this.requestMapUpdates();
     }
     let m = line.match(/: ([A-Za-z0-9_.]{2,17}) joined the game/);
     if (m) {
@@ -195,6 +196,18 @@ class Instance {
   }
 
   /** BlueMap crea su configuración en el primer arranque: el panel la ajusta y lo recarga. */
+  /** Tras un borrado en frío del mapa, le pide a BlueMap que lo dibuje (cuando ya cargó sus recursos). */
+  async requestMapUpdates() {
+    const server = getServer(this.id);
+    if (!server?.map?.enabled) return;
+    const maps = takePendingUpdates(server);
+    if (!maps.length) return;
+    await sleep(15_000); // BlueMap carga (o descarga) sus recursos después de "Done"
+    if (!this.proc) return;
+    for (const id of maps) this.send(`bluemap update ${id}`);
+    this.panelLine(`BlueMap vuelve a dibujar el mapa (${maps.join(', ')}). Tarda unos minutos.`);
+  }
+
   async finishMapSetup() {
     this.mapPending = false;
     for (let attempt = 0; attempt < 20 && this.proc; attempt++) {

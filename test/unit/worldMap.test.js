@@ -103,4 +103,15 @@ describe('El mapa sigue al mundo activo', () => {
     followActiveWorld(server);
     assert.match(conf('srv-h', 'world_the_end'), /^world: "nuevo_the_end"$/m);
   });
+
+  it('al borrar lo dibujado, quita la fecha de la última revisión en pluginState.json y deja pendiente el "update"', () => {
+    const server = setup('srv-i');
+    const stateFile = path.join(serverDir('srv-i'), 'bluemap', 'pluginState.json');
+    fs.writeFileSync(stateFile, JSON.stringify({ 'render-threads-enabled': true, maps: { world: { 'update-enabled': true, 'last-full-update': 1760400000 }, creativo: { 'last-full-update': 5 } } }));
+    followActiveWorld(server);
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    assert.equal(state.maps.world['last-full-update'], 0);
+    assert.equal(state.maps.creativo['last-full-update'], 5, 'otros mapas no se tocan');
+    assert.deepEqual(server.map.pendingUpdate.sort(), ['world', 'world_nether', 'world_the_end']);
+  });
 });

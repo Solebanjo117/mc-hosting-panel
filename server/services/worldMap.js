@@ -187,11 +187,50 @@ function readMaps(server) {
   return maps;
 }
 
-/** Borra lo que BlueMap dibujó de un mapa (tiles y estado de dibujo). */
+/** Carpeta de datos de BlueMap (core.conf → data, por defecto bluemap/). */
+function dataRoot(server) {
+  const dir = configDir(server);
+  let root = 'bluemap';
+  try {
+    const m = fs.readFileSync(path.join(dir, 'core.conf'), 'utf8').match(/^\s*data\s*:\s*"([^"]+)"/m);
+    if (m) root = m[1];
+  } catch {
+    /* sin archivo: valor por defecto */
+  }
+  return path.resolve(serverDir(server.id), root);
+}
+
+/**
+ * Borra lo que BlueMap dibujó de un mapa (tiles y estado de dibujo) con el servidor apagado.
+ * BlueMap solo vuelve a dibujar todo al arrancar si pasaron 24 h desde su última revisión completa
+ * (pluginState.json), así que se le quita esa fecha y además el panel le pide "bluemap update" al encender.
+ */
 function purgeRendered(server, mapId) {
   const tiles = tilesRoot(server);
   const rendered = path.join(tiles, mapId);
   if (rendered.startsWith(tiles + path.sep)) fs.rmSync(rendered, { recursive: true, force: true });
+  const stateFile = path.join(dataRoot(server), 'pluginState.json');
+  try {
+    const state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    const entry = state.maps?.[mapId];
+    if (entry) {
+      for (const key of ['last-full-update', 'lastFullUpdate']) if (key in entry) entry[key] = 0;
+      fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+    }
+  } catch {
+    /* sin estado todavía */
+  }
+  server.map.pendingUpdate = [...new Set([...(server.map.pendingUpdate || []), mapId])];
+}
+
+/** Mapas que hay que pedirle a BlueMap que dibuje al encender (después de un borrado en frío). */
+export function takePendingUpdates(server) {
+  const list = server.map?.pendingUpdate || [];
+  if (list.length) {
+    server.map.pendingUpdate = [];
+    db.flush();
+  }
+  return list;
 }
 
 /**
@@ -228,6 +267,7 @@ export async function redraw(id) {
     for (const m of maps) inst.send(`bluemap purge ${m.id}`);
   } else {
     for (const m of maps) purgeRendered(server, m.id);
+    db.flush();
   }
   return { maps: maps.map((m) => m.id), running: isRunning(id) };
 }
@@ -245,6 +285,8 @@ export function forgetWorld(server, world) {
     purgeRendered(server, m.id);
     removed++;
   }
+  // Un mapa que ya no existe no hay que pedírselo a BlueMap.
+  if (server.map?.pendingUpdate) server.map.pendingUpdate = server.map.pendingUpdate.filter((id) => readMaps(server).some((m) => m.id === id));
   return removed;
 }
 
@@ -284,7 +326,7 @@ export function followActiveWorld(server) {
     message = `El mundo "${active}" se regeneró: BlueMap vuelve a dibujar el mapa desde cero.`;
   }
 
-  if (server.map.world !== active || (fingerprint && server.map.worldId !== fingerprint)) {
+  if (message || server.map.world !== active || (fingerprint && server.map.worldId !== fingerprint)) {
     server.map.world = active;
     if (fingerprint) server.map.worldId = fingerprint;
     db.flush();

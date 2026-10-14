@@ -143,6 +143,9 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       assert.deepEqual(off, { maps: ['world'], running: false });
       assert.ok(!fs.existsSync(tiles));
       await panel.start(paper.id);
+      // Tras el borrado en frío, el panel le pide a BlueMap que dibuje (BlueMap solo lo haría cada 24 h).
+      await panel.waitConsole(paper.id, /> bluemap update world/, 30000);
+      assert.deepEqual(panel.readDb().servers.find((x) => x.id === paper.id).map.pendingUpdate, []);
       const on = await c.ok('POST', `/api/servers/${paper.id}/map/redraw`);
       assert.equal(on.running, true);
       await panel.waitConsole(paper.id, /> bluemap purge world/);
