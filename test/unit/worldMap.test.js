@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { serverDir } from '../../server/config.js';
-import { followActiveWorld, forgetWorld } from '../../server/services/worldMap.js';
+import { followActiveWorld, forgetWorld, worldFingerprint } from '../../server/services/worldMap.js';
+import { writeNbt } from '../../server/lib/nbt.js';
 
 /** Un servidor Paper con BlueMap ya configurado para el mundo "world" y algo dibujado. */
 function setup(id, { level = 'nuevo', extraMaps = {}, mapWorld = 'world' } = {}) {
@@ -76,5 +77,30 @@ describe('El mapa sigue al mundo activo', () => {
     assert.ok(!drawn('srv-f', 'creativo_nether'));
     assert.ok(drawn('srv-f', 'world'), 'el mapa del mundo activo sigue');
     assert.equal(forgetWorld(server, 'no-existe'), 0);
+  });
+
+  it('misma carpeta pero mundo regenerado (otra semilla): borra lo dibujado y avisa', () => {
+    const server = setup('srv-g', { level: 'world' });
+    const levelDat = (seed) =>
+      writeNbt({ compression: 'gzip', rootName: '', root: { type: 'compound', value: [{ name: 'Data', type: 'compound', value: [{ name: 'WorldGenSettings', type: 'compound', value: [{ name: 'seed', type: 'long', value: seed }] }] }] } });
+    const file = path.join(serverDir('srv-g'), 'world', 'level.dat');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, levelDat('111'));
+    assert.equal(worldFingerprint(server, 'world'), 'seed:111');
+    assert.equal(followActiveWorld(server), null, 'la primera vez solo recuerda la semilla');
+    assert.equal(server.map.worldId, 'seed:111');
+    assert.ok(drawn('srv-g', 'world'));
+    fs.writeFileSync(file, levelDat('222'));
+    assert.match(followActiveWorld(server), /se regeneró/);
+    assert.ok(!drawn('srv-g', 'world'));
+    assert.ok(!drawn('srv-g', 'world_nether'));
+    assert.equal(server.map.worldId, 'seed:222');
+    assert.equal(followActiveWorld(server), null);
+  });
+
+  it('entiende rutas como las escribe BlueMap en Windows (con barras dobles)', () => {
+    const server = setup('srv-h', { extraMaps: { world: 'world: "world"\n', world_nether: 'world: "world_nether"\n', world_the_end: 'world: ".\\\\world_the_end"\n' } });
+    followActiveWorld(server);
+    assert.match(conf('srv-h', 'world_the_end'), /^world: "nuevo_the_end"$/m);
   });
 });

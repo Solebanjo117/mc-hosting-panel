@@ -57,6 +57,8 @@ public class FakeServer {
         out("Automatic saving is now disabled");
       } else if (cmd.equals("save-on")) {
         out("Automatic saving is now enabled");
+      } else if (cmd.equals("bluemap") && p.length > 2 && p[1].equals("purge")) {
+        out("[BlueMap] Scheduled a new task to purge map " + p[2]);
       } else if (cmd.equals("reload") || cmd.equals("minecraft:reload")) {
         out("Reloading!");
       } else if (cmd.equals("tps")) {

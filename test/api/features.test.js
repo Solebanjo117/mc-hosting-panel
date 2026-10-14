@@ -133,6 +133,21 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       assert.ok(!fs.existsSync(path.join(dir, 'bluemap', 'web', 'maps', 'extra')));
       assert.ok(!fs.existsSync(path.join(dir, 'Regenerado')));
     });
+
+    it('"Volver a dibujar": apagado borra lo dibujado; encendido se lo pide a BlueMap', async () => {
+      const dir = panel.serverDir(paper.id);
+      const tiles = path.join(dir, 'bluemap', 'web', 'maps', 'world', 'tiles');
+      fs.mkdirSync(tiles, { recursive: true });
+      fs.writeFileSync(path.join(tiles, 'x.png'), 'viejo');
+      const off = await c.ok('POST', `/api/servers/${paper.id}/map/redraw`);
+      assert.deepEqual(off, { maps: ['world'], running: false });
+      assert.ok(!fs.existsSync(tiles));
+      await panel.start(paper.id);
+      const on = await c.ok('POST', `/api/servers/${paper.id}/map/redraw`);
+      assert.equal(on.running, true);
+      await panel.waitConsole(paper.id, /> bluemap purge world/);
+      await panel.stop(paper.id);
+    });
   });
 
   describe('Revisión general', () => {

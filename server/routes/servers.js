@@ -317,6 +317,7 @@ serversRouter.post('/:id/map', async (req, res) => {
   bus.emit('servers');
   res.json({ ...result, restartRequired: isRunning(server.id) });
 });
+serversRouter.post('/:id/map/redraw', async (req, res) => res.json(await worldMap.redraw(load(req).id)));
 serversRouter.use('/:id/map/view', (req, res) => worldMap.proxy(req, res));
 
 // --- Listas del juego para los comandos rápidos (objetos, efectos…) ---------------

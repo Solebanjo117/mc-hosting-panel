@@ -6,6 +6,8 @@ import { db, getServer } from '../db.js';
 import { HttpError } from '../lib/util.js';
 import * as market from './marketplace.js';
 import { readProperties } from './properties.js';
+import { parseNbt } from '../lib/nbt.js';
+import { instance, isRunning } from './processManager.js';
 
 /**
  * Mapa del mundo con BlueMap (3D, en el navegador). Funciona en Paper, Fabric, Forge y NeoForge.
@@ -167,26 +169,80 @@ function tilesRoot(server) {
   return path.resolve(serverDir(server.id), root);
 }
 
+/** Los mapas de BlueMap con la carpeta de mundo a la que apuntan. */
+function readMaps(server) {
+  const dir = configDir(server);
+  const mapsDir = dir && path.join(dir, 'maps');
+  if (!mapsDir || !fs.existsSync(mapsDir)) return [];
+  const maps = [];
+  for (const f of fs.readdirSync(mapsDir).filter((x) => x.endsWith('.conf'))) {
+    const file = path.join(mapsDir, f);
+    const text = fs.readFileSync(file, 'utf8');
+    const m = text.match(WORLD_LINE);
+    if (!m) continue;
+    const folder = m[3].trim().replace(/\\\\/g, '/').replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
+    if (folder.includes('/')) continue; // ruta rara (otra carpeta): no se toca
+    maps.push({ id: f.slice(0, -5), file, text, folder, base: folder.replace(DIM_SUFFIX, ''), suffix: (folder.match(DIM_SUFFIX) || [''])[0] });
+  }
+  return maps;
+}
+
+/** Borra lo que BlueMap dibujó de un mapa (tiles y estado de dibujo). */
+function purgeRendered(server, mapId) {
+  const tiles = tilesRoot(server);
+  const rendered = path.join(tiles, mapId);
+  if (rendered.startsWith(tiles + path.sep)) fs.rmSync(rendered, { recursive: true, force: true });
+}
+
+/**
+ * Identifica el mundo que hay en una carpeta: su semilla (del level.dat). Si se regenera el mundo en
+ * la misma carpeta, la semilla cambia y el mapa anterior ya no sirve.
+ */
+export function worldFingerprint(server, level) {
+  const file = path.join(serverDir(server.id), level, 'level.dat');
+  try {
+    const { root } = parseNbt(fs.readFileSync(file));
+    const get = (node, name) => node?.value?.find?.((t) => t.name === name);
+    const data = get(root, 'Data');
+    const seed = get(get(data, 'WorldGenSettings'), 'seed') || get(data, 'RandomSeed');
+    if (seed?.value != null) return `seed:${seed.value}`;
+    return `born:${Math.round(fs.statSync(file).birthtimeMs)}`;
+  } catch {
+    return null; // todavía no se generó
+  }
+}
+
+/**
+ * Vuelve a dibujar el mapa del mundo activo desde cero. Con el servidor encendido se lo pide a BlueMap
+ * (bluemap purge); apagado, se borra lo dibujado y BlueMap lo rehace al encender.
+ */
+export async function redraw(id) {
+  const server = requireServer(id);
+  if (!server.map?.enabled) throw new HttpError(409, 'El mapa no está activado');
+  const active = readProperties(id)['level-name'] || 'world';
+  const maps = readMaps(server).filter((m) => m.base === active);
+  if (!maps.length) throw new HttpError(409, 'BlueMap todavía no creó sus mapas: enciende el servidor una vez y vuelve a intentar');
+  if (isRunning(id)) {
+    const inst = instance(id);
+    if (inst.status !== 'running') throw new HttpError(409, 'Espera a que el servidor termine de encender');
+    for (const m of maps) inst.send(`bluemap purge ${m.id}`);
+  } else {
+    for (const m of maps) purgeRendered(server, m.id);
+  }
+  return { maps: maps.map((m) => m.id), running: isRunning(id) };
+}
+
 /**
  * Al borrar un mundo: quita los mapas de BlueMap que lo mostraban (también Nether y End)
  * y lo que tenían dibujado, para que no queden mapas de un mundo que ya no existe.
  * Devuelve cuántos mapas quitó.
  */
 export function forgetWorld(server, world) {
-  const dir = configDir(server);
-  const mapsDir = dir && path.join(dir, 'maps');
-  if (!mapsDir || !fs.existsSync(mapsDir)) return 0;
-  const tiles = tilesRoot(server);
   let removed = 0;
-  for (const f of fs.readdirSync(mapsDir).filter((x) => x.endsWith('.conf'))) {
-    const file = path.join(mapsDir, f);
-    const m = fs.readFileSync(file, 'utf8').match(WORLD_LINE);
-    if (!m) continue;
-    const folder = m[3].trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
-    if (folder.replace(DIM_SUFFIX, '') !== world) continue;
-    fs.rmSync(file, { force: true });
-    const rendered = path.join(tiles, f.slice(0, -5));
-    if (rendered.startsWith(tiles + path.sep)) fs.rmSync(rendered, { recursive: true, force: true });
+  for (const m of readMaps(server)) {
+    if (m.base !== world) continue;
+    fs.rmSync(m.file, { force: true });
+    purgeRendered(server, m.id);
     removed++;
   }
   return removed;
@@ -200,46 +256,38 @@ export function forgetWorld(server, world) {
  * Devuelve un mensaje si cambió algo.
  */
 export function followActiveWorld(server) {
-  const dir = configDir(server);
-  if (!dir || !server.map?.enabled) return null;
-  const mapsDir = path.join(dir, 'maps');
-  if (!fs.existsSync(mapsDir)) return null;
+  if (!server.map?.enabled) return null;
+  const maps = readMaps(server);
+  if (!maps.length) return null;
   const active = readProperties(server.id)['level-name'] || 'world';
+  const fingerprint = worldFingerprint(server, active);
 
-  const maps = [];
-  for (const f of fs.readdirSync(mapsDir).filter((x) => x.endsWith('.conf'))) {
-    const file = path.join(mapsDir, f);
-    const text = fs.readFileSync(file, 'utf8');
-    const m = text.match(WORLD_LINE);
-    if (!m) continue;
-    const value = m[3].trim();
-    const folder = value.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/$/, '');
-    if (folder.includes('/')) continue; // ruta rara (otra carpeta): no se toca
-    maps.push({ id: f.slice(0, -5), file, text, folder, base: folder.replace(DIM_SUFFIX, ''), suffix: (folder.match(DIM_SUFFIX) || [''])[0] });
-  }
   // ¿Cuál era el mundo del mapa? El que el panel recuerda o, en instalaciones viejas, el único que aparece.
   let previous = server.map.world;
   if (!previous) {
     const bases = [...new Set(maps.map((x) => x.base))];
     previous = bases.length === 1 ? bases[0] : active;
   }
-  if (previous === active) {
-    if (server.map.world !== active) {
-      server.map.world = active;
-      db.flush();
+
+  let message = null;
+  if (previous !== active) {
+    // Solo se cambian los mapas del mundo anterior; mundos extra (Multiverse, etc.) se respetan.
+    const changed = maps.filter((x) => x.base === previous);
+    for (const x of changed) {
+      fs.writeFileSync(x.file, x.text.replace(WORLD_LINE, (_all, pre, q, _v, post) => `${pre}${q || '"'}${active}${x.suffix}${q || '"'}${post}`));
+      purgeRendered(server, x.id);
     }
-    return null;
+    if (changed.length) message = `El mapa ahora muestra el mundo "${active}". BlueMap lo vuelve a dibujar desde cero (tarda unos minutos).`;
+  } else if (fingerprint && server.map.worldId && server.map.worldId !== fingerprint) {
+    // Misma carpeta, pero el mundo se regeneró (otra semilla): lo dibujado ya no sirve.
+    for (const x of maps.filter((m) => m.base === active)) purgeRendered(server, x.id);
+    message = `El mundo "${active}" se regeneró: BlueMap vuelve a dibujar el mapa desde cero.`;
   }
 
-  // Solo se cambian los mapas del mundo anterior; mundos extra (Multiverse, etc.) se respetan.
-  const changed = maps.filter((x) => x.base === previous);
-  const tiles = tilesRoot(server);
-  for (const x of changed) {
-    fs.writeFileSync(x.file, x.text.replace(WORLD_LINE, (_all, pre, q, _v, post) => `${pre}${q || '"'}${active}${x.suffix}${q || '"'}${post}`));
-    const rendered = path.join(tiles, x.id);
-    if (rendered.startsWith(tiles + path.sep)) fs.rmSync(rendered, { recursive: true, force: true });
+  if (server.map.world !== active || (fingerprint && server.map.worldId !== fingerprint)) {
+    server.map.world = active;
+    if (fingerprint) server.map.worldId = fingerprint;
+    db.flush();
   }
-  server.map.world = active;
-  db.flush();
-  return changed.length ? `El mapa ahora muestra el mundo "${active}". BlueMap lo vuelve a dibujar desde cero (tarda unos minutos).` : null;
+  return message;
 }

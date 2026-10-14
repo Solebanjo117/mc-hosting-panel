@@ -75,6 +75,20 @@ export default function MapTab({ server, state }) {
         <button className="btn-sm" onClick={() => setReloadKey((k) => k + 1)} disabled={!running}>
           Recargar
         </button>
+        <button
+          className="btn-sm"
+          disabled={busy}
+          title="Borra lo dibujado y BlueMap vuelve a dibujar el mundo actual desde cero. Úsalo si el mapa muestra un mundo viejo."
+          onClick={() =>
+            run(async () => {
+              const r = await api(`/servers/${server.id}/map/redraw`, { method: 'POST' });
+              setTimeout(() => setReloadKey((k) => k + 1), 1500);
+              return r;
+            }, running ? 'BlueMap está volviendo a dibujar el mapa (tarda unos minutos)' : 'Listo: el mapa se dibuja de nuevo al encender el servidor')
+          }
+        >
+          Volver a dibujar
+        </button>
         <a className="btn btn-sm" href={src} target="_blank" rel="noreferrer">
           Abrir en pestaña nueva
         </a>
