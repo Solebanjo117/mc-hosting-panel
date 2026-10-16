@@ -74,6 +74,34 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       assert.equal((await c.ok('GET', `/api/servers/${paper.id}/map`)).configured, true);
     });
 
+    it('velocidad de dibujo y pausa con jugadores: se guardan y BlueMap las recarga al momento', async () => {
+      const dir = path.join(panel.serverDir(paper.id), 'plugins', 'BlueMap');
+      fs.writeFileSync(path.join(dir, 'plugin.conf'), 'live-player-markers: true\nplayer-render-limit: -1\n');
+      let st = await c.ok('GET', `/api/servers/${paper.id}/map`);
+      assert.equal(st.speed, 'normal');
+      assert.equal(st.pauseWithPlayers, false);
+      assert.equal(st.threads.normal, 1);
+      assert.ok(st.threads.maxima >= st.threads.rapida && st.threads.rapida >= 1);
+      assert.doesNotMatch(fs.readFileSync(path.join(dir, 'core.conf'), 'utf8'), /render-thread-count/, 'sin elegir, no toca lo que puso BlueMap');
+
+      st = await c.ok('PUT', `/api/servers/${paper.id}/map/settings`, { speed: 'maxima', pauseWithPlayers: true });
+      assert.equal(st.applied, 'saved');
+      assert.match(fs.readFileSync(path.join(dir, 'core.conf'), 'utf8'), new RegExp(`^render-thread-count: ${st.threads.maxima}$`, 'm'));
+      assert.match(fs.readFileSync(path.join(dir, 'plugin.conf'), 'utf8'), /^player-render-limit: 1$/m);
+
+      await panel.start(paper.id);
+      try {
+        st = await c.ok('PUT', `/api/servers/${paper.id}/map/settings`, { speed: 'rapida', pauseWithPlayers: false });
+        assert.equal(st.applied, 'now');
+        await panel.waitConsole(paper.id, /> bluemap reload/);
+        assert.match(fs.readFileSync(path.join(dir, 'core.conf'), 'utf8'), new RegExp(`^render-thread-count: ${st.threads.rapida}$`, 'm'));
+        assert.match(fs.readFileSync(path.join(dir, 'plugin.conf'), 'utf8'), /^player-render-limit: -1$/m);
+      } finally {
+        await panel.stop(paper.id);
+      }
+      assert.equal((await c.put(`/api/servers/${paper.id}/map/settings`, { speed: 'turbo' })).status, 400);
+    });
+
     it('muestra el mapa dentro del panel (con la sesión del panel) y explica si aún no responde', async () => {
       const { port } = await c.ok('GET', `/api/servers/${paper.id}/map`);
       const down = await c.get(`/api/servers/${paper.id}/map/view/`);

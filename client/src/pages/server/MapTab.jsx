@@ -8,6 +8,7 @@ export default function MapTab({ server, state }) {
   const [error, setError] = useState('');
   const [confirm, setConfirm] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showSpeed, setShowSpeed] = useState(false);
   const [run, busy] = useAction();
   const running = state === 'running';
 
@@ -92,10 +93,14 @@ export default function MapTab({ server, state }) {
         <a className="btn btn-sm" href={src} target="_blank" rel="noreferrer">
           Abrir en pestaña nueva
         </a>
+        <button className="btn-sm" aria-expanded={showSpeed} onClick={() => setShowSpeed(!showSpeed)}>
+          Velocidad de dibujo
+        </button>
         <button className="btn-sm btn-ghost" onClick={() => setConfirm(true)}>
           Quitar mapa
         </button>
       </div>
+      {showSpeed && <MapSpeed server={server} s={s} onChange={setS} />}
       {running ? (
         <iframe key={reloadKey} title="Mapa del mundo" src={src} className="map-frame" allow="fullscreen" />
       ) : (
@@ -114,5 +119,62 @@ export default function MapTab({ server, state }) {
         />
       )}
     </div>
+  );
+}
+
+const SPEED_LABEL = {
+  normal: ['Normal', 'Lo que trae BlueMap: dibuja despacio y casi no se nota en el servidor.'],
+  rapida: ['Rápida', 'Usa la mitad de los núcleos del procesador mientras dibuja.'],
+  maxima: ['Máxima', 'Usa casi todo el procesador: ideal para el primer dibujo, con nadie jugando.'],
+};
+
+function MapSpeed({ server, s, onChange }) {
+  const [run, busy] = useAction();
+  const save = (body, ok) =>
+    run(async () => {
+      const r = await api(`/servers/${server.id}/map/settings`, { method: 'PUT', body });
+      onChange(r);
+      return r;
+    }, ok);
+  const msg = (r) => (r?.applied === 'now' ? 'Aplicado al momento' : 'Guardado: se aplica al encender');
+  return (
+    <section className="panel stack" aria-label="Velocidad de dibujo del mapa">
+      <fieldset className="stack" style={{ gap: '0.5rem', border: 0, padding: 0, margin: 0 }}>
+        <legend className="small" style={{ marginBottom: '0.4rem' }}>
+          <strong>Velocidad de dibujo</strong> <span className="faint">(tu PC tiene {s.cores} núcleos)</span>
+        </legend>
+        {Object.entries(SPEED_LABEL).map(([id, [label, hint]]) => (
+          <label key={id} className="check">
+            <input
+              type="radio"
+              name={`map-speed-${server.id}`}
+              checked={s.speed === id}
+              disabled={busy}
+              onChange={() => save({ speed: id })}
+            />
+            <span>
+              {label} · {s.threads[id]} {s.threads[id] === 1 ? 'hilo' : 'hilos'}
+              <span className="faint" style={{ display: 'block' }}>
+                {hint}
+              </span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <label className="check">
+        <input type="checkbox" checked={s.pauseWithPlayers} disabled={busy} onChange={(e) => save({ pauseWithPlayers: e.target.checked })} />
+        <span>
+          Pausar el dibujo mientras hay jugadores conectados
+          <span className="faint" style={{ display: 'block' }}>
+            Así el dibujo no le quita rendimiento al juego; sigue solo cuando el servidor se queda vacío. Las posiciones de los jugadores se siguen
+            viendo en vivo.
+          </span>
+        </span>
+      </label>
+      <p className="faint small" style={{ margin: 0 }}>
+        {s.applied ? msg(s) : 'Los cambios se aplican al momento si el servidor está encendido.'} El primer dibujo de un mundo grande puede tardar
+        bastante; las zonas nuevas se dibujan mientras se exploran.
+      </p>
+    </section>
   );
 }

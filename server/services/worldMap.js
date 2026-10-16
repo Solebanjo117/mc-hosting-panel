@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import http from 'node:http';
 import { serverDir } from '../config.js';
 import { db, getServer } from '../db.js';
@@ -37,6 +38,19 @@ export function nextMapPort(exceptId) {
   return port;
 }
 
+/**
+ * Velocidad de dibujo: cuántos hilos usa BlueMap para dibujar (render-thread-count en core.conf).
+ * Más hilos = mapa listo antes, pero le quita CPU al servidor mientras dibuja.
+ */
+export const SPEEDS = ['normal', 'rapida', 'maxima'];
+const CORES = () => Math.max(1, os.availableParallelism?.() || os.cpus().length || 1);
+export function renderThreads(speed) {
+  const cores = CORES();
+  if (speed === 'maxima') return Math.max(1, cores - 2); // deja libres 2 núcleos para el servidor
+  if (speed === 'rapida') return Math.max(1, Math.floor(cores / 2));
+  return 1; // lo que trae BlueMap
+}
+
 const configDir = (server) => (CONFIG_DIRS[server.type] ? path.join(serverDir(server.id), CONFIG_DIRS[server.type]) : null);
 
 export function status(id) {
@@ -50,6 +64,10 @@ export function status(id) {
     installed: Boolean(installed),
     port: server.map?.port || null,
     configured: applyConfig(server, { dryRun: true }) === 'ok',
+    speed: server.map?.speed || 'normal',
+    pauseWithPlayers: Boolean(server.map?.pauseWithPlayers),
+    cores: CORES(),
+    threads: Object.fromEntries(SPEEDS.map((sp) => [sp, renderThreads(sp)])),
   };
 }
 
@@ -60,9 +78,35 @@ export async function enable(id) {
   const results = await market.install(id, { source: 'modrinth', projectId: PROJECT });
   const main = results.find((r) => r.projectId === PROJECT || /bluemap/i.test(r.file || ''));
   if (!main || main.error) throw new HttpError(502, main?.error || 'No se pudo instalar BlueMap');
-  server.map = { enabled: true, port: server.map?.port || nextMapPort(id), world: readProperties(id)['level-name'] || 'world' };
+  server.map = {
+    enabled: true,
+    port: server.map?.port || nextMapPort(id),
+    world: readProperties(id)['level-name'] || 'world',
+    // Si se había elegido velocidad antes de desactivarlo, se conserva.
+    ...(server.map?.speed ? { speed: server.map.speed } : {}),
+    ...(server.map?.pauseWithPlayers !== undefined ? { pauseWithPlayers: server.map.pauseWithPlayers } : {}),
+  };
   db.flush();
   return { ...status(id), installedNow: results };
+}
+
+/** Cambia la velocidad de dibujo y la pausa con jugadores; si está encendido, BlueMap la recarga al momento. */
+export function setSettings(id, { speed, pauseWithPlayers } = {}) {
+  const server = requireServer(id);
+  if (!server.map?.enabled) throw new HttpError(409, 'Activa el mapa primero');
+  if (speed !== undefined) {
+    if (!SPEEDS.includes(speed)) throw new HttpError(400, 'Velocidad inválida');
+    server.map.speed = speed;
+  }
+  if (pauseWithPlayers !== undefined) server.map.pauseWithPlayers = Boolean(pauseWithPlayers);
+  db.flush();
+  const result = applyConfig(server);
+  let applied = 'next-start';
+  if (result === 'changed' && isRunning(id) && instance(id).status === 'running') {
+    instance(id).send('bluemap reload');
+    applied = 'now';
+  } else if (result !== 'missing' && !isRunning(id)) applied = 'saved';
+  return { ...status(id), applied };
 }
 
 export function disable(id) {
@@ -70,7 +114,7 @@ export function disable(id) {
   for (const item of market.listInstalled(id).items) {
     if (item.projectId === PROJECT || /bluemap/i.test(item.filename)) market.uninstall(id, item.filename);
   }
-  server.map = { enabled: false };
+  server.map = { enabled: false, ...(server.map?.speed ? { speed: server.map.speed } : {}), ...(server.map?.pauseWithPlayers !== undefined ? { pauseWithPlayers: server.map.pauseWithPlayers } : {}) };
   db.flush();
   return status(id);
 }
@@ -99,7 +143,16 @@ export function applyConfig(server, { dryRun = false } = {}) {
       if (!dryRun) fs.writeFileSync(file, text);
     }
   };
-  patch(core, [[/^([ \t]*)accept-download\s*:\s*\w+/m, 'accept-download: true', true]]);
+  // Velocidad y pausa solo se escriben si se eligieron en el panel (respeta lo editado a mano).
+  patch(core, [
+    [/^([ \t]*)accept-download\s*:\s*\w+/m, 'accept-download: true', true],
+    ...(server.map.speed ? [[/^([ \t]*)#?\s*render-thread-count\s*:\s*-?\d+/m, `render-thread-count: ${renderThreads(server.map.speed)}`, true]] : []),
+  ]);
+  // plugin.conf (Paper, Fabric, Forge…): pausar el dibujo mientras hay jugadores conectados.
+  const plugin = path.join(dir, 'plugin.conf');
+  if (server.map.pauseWithPlayers !== undefined && fs.existsSync(plugin)) {
+    patch(plugin, [[/^([ \t]*)#?\s*player-render-limit\s*:\s*-?\d+/m, `player-render-limit: ${server.map.pauseWithPlayers ? 1 : -1}`, true]]);
+  }
   patch(web, [
     [/^([ \t]*)port\s*:\s*\d+/m, `port: ${server.map.port}`, true],
     // Solo esta PC: tus amigos lo ven a través del panel, no hace falta abrir otro puerto.
