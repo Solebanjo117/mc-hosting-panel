@@ -10,6 +10,8 @@ import { localIps, publicIp } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
 import { healthCheck } from '../services/health.js';
 import { getMetrics } from '../services/metrics.js';
+import { checkUpdate, startUpdate, updateStatus } from '../services/appUpdate.js';
+import { startupStatus, setStartup } from '../services/startup.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
 
 export const systemRouter = express.Router();
@@ -86,6 +88,18 @@ systemRouter.put('/settings', (req, res) => {
   // Solo lo que se puede cambiar aquí: los tokens de DNS o CurseForge nunca salen del panel.
   const { panelPort: port, javaPaths: paths, remoteAccess: access } = db.data.settings;
   res.json({ settings: { panelPort: port, javaPaths: paths || {}, remoteAccess: access || 'lan' }, restartRequired: panelPort !== undefined });
+});
+
+// --- Actualizar el panel e inicio con Windows -----------------------------------------
+
+systemRouter.get('/update', (_req, res) => res.json(updateStatus()));
+systemRouter.post('/update/check', async (_req, res) => res.json({ ...updateStatus(), lastCheck: await checkUpdate() }));
+systemRouter.post('/update', (_req, res) => res.status(202).json(startUpdate()));
+
+systemRouter.get('/startup', (_req, res) => res.json(startupStatus()));
+systemRouter.put('/startup', async (req, res) => {
+  if (typeof req.body?.enabled !== 'boolean') throw new HttpError(400, 'Falta "enabled"');
+  res.json(await setStartup(req.body.enabled));
 });
 
 const DOCS = { puertos: 'ABRIR-PUERTOS.md' };

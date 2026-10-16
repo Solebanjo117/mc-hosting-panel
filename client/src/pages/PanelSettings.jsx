@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
-import { useAction, useToast } from '../ui.jsx';
+import { Confirm, useAction, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 
@@ -32,6 +32,8 @@ export default function PanelSettings() {
   return (
     <div className="page stack" style={{ gap: '1.75rem', maxWidth: 860 }}>
       <h1>Ajustes del panel</h1>
+
+      <PanelUpdate />
 
       <PlayitSettings />
       <DnsSettings />
@@ -115,6 +117,7 @@ export default function PanelSettings() {
       </section>
 
       <PanelAccess />
+      <StartWithWindows />
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Puerto del panel</h2>
@@ -203,6 +206,170 @@ function PanelAccess() {
           </table>
         )}
       </div>
+    </section>
+  );
+}
+
+const MODE_HINT = {
+  git: 'Se actualiza con git desde GitHub. Tus servidores, mundos y ajustes (carpeta data) no se tocan.',
+  installer: 'Se descarga el instalador nuevo y se instala encima. Tus servidores, mundos y ajustes (carpeta data) no se tocan.',
+  manual: '',
+};
+
+function PanelUpdate() {
+  const [st, setSt] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+  const [run] = useAction();
+  const toast = useToast();
+  const timer = useRef();
+
+  const load = () => api('/system/update').then(setSt).catch(() => {});
+  useEffect(() => {
+    load();
+    return () => clearTimeout(timer.current);
+  }, []);
+
+  // Mientras se actualiza, consulta el avance; cuando el panel se reinicia, espera a que vuelva y recarga.
+  useEffect(() => {
+    if (!st) return;
+    if (st.running) {
+      timer.current = setTimeout(load, 1500);
+    } else if (st.done && !st.error && restarting) {
+      const from = st.current;
+      const wait = async () => {
+        try {
+          const info = await api('/system/info');
+          if (info.version !== from || Date.now() - restarting > 60_000) return location.reload();
+        } catch {
+          /* todavía reiniciando */
+        }
+        timer.current = setTimeout(wait, 2000);
+      };
+      timer.current = setTimeout(wait, 3000);
+    }
+  }, [st, restarting]);
+
+  const check = async () => {
+    setChecking(true);
+    try {
+      const r = await api('/system/update/check', { method: 'POST' });
+      setSt(r);
+      if (!r.lastCheck.available) toast(r.lastCheck.message || 'Ya tienes la versión más reciente');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  if (!st) return null;
+  const c = st.lastCheck;
+  const updating = st.running || (restarting && !st.error);
+  return (
+    <section className="panel stack" aria-labelledby="update-title">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h2 id="update-title" style={{ margin: 0 }}>
+          Actualizar el panel
+        </h2>
+        <span className="muted small">Versión instalada: {st.current}</span>
+      </div>
+      {st.mode === 'manual' ? (
+        <p className="muted small">
+          Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos
+          conservando la carpeta <span className="mono">data</span>.
+        </p>
+      ) : (
+        <p className="muted small">{MODE_HINT[st.mode]} Al terminar, los servidores encendidos se apagan con cuidado y el panel se vuelve a abrir solo.</p>
+      )}
+
+      {c?.available && !updating && (
+        <div className="note stack" style={{ gap: '0.4rem' }}>
+          <strong>Hay una versión nueva: {c.latest}</strong>
+          {c.changes?.length > 0 && (
+            <ul className="small" style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              {c.changes.slice(0, 12).map((ch) => (
+                <li key={ch.hash}>{ch.subject}</li>
+              ))}
+              {c.changes.length > 12 && <li className="faint">y {c.changes.length - 12} cambios más</li>}
+            </ul>
+          )}
+          {c.notes && <p className="small" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{c.notes.slice(0, 800)}</p>}
+          {c.dirty && <p className="small" style={{ margin: 0 }}>Hay archivos del panel modificados a mano: si chocan con la versión nueva, git no actualizará.</p>}
+        </div>
+      )}
+
+      {(st.running || st.log.length > 0) && (
+        <div role="status" aria-live="polite" className="stack" style={{ gap: '0.3rem' }}>
+          <strong className="small">{st.error ? 'No se pudo actualizar' : st.running ? st.step : restarting ? 'Reiniciando el panel…' : st.step}</strong>
+          <pre className="log-box">
+            {st.log.join('\n')}
+          </pre>
+        </div>
+      )}
+
+      {st.mode !== 'manual' && (
+        <div className="row">
+          <button onClick={check} disabled={checking || updating}>
+            {checking ? 'Buscando…' : 'Buscar actualizaciones'}
+          </button>
+          {c?.available && (
+            <button className="btn-go" disabled={updating} onClick={() => setConfirm(true)}>
+              {updating ? 'Actualizando…' : `Actualizar a ${c.latest}`}
+            </button>
+          )}
+        </div>
+      )}
+      {c && !c.available && !st.log.length && <p className="faint small">Revisado {formatDate(c.checkedAt)}: ya tienes la versión más reciente.</p>}
+
+      {confirm && (
+        <Confirm
+          title={`Actualizar a ${c.latest}`}
+          message="El panel se reinicia al terminar: los servidores encendidos se apagan con cuidado (guardando el mundo) y vuelven a encenderse cuando el panel termina de reiniciar."
+          confirmLabel="Actualizar"
+          onClose={() => setConfirm(false)}
+          onConfirm={async () => {
+            const r = await run(() => api('/system/update', { method: 'POST' }));
+            if (r) {
+              setSt(r);
+              setRestarting(Date.now());
+            }
+            setConfirm(false);
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function StartWithWindows() {
+  const [st, setSt] = useState(null);
+  const [run, busy] = useAction();
+  useEffect(() => {
+    api('/system/startup').then(setSt).catch(() => {});
+  }, []);
+  if (!st?.supported) return null;
+  return (
+    <section className="panel stack">
+      <h2 style={{ margin: 0 }}>Iniciar con Windows</h2>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={st.enabled}
+          disabled={busy}
+          onChange={(e) => {
+            const enabled = e.target.checked;
+            run(() => api('/system/startup', { method: 'PUT', body: { enabled } }).then(setSt), enabled ? 'El panel se abrirá al iniciar sesión' : 'Ya no se abrirá solo');
+          }}
+        />
+        <span>
+          Abrir el panel al iniciar sesión en Windows
+          <span className="faint" style={{ display: 'block' }}>
+            Se abre minimizado, sin el navegador. Marca «Encender automáticamente» en los servidores que quieras encendidos siempre.
+          </span>
+        </span>
+      </label>
     </section>
   );
 }

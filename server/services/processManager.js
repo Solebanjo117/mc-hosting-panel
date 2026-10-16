@@ -435,13 +435,27 @@ setInterval(async () => {
 setInterval(() => tickProtection((id) => instances.get(id)), 20_000).unref();
 
 export async function autoStartServers() {
+  // Los que estaban encendidos cuando el panel se reinició para actualizarse vuelven a encender.
+  const resume = new Set(db.data.settings.resumeAfterRestart || []);
+  if (resume.size) {
+    delete db.data.settings.resumeAfterRestart;
+    db.flush();
+  }
   for (const server of db.data.servers) {
-    if (server.autoStart && server.installState === 'ready') {
+    if ((server.autoStart || resume.has(server.id)) && server.installState === 'ready') {
       instance(server.id)
         .start()
         .catch((err) => console.error(`[autostart ${server.name}]`, err.message));
     }
   }
+}
+
+/** Antes de reiniciar el panel (actualización): recordar cuáles encender de nuevo. */
+export function rememberRunning() {
+  db.data.settings.resumeAfterRestart = allInstances()
+    .filter((i) => i.proc)
+    .map((i) => i.id);
+  db.flush();
 }
 
 /** Al cerrar el panel se apagan los servidores para no dejar Java huérfano ocupando el puerto. */

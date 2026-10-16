@@ -181,6 +181,8 @@ export async function startPanel({ mocks, setup = true, db = {}, env = {}, playi
     base,
     port,
     dataDir,
+    /** Se resuelve con el código de salida cuando el panel se cierra. */
+    exited,
     client,
     get log() {
       return log;

@@ -21,9 +21,10 @@ import './services/dns.js';
 import './services/activity.js';
 import { attachWebSocket } from './ws.js';
 import { guardHttp, securityHeaders, sameOrigin } from './lib/netguard.js';
-import { autoStartServers, stopAll } from './services/processManager.js';
+import { autoStartServers, stopAll, rememberRunning } from './services/processManager.js';
 import { localIps } from './services/network.js';
 import { startInstall } from './services/installer.js';
+import { bus } from './lib/bus.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -70,7 +71,13 @@ const port = Number(process.env.PORT) || Number(db.data.settings.panelPort) || 8
 const server = http.createServer(app);
 attachWebSocket(server);
 
+let listenTries = 0;
 server.on('error', (err) => {
+  // Tras actualizar, el panel nuevo puede arrancar antes de que el viejo suelte el puerto.
+  if (err.code === 'EADDRINUSE' && process.env.MCP_RESTARTED && listenTries++ < 20) {
+    setTimeout(() => server.listen(port, '0.0.0.0'), 1000);
+    return;
+  }
   if (err.code === 'EADDRINUSE') {
     console.error(`\n  El puerto ${port} ya está en uso. ¿El panel ya está abierto en otra ventana?\n`);
     process.exit(1);
@@ -84,7 +91,8 @@ server.listen(port, '0.0.0.0', () => {
   console.log(`  En esta PC:      http://localhost:${port}`);
   for (const ip of lan) console.log(`  En tu red local: http://${ip.address}:${port}`);
   console.log('\n  Cierra esta ventana (o Ctrl+C) para apagar el panel y los servidores.\n');
-  if (process.env.OPEN_BROWSER === '1' && process.platform === 'win32') {
+  const openBrowser = (process.env.OPEN_BROWSER === '1' || process.argv.includes('--abrir')) && !process.env.MCP_RESTARTED;
+  if (openBrowser && process.platform === 'win32') {
     spawn('cmd', ['/c', 'start', '', `http://localhost:${port}`], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
   }
   autoStartServers();
@@ -92,13 +100,36 @@ server.listen(port, '0.0.0.0', () => {
 });
 
 let shuttingDown = false;
-async function shutdown(signal) {
+async function shutdown(signal, { code = 0, afterExit = null } = {}) {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`\n  Apagando servidores (${signal})…`);
   db.flush();
   // Windows da pocos segundos al cerrar la ventana de consola (SIGHUP).
   await Promise.all([stopAll(signal === 'SIGHUP' ? 4000 : 20000), playit.stopAgent().catch(() => {})]);
-  process.exit(0);
+  if (afterExit) afterExit();
+  else if (code === 75 && !process.env.MCP_SUPERVISED) relaunch();
+  process.exit(code);
 }
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) process.on(sig, () => shutdown(sig));
+
+/**
+ * Reinicio después de actualizar. iniciar.bat (MCP_SUPERVISED) vuelve a abrir el panel cuando sale con
+ * código 75; si se abrió de otra forma (npm start, acceso directo), el panel se relanza a sí mismo.
+ */
+function relaunch() {
+  const args = process.argv.slice(1).filter((a) => a !== '--abrir');
+  const env = { ...process.env, MCP_RESTARTED: '1' };
+  if (process.platform === 'win32') {
+    const q = (a) => `"${a}"`;
+    const line = ['start', q('MC Hosting Panel'), '/min', q(process.execPath), ...args.map(q)].join(' ');
+    spawn('cmd', ['/d', '/s', '/c', q(line)], { detached: true, stdio: 'ignore', env, cwd: process.cwd(), windowsVerbatimArguments: true }).unref();
+  } else {
+    spawn(process.execPath, args, { detached: true, stdio: 'inherit', env, cwd: process.cwd() }).unref();
+  }
+}
+bus.on('app-restart', ({ code, afterExit }) => {
+  console.log('\n  Actualización lista: reiniciando el panel…');
+  rememberRunning();
+  shutdown('actualización', { code, afterExit });
+});

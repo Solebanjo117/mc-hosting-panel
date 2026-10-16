@@ -472,7 +472,12 @@ export async function startMocks() {
     }
     if (p.startsWith('/ipify')) return send({ ip: '203.0.113.7' });
     if (p.startsWith('/geysermc/')) return bin(FAKE_SERVER_JAR);
+    if (p.startsWith('/github/') && p.includes('/releases-assets/')) return bin(Buffer.from('MZ instalador simulado'));
     if (p.startsWith('/github/')) return bin(Buffer.from('#!/bin/sh\nsleep 600\n'));
+    // --- GitHub Releases (actualizar el panel instalado con el instalador) ------------------
+    if (p === '/ghapi/repos/Solebanjo117/mc-hosting-panel/releases/latest') {
+      return state.release ? send(state.release) : send({ message: 'Not Found' }, 404);
+    }
 
     text(`Ruta simulada desconocida: ${req.method} ${p}`, 404);
   }
@@ -506,6 +511,7 @@ export async function startMocks() {
     'https://api.ipify.org': `${base}/ipify`,
     'https://download.geysermc.org': `${base}/geysermc`,
     'https://github.com': `${base}/github`,
+    'https://api.github.com': `${base}/ghapi`,
     'https://api.adoptium.net': `${base}/adoptium`,
   };
 

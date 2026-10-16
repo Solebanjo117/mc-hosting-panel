@@ -1,0 +1,74 @@
+name: Instalador de Windows
+
+# Se construye al publicar una versión (git tag v0.11.0 && git push --tags) o a mano desde la pestaña Actions.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  instalador:
+    name: Instalador (.exe)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: node scripts/build-installer.mjs
+
+      - name: Empaquetar con Inno Setup
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          $v = Get-Content build\version.txt
+          & $iscc /Qp "/DAppVersion=$v" installer\mc-hosting-panel.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem build\*.exe
+
+      # Instala en silencio como lo hace la actualización desde el panel y comprueba que el panel abre.
+      - name: Probar el instalador
+        run: |
+          $v = Get-Content build\version.txt
+          $dir = Join-Path $env:RUNNER_TEMP 'MC Hosting Panel'
+          $p = Start-Process -Wait -PassThru -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          if ($p.ExitCode -ne 0) { throw "El instalador terminó con $($p.ExitCode)" }
+          if (-not (Test-Path "$dir\node\node.exe")) { throw 'Falta node.exe' }
+          if (-not (Test-Path "$dir\dist\index.html")) { throw 'Falta la interfaz' }
+          $ok = $false
+          for ($i = 0; $i -lt 40 -and -not $ok; $i++) {
+            Start-Sleep -Seconds 1
+            try { $r = Invoke-RestMethod http://127.0.0.1:8080/api/auth/status; $ok = $true; $r | ConvertTo-Json } catch { }
+          }
+          if (-not $ok) { throw 'El panel instalado no respondió en el puerto 8080' }
+          if (-not (Test-Path "$dir\data\db.json")) { throw 'El panel no creó su carpeta data' }
+          Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$dir*" } | Stop-Process -Force
+          # Reinstalar encima (una actualización) conserva data.
+          Start-Sleep -Seconds 2
+          Start-Process -Wait -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          if (-not (Test-Path "$dir\data\db.json")) { throw 'La actualización borró la carpeta data' }
+          Start-Sleep -Seconds 3
+          Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$dir*" } | Stop-Process -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instalador
+          path: build/MC-Hosting-Panel-Setup-*.exe
+
+      - name: Publicar la versión
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME (Get-ChildItem build\MC-Hosting-Panel-Setup-*.exe).FullName --title "MC Hosting Panel $env:GITHUB_REF_NAME" --generate-notes

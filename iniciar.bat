@@ -33,8 +33,20 @@ if not exist dist\index.html (
   if errorlevel 1 goto :error
 )
 
-set OPEN_BROWSER=1
+rem "minimizado": lo usa el inicio automatico con Windows (no abre el navegador).
+if /i not "%~1"=="minimizado" set OPEN_BROWSER=1
+set MCP_SUPERVISED=1
+
+:arrancar
 node server\index.js
+rem 75 = el panel se actualizo desde el propio panel: se vuelve a abrir solo.
+if errorlevel 75 if not errorlevel 76 (
+  set OPEN_BROWSER=
+  set MCP_RESTARTED=1
+  echo.
+  echo  Reiniciando el panel con la version nueva...
+  goto :arrancar
+)
 echo.
 echo  El panel se detuvo.
 pause

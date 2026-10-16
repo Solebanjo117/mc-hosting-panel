@@ -268,6 +268,18 @@ label.check input {
   white-space: pre-wrap;
 }
 
+.log-box {
+  margin: 0;
+  max-height: 160px;
+  overflow: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--step--1);
+  white-space: pre-wrap;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-control);
+  padding: 0.5rem 0.7rem;
+}
+
 .note {
   border-left: 3px solid var(--gold);
   padding: 0.4rem 0.8rem;

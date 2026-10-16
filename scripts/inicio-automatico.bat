@@ -17,6 +17,7 @@ if exist "%SHORTCUT%" (
 powershell -NoProfile -Command ^
   "$s = (New-Object -ComObject WScript.Shell).CreateShortcut('%SHORTCUT%');" ^
   "$s.TargetPath = '%CD%\iniciar.bat';" ^
+  "$s.Arguments = 'minimizado';" ^
   "$s.WorkingDirectory = '%CD%';" ^
   "$s.WindowStyle = 7;" ^
   "$s.Save()"
