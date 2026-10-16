@@ -3,6 +3,7 @@ import { api, formatBytes, formatDate } from '../../api.js';
 import { Confirm, Modal, PlayerHead, useAction, useToast } from '../../ui.jsx';
 import NbtEditor from './NbtEditor.jsx';
 import InventoryEditor from './InventoryEditor.jsx';
+import Pregen from './Pregen.jsx';
 
 export default function WorldsTab({ server, state }) {
   const [data, setData] = useState(null);
@@ -118,6 +119,8 @@ export default function WorldsTab({ server, state }) {
         Para regenerar el mundo con otra semilla sin perder el actual, crea un mundo nuevo: el anterior se conserva y puedes volver a él cuando quieras.
         Haz un respaldo antes de borrar.
       </p>
+
+      <Pregen server={server} state={state} />
 
       {nbt && <NbtEditor serverId={server.id} path={nbt.path} title={nbt.title} running={on} onClose={() => setNbt(null)} onSaved={() => toast('Guardado (se dejó una copia .panel-bak)')} />}
       {playersOf && (

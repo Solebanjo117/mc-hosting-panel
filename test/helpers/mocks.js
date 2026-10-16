@@ -31,6 +31,7 @@ const MODRINTH_PROJECTS = {
   'ferrite-core': { title: 'FerriteCore', type: 'mod', loaders: ['fabric', 'forge', 'neoforge'] },
   modernfix: { title: 'ModernFix', type: 'mod', loaders: ['fabric', 'forge', 'neoforge'] },
   bluemap: { title: 'BlueMap', type: 'plugin', loaders: ['paper', 'fabric', 'forge', 'neoforge'] },
+  chunky: { title: 'Chunky', type: 'plugin', loaders: ['paper', 'fabric', 'forge', 'neoforge'] },
   wKkoqHrH: { title: 'Geyser', type: 'plugin', loaders: ['paper', 'fabric', 'neoforge'] },
   bWrNNfkb: { title: 'Floodgate', type: 'mod', loaders: ['fabric', 'neoforge'] },
   viaversion: { title: 'ViaVersion', type: 'plugin', loaders: ['paper'] },

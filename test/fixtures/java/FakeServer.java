@@ -11,6 +11,97 @@ import java.util.*;
 public class FakeServer {
   static final Set<String> players = new LinkedHashSet<>();
 
+  // Chunky (pregenerar el mundo): una tarea que avanza sola en otro hilo.
+  static String chunkyWorld = "world";
+  static int chunkyRadius = 500;
+  static volatile int chunkyStep = 0;
+  static volatile Thread chunkyTask = null;
+  static boolean chunkyPending = false;
+  static final int CHUNKY_STEPS = Integer.parseInt(System.getProperty("fake.chunkySteps", "40"));
+
+  static long chunkyTotal() {
+    long side = (2L * chunkyRadius + 15) / 16;
+    return side * side;
+  }
+
+  static synchronized void chunkyRun() {
+    if (chunkyTask != null) return;
+    Thread t = new Thread(() -> {
+      try {
+        while (chunkyStep < CHUNKY_STEPS) {
+          Thread.sleep(150);
+          if (Thread.currentThread() != chunkyTask) return;
+          chunkyStep++;
+          long done = chunkyTotal() * chunkyStep / CHUNKY_STEPS;
+          double pct = 100.0 * chunkyStep / CHUNKY_STEPS;
+          if (chunkyStep < CHUNKY_STEPS) {
+            out(String.format(Locale.ROOT, "[Chunky] Task running for %s. Processed: %d chunks (%.2f%%), ETA: 0:00:%02d, Rate: 312.5 cps, Current: %d, %d", chunkyWorld, done, pct, CHUNKY_STEPS - chunkyStep, chunkyStep, -chunkyStep));
+          } else {
+            out(String.format(Locale.ROOT, "[Chunky] Task finished for %s. Processed: %d chunks (100.00%%), Total time: 0:00:06", chunkyWorld, done));
+          }
+        }
+        chunkyTask = null;
+      } catch (InterruptedException e) {
+        // pausada o cancelada
+      }
+    });
+    t.setDaemon(true);
+    chunkyTask = t;
+    t.start();
+  }
+
+  static void chunky(String[] w) {
+    String sub = w.length > 1 ? w[1] : "";
+    if (sub.equals("world") && w.length > 2) {
+      chunkyWorld = w[2];
+      out("[Chunky] World changed to " + w[2] + ".");
+    } else if (sub.equals("radius") && w.length > 2) {
+      chunkyRadius = Integer.parseInt(w[2]);
+      out("[Chunky] Radius changed to " + w[2] + ".");
+    } else if (sub.equals("spawn")) {
+      out("[Chunky] Center changed to 0, 0.");
+    } else if (sub.equals("center") && w.length > 3) {
+      out("[Chunky] Center changed to " + w[2] + ", " + w[3] + ".");
+    } else if (sub.equals("shape") && w.length > 2) {
+      out("[Chunky] Shape changed to " + w[2] + ".");
+    } else if (sub.equals("quiet") && w.length > 2) {
+      out("[Chunky] Quiet interval changed to " + w[2] + ".");
+    } else if (sub.equals("start")) {
+      if (chunkyTask != null || (chunkyStep > 0 && chunkyStep < CHUNKY_STEPS)) {
+        chunkyPending = true;
+        out("[Chunky] Task already exists for " + chunkyWorld + ". Type /chunky confirm to overwrite.");
+        return;
+      }
+      chunkyStep = 0;
+      out("[Chunky] Task started for " + chunkyWorld + " at 0, 0 with radius " + chunkyRadius + ".");
+      chunkyRun();
+    } else if (sub.equals("confirm") && chunkyPending) {
+      chunkyPending = false;
+      Thread t = chunkyTask;
+      chunkyTask = null;
+      if (t != null) t.interrupt();
+      chunkyStep = 0;
+      out("[Chunky] Task started for " + chunkyWorld + " at 0, 0 with radius " + chunkyRadius + ".");
+      chunkyRun();
+    } else if (sub.equals("pause")) {
+      Thread t = chunkyTask;
+      chunkyTask = null;
+      if (t != null) t.interrupt();
+      out("[Chunky] Task paused for " + chunkyWorld + ".");
+    } else if (sub.equals("continue")) {
+      out("[Chunky] Task continuing for " + chunkyWorld + ".");
+      chunkyRun();
+    } else if (sub.equals("cancel")) {
+      Thread t = chunkyTask;
+      chunkyTask = null;
+      if (t != null) t.interrupt();
+      chunkyStep = 0;
+      out("[Chunky] Task cancelled for " + chunkyWorld + ".");
+    } else {
+      out("[Chunky] Unknown command");
+    }
+  }
+
   static void out(String s) {
     System.out.println("[12:00:00 INFO]: " + s);
     System.out.flush();
@@ -36,6 +127,18 @@ public class FakeServer {
     while ((line = in.readLine()) != null) {
       String[] p = line.trim().split(" ", 3);
       String cmd = p[0];
+      if (cmd.equals("chunky")) {
+        if (System.getProperty("fake.chunky") == null && !Files.exists(Paths.get("plugins", "chunky-1.0.0.jar")) && !Files.exists(Paths.get("mods", "chunky-1.0.0.jar"))) {
+          out("Unknown or incomplete command, see below for error");
+        } else {
+          chunky(line.trim().split(" "));
+        }
+        continue;
+      }
+      if (cmd.equals("worldborder")) {
+        out("Set the world border to " + (p.length > 2 ? p[2] : "?") + " block(s) wide");
+        continue;
+      }
       if (cmd.equals("stop")) {
         out("Stopping the server");
         System.exit(0);

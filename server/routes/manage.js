@@ -10,6 +10,7 @@ import * as worlds from '../services/worlds.js';
 import * as logs from '../services/logs.js';
 import * as scheduler from '../services/scheduler.js';
 import * as modpack from '../services/modpack.js';
+import * as pregen from '../services/pregen.js';
 import { softwareStatus, startSoftwareUpdate, undoSoftwareUpdate, softwareJob } from '../services/softwareUpdate.js';
 import { bus } from '../lib/bus.js';
 import { getMetrics } from '../services/metrics.js';
@@ -92,6 +93,16 @@ manageRouter.get('/modpack/players', async (req, res) => {
 });
 
 // --- Logs ----------------------------------------------------------------------
+
+// --- Pregenerar el mundo (Chunky) ----------------------------------------------------
+manageRouter.get('/pregen', (req, res) => res.json(pregen.status(req.params.id)));
+manageRouter.get('/pregen/estimate', (req, res) =>
+  res.json(pregen.estimate(Math.min(Number(req.query.radius) || 0, pregen.MAX_RADIUS), String(req.query.shape || 'square'), String(req.query.dimension || 'overworld')))
+);
+manageRouter.post('/pregen/install', async (req, res) => res.json(await pregen.install(req.params.id)));
+manageRouter.post('/pregen/start', async (req, res) => res.json(await pregen.start(req.params.id, req.body || {})));
+manageRouter.post('/pregen/:action', async (req, res) => res.json(await pregen.control(req.params.id, req.params.action)));
+manageRouter.delete('/pregen', (req, res) => res.json(pregen.clear(req.params.id)));
 
 // --- Actualizar Paper/Fabric/Forge/NeoForge/Minecraft con respaldo -----------------------
 manageRouter.get('/software', async (req, res) => res.json(await softwareStatus(req.params.id)));

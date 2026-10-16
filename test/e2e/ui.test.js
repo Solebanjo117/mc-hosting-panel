@@ -112,6 +112,29 @@ describe('Panel en el navegador', { skip }, () => {
     assert.deepEqual(errors, []);
   });
 
+  it('pregenera el mundo desde Mundos con Chunky', async () => {
+    const list = await page.evaluate(() => fetch('/api/servers').then((r) => r.json()));
+    const id = list[0].id;
+    await page.goto(`${panel.base}/servidor/${id}/mundos`);
+    const card = page.locator('section', { has: page.getByRole('heading', { name: 'Pregenerar el mundo' }) });
+    await card.getByRole('button', { name: 'Instalar Chunky' }).click();
+    await card.getByText(/reinícialo para usarlo/).waitFor();
+    await page.evaluate((sid) => fetch(`/api/servers/${sid}/restart`, { method: 'POST' }), id);
+    // Espera a que vuelva a encender con Chunky cargado.
+    for (let i = 0; i < 60; i++) {
+      const st = await page.evaluate((sid) => fetch(`/api/servers/${sid}/pregen`).then((r) => r.json()), id);
+      if (st.running && !st.needsRestart) break;
+      await page.waitForTimeout(500);
+    }
+    await page.reload();
+    await card.getByRole('button', { name: '1,000' }).click();
+    await card.getByText(/Unos 15,625 chunks/).waitFor();
+    await card.getByRole('button', { name: 'Pregenerar' }).click();
+    await card.getByText(/Pregenerando · Mundo normal/).waitFor();
+    await card.getByText(/Terminada · Mundo normal/).waitFor({ timeout: 30000 });
+    assert.deepEqual(errors, []);
+  });
+
   it('en el celular las pestañas caben y la página no se desborda a lo ancho', async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     const list = await panel.client.request('GET', '/api/servers', { headers: { cookie: (await page.context().cookies()).map((c) => `${c.name}=${c.value}`).join('; ') } });

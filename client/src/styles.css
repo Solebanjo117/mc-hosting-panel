@@ -199,7 +199,8 @@ input[type='checkbox'] {
   margin: 0;
 }
 
-label.field {
+label.field,
+div.field {
   display: grid;
   align-content: start;
   gap: 0.3rem;
@@ -207,7 +208,8 @@ label.field {
   color: var(--sand-dim);
 }
 
-label.field > span:first-child {
+label.field > span:first-child,
+div.field > label:first-child {
   color: var(--sand);
   font-weight: 500;
 }
