@@ -13,12 +13,14 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Datapacks en cualquier servidor** (Vanilla, Paper, Fabric, Forge, NeoForge): búscalos en Modrinth o CurseForge, aplícalos sin reiniciar (`minecraft:reload`), el panel avisa cuáles cambian la generación del mundo y al crear un mundo nuevo puedes copiarle los datapacks.
 - **Modpacks de Modrinth y CurseForge:** búscalo o sube el `.mrpack` / `.zip` y el panel crea el servidor con el loader, la versión, los mods y la configuración. Los mods que solo sirven en el juego se omiten en el servidor (en CurseForge se revisa cada jar).
 - **Actualizar el modpack** a otra versión en el mismo servidor, con respaldo antes; el mundo y tus mods se quedan.
-- **Modpack para los jugadores:** un archivo con el modpack completo, los mods que agregaste y tu servidor ya puesto en Multijugador, para importarlo en Modrinth App, CurseForge App o Prism Launcher.
+- **Modpack para los jugadores:** un archivo con el modpack completo, los mods que agregaste y tu servidor ya puesto en Multijugador, para importarlo en Modrinth App, CurseForge App o Prism Launcher. Los mods del pack que quitaste o desactivaste en el servidor no se incluyen.
 - **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
 - **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
 - **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
 - **Inventario visual** de cada jugador como en el juego (armadura, mano secundaria, inventario, barra rápida y cofre de Ender): arrastra objetos, cambia cantidades o pon objetos nuevos con el buscador.
-- **Mapa del mundo en 3D** con BlueMap dentro del panel, con los jugadores en vivo (Paper, Fabric, Forge y NeoForge).
+- **Mapa del mundo en 3D** con BlueMap dentro del panel, con los jugadores en vivo (Paper, Fabric, Forge y NeoForge). Eliges la **velocidad de dibujo** (Normal, Rápida o Máxima según los núcleos de tu PC) y si se **pausa mientras hay jugadores**.
+- **Pregenerar el mundo** con Chunky desde Mundos: radio con atajos, dimensión, forma, centro y borde del mundo opcional; ves el avance, la velocidad y cuánto falta, y puedes pausar, continuar o cancelar.
+- **Actualizar Paper, Fabric, Forge, NeoForge o Minecraft con un clic:** respaldo completo antes, apagado y encendido automáticos, aviso de qué plugins o mods tienen versión para la nueva y actualización de esos; con **Deshacer** si algo sale mal.
 - **Actividad:** ranking de jugadores (tiempo jugado, bloques minados, distancia, mobs, muertes…), mapa de calor de cuándo se juega y línea de tiempo de entradas, salidas, caídas y respaldos.
 - **Cómo se ve en la lista de servidores:** editor del mensaje (MOTD) con colores y formato, y del ícono: subes cualquier foto, eliges la parte con zoom y arrastre, y queda en 64×64. Vista previa idéntica a la de Minecraft.
 - **Optimización de un clic:** parámetros de Java de Aikar, distancias y guardado de chunks, ajustes de Paper y mods de rendimiento (Lithium, FerriteCore, ModernFix) en Fabric, Forge y NeoForge. Se puede deshacer.
@@ -28,30 +30,44 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Logs y diagnóstico:** búsqueda en todos los logs (también los antiguos .gz), lectura de crash reports y explicación en español de las causas comunes (falta de memoria, mods que faltan o chocan, Java incorrecto, puerto ocupado…).
 - **Seguridad:** revisión por servidor con arreglos de un clic, protección contra oleadas de bots (bloqueo temporal de IP y lista blanca de emergencia), panel limitado a tu red, historial de inicios de sesión, y una guía sobre DDoS (qué se puede y qué no se puede hacer desde casa).
 - **Clonar servidores** para probar mods o versiones sin arriesgar el original.
+- **El panel se actualiza solo** desde Ajustes (con git o con el instalador) y puede **abrirse al iniciar Windows**.
+- **Accesible:** se revisa con axe (WCAG 2.1 AA) en cada cambio; se usa con teclado y lector de pantalla.
 - Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.
 
 ## Requisitos
 
 - Windows 10 u 11 (también funciona en Linux para desarrollo).
-- [Node.js 20 o más reciente](https://nodejs.org/es) (versión LTS).
+- Con el instalador no necesitas nada más. Con git: [Node.js 20 o más reciente](https://nodejs.org/es) (versión LTS).
 - Internet para descargar servidores, Java y mods.
 - RAM: unos 2–4 GB por servidor sin mods, 6 GB o más con modpacks.
 
 ## Instalación
+
+### Con el instalador (recomendado)
+
+1. Descarga `MC-Hosting-Panel-Setup-x.y.z.exe` de [Releases](https://github.com/Solebanjo117/mc-hosting-panel/releases/latest).
+2. Ábrelo. No pide permisos de administrador ni instalar Node: trae lo que necesita. Puedes marcar **Abrir el panel al iniciar sesión en Windows**.
+3. Se abre el navegador en `http://localhost:8080`: crea tu cuenta y tu primer servidor.
+
+Para actualizar, entra a **Ajustes del panel → Actualizar el panel**: descarga la versión nueva, la instala encima y el panel se vuelve a abrir solo. Tus servidores, mundos y ajustes (carpeta `data`) nunca se borran, ni al desinstalar.
+
+### Con git
 
 1. Descarga el proyecto (`git clone https://github.com/Solebanjo117/mc-hosting-panel.git` o el ZIP desde GitHub).
 2. Abre **`iniciar.bat`**. La primera vez instala dependencias y compila la interfaz; después se abre el navegador en `http://localhost:8080`.
 3. Crea tu cuenta de administrador y tu primer servidor.
 4. Para que entren tus amigos por internet sigue la **Guía para abrir puertos** del menú lateral.
 
-La ventana negra es el panel: si la cierras, se apagan los servidores (de forma ordenada). Para que arranque solo al iniciar Windows ejecuta `scripts\inicio-automatico.bat` y marca **Encender automáticamente** en los servidores que quieras.
+La ventana negra es el panel: si la cierras, se apagan los servidores (de forma ordenada). Para que arranque solo al iniciar Windows activa **Ajustes del panel → Iniciar con Windows** (o ejecuta `scripts\inicio-automatico.bat`) y marca **Encender automáticamente** en los servidores que quieras.
+
+Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pull`, instala dependencias y recompila solo si hace falta, y se reinicia) o `actualizar.bat`.
 
 ### Scripts incluidos
 
 | Archivo | Para qué sirve |
 |---|---|
-| `iniciar.bat` | Prepara (la primera vez) y abre el panel |
+| `iniciar.bat` | Prepara (la primera vez) y abre el panel; lo vuelve a abrir tras actualizar desde Ajustes |
 | `actualizar.bat` | Baja la última versión con `git pull` y recompila; no toca tus servidores |
 | `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
@@ -122,7 +138,11 @@ server/
     metrics.js          historial de CPU, RAM, TPS y jugadores
     worlds.js           varios mundos por servidor
     quickCommands.js    comandos rápidos de la consola (plantillas con huecos)
-    worldMap.js         mapa con BlueMap: instalación, configuración y proxy dentro del panel
+    worldMap.js         mapa con BlueMap: instalación, configuración, velocidad de dibujo y proxy dentro del panel
+    pregen.js           pregenerar el mundo con Chunky (comandos y lectura del avance en la consola)
+    softwareUpdate.js   actualizar Paper/Fabric/Forge/NeoForge/Minecraft con respaldo y Deshacer
+    appUpdate.js        actualizar el propio panel (git o GitHub Releases) y reiniciarlo
+    startup.js          abrir el panel al iniciar Windows (acceso directo en Inicio)
     activity.js         línea de tiempo, mapa de calor y estadísticas de jugadores
     health.js           revisión general de cada servidor
     optimize.js         optimización de un clic (Aikar, server.properties, Paper, mods de rendimiento)
@@ -138,7 +158,15 @@ server/
 client/                 React + Vite
 test/                   pruebas automáticas (ver abajo)
 docs/ABRIR-PUERTOS.md   manual de red (también se ve dentro del panel)
+installer/              instalador de Windows (Inno Setup)
+scripts/build-installer.mjs  prepara build/app con node.exe para el instalador
 ```
+
+### Instalador de Windows
+
+`.github/workflows/instalador.yml` lo construye en GitHub Actions: al publicar una etiqueta (`git tag v0.11.0 && git push --tags`) crea la versión en Releases con el `.exe`; también se puede correr a mano desde la pestaña Actions. Antes de publicarlo lo instala en silencio, comprueba que el panel abre y que reinstalar encima conserva `data`.
+
+Para construirlo en tu PC: `npm run build`, `node scripts/build-installer.mjs` y `ISCC /DAppVersion=x.y.z installer\mc-hosting-panel.iss` (Inno Setup 6).
 
 ### Pruebas
 
@@ -153,7 +181,8 @@ npm run test:e2e     # en el navegador (opcional, ver abajo)
 Las pruebas de casos de uso arrancan el panel de verdad (`node server/index.js`) con una carpeta de datos temporal
 y recorren lo que haría una persona: crear e instalar cada tipo de servidor, encender y apagar, consola,
 jugadores, archivos, mundos, respaldos, marketplace, modpacks, Bedrock, playit.gg, dominios, tareas programadas,
-seguridad, mapa, optimización, copias, ícono, comandos rápidos, sesión y WebSocket.
+seguridad, mapa, optimización, copias, ícono, comandos rápidos, sesión, WebSocket (y sus límites), pregenerar con
+Chunky, actualizar el servidor con Deshacer y actualizar el propio panel.
 
 - **Sin internet:** `test/helpers/mocks.js` simula Mojang, PaperMC, Fabric, Forge, NeoForge, Modrinth, Hangar,
   CurseForge, playit.gg, DuckDNS, deSEC, Cloudflare, mcsrvstat, GitHub y un DNS propio. El panel los usa gracias a
@@ -165,11 +194,12 @@ seguridad, mapa, optimización, copias, ícono, comandos rápidos, sesión y Web
   ```bash
   cd test/fixtures/java
   javac --release 8 -d out FakeServer.java FakeInstaller.java
-  jar cfe fake-server.jar FakeServer -C out FakeServer.class
+  jar cfe fake-server.jar FakeServer -C out .
   jar cfe fake-installer.jar FakeInstaller -C out .
   ```
-- **En el navegador:** `npm run build`, luego `npm i --no-save playwright` y `npx playwright install chromium`,
-  y `npm run test:e2e`. Sin Playwright esas pruebas se omiten.
+- **En el navegador:** `npm run build`, luego `npm i --no-save playwright axe-core` y `npx playwright install chromium`,
+  y `npm run test:e2e`. Además de los recorridos, revisa la accesibilidad de todas las pantallas con axe
+  (WCAG 2.1 AA). Sin Playwright esas pruebas se omiten.
 - GitHub Actions (`.github/workflows/pruebas.yml`) corre todo en Ubuntu y Windows en cada push.
 
 Lo que no cubren: los servicios reales (si Modrinth, playit.gg o DuckDNS cambian su API, las pruebas no lo
@@ -178,7 +208,8 @@ notan), Minecraft de verdad con mods reales, y los archivos `.bat` de Windows.
 ## Limitaciones conocidas
 
 - El inventario y los datos de jugadores se guardan con el servidor apagado (mientras corre, Minecraft reescribe esos archivos).
-- BlueMap tarda en dibujar el mapa la primera vez y usa CPU mientras lo hace; solo dibuja lo ya explorado.
+- BlueMap tarda en dibujar el mapa la primera vez y usa CPU mientras lo hace; solo dibuja lo ya explorado (pregenera el mundo para tenerlo completo). La posición de los jugadores se actualiza cada segundo: es lo que hace BlueMap y no se puede cambiar.
+- Actualizar a otra versión de Minecraft convierte el mundo: para volver atrás se usa **Deshacer**, que restaura el respaldo (lo jugado después se pierde).
 - Las notificaciones y la app instalable solo funcionan en páginas seguras: `http://localhost` en la PC del servidor, o HTTPS (por ejemplo con `tailscale serve`). Por la IP de la red local (`http://192.168…`) el navegador no las permite.
 - Los nombres en español de objetos y criaturas vienen del archivo de idioma oficial de Mojang; los objetos de mods se muestran con su ID.
 
