@@ -57,6 +57,7 @@ export async function startMocks() {
     cloudflare: { token: 'cf-token', zone: 'midominio.com', records: [], nextId: 1 },
     curseforgeKey: 'cf-key-123',
     modrinthUpdates: {}, // sha1 -> { project, version }
+    paperBuild: 120, // build estable más nuevo de Paper
     mcsrvstatOnline: true,
     files: {}, // nombre -> contenido extra para /files/
     cf: { mods: {}, files: {} },
@@ -195,7 +196,7 @@ export async function startMocks() {
     // --- PaperMC (Fill v3) ---------------------------------------------------------------
     if (p === '/paper') return send({ versions: { '1.21': ['1.21.4', '1.21.4-rc1'], '1.20': ['1.20.1'] } });
     m = p.match(/^\/paper\/versions\/([^/]+)\/builds$/);
-    if (m) return send([{ id: 120, channel: 'STABLE', downloads: { 'server:default': { url: `${base}/files/paper-${m[1]}-120.jar` } } }, { id: 121, channel: 'BETA', downloads: { 'server:default': { url: `${base}/files/paper-beta.jar` } } }]);
+    if (m) return send([{ id: state.paperBuild, channel: 'STABLE', downloads: { 'server:default': { url: `${base}/files/paper-${m[1]}-${state.paperBuild}.jar` } } }, { id: state.paperBuild + 1, channel: 'BETA', downloads: { 'server:default': { url: `${base}/files/paper-beta.jar` } } }]);
 
     // --- Fabric ----------------------------------------------------------------------------
     if (p === '/fabric/versions/game') return send([{ version: '1.21.4', stable: true }, { version: '25w01a', stable: false }]);

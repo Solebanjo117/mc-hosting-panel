@@ -5,6 +5,7 @@ import { useLive } from '../../live.jsx';
 import { Confirm, Modal, useAction } from '../../ui.jsx';
 import AppearanceEditor from './AppearanceEditor.jsx';
 import OptimizeSection from './OptimizeSection.jsx';
+import SoftwareUpdate from './SoftwareUpdate.jsx';
 
 // Ajustes de server.properties que la gente cambia más seguido.
 const COMMON = [
@@ -196,6 +197,8 @@ export default function SettingsTab({ server, state }) {
           </button>
         </div>
       </section>
+
+      <SoftwareUpdate server={server} running={on} />
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Versión</h2>

@@ -32,6 +32,7 @@ const EVENT = {
   stop: { label: () => 'Servidor apagado', cls: 'ev-server', icon: '■' },
   crash: { label: (e) => `El servidor se cayó${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-crash', icon: '✕' },
   backup: { label: (e) => `Respaldo${e.detail ? ` ${e.detail}` : ''}`, cls: 'ev-backup', icon: '⤓' },
+  update: { label: (e) => `Actualizado${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-server', icon: '↑' },
 };
 
 export default function ActivityTab({ server, state }) {

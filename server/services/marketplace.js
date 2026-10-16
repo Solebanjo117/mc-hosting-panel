@@ -475,6 +475,37 @@ export async function checkUpdates(id, kind = null) {
   return updates;
 }
 
+/**
+ * Antes de cambiar de versión de Minecraft: cuáles de los mods/plugins instalados tienen versión para
+ * la nueva en Modrinth (y cuál), y cuáles no (o no están en Modrinth: subidos a mano, CurseForge…).
+ */
+export async function targetCompatibility(id, mcVersion) {
+  const server = requireServer(id);
+  if (server.type === 'vanilla') return { total: 0, ready: [], missing: [] };
+  const profile = contentProfile(server);
+  const dir = safeJoin(serverDir(server.id), profile.folder);
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(profile.ext) && fs.statSync(path.join(dir, f)).isFile()) : [];
+  if (!files.length) return { total: 0, ready: [], missing: [] };
+  const hashes = new Map(files.map((f) => [sha1(path.join(dir, f)), f]));
+  const res = await fetch(rewriteUrl(`${MODRINTH}/version_files/update`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'User-Agent': USER_AGENT },
+    body: JSON.stringify({ hashes: [...hashes.keys()], algorithm: 'sha1', loaders: profile.loaders, game_versions: [mcVersion] }),
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new HttpError(502, `Modrinth respondió ${res.status}`);
+  const data = await res.json();
+  const titles = new Map(records(server).map((r) => [r.filename, r.title]));
+  const ready = [];
+  for (const [hash, version] of Object.entries(data)) {
+    const filename = hashes.get(hash);
+    if (filename) ready.push({ filename, title: titles.get(filename) || filename, newVersion: version.version_number });
+  }
+  const readySet = new Set(ready.map((r) => r.filename));
+  const missing = files.filter((f) => !readySet.has(f)).map((filename) => ({ filename, title: titles.get(filename) || filename }));
+  return { total: files.length, ready, missing, kind: profile.kind };
+}
+
 /** Aplica una actualización detectada por checkUpdates. */
 export async function applyUpdate(id, { filename, projectId, versionId, kind = null }) {
   const server = requireServer(id);

@@ -182,7 +182,10 @@ async function doInstall(server, report) {
   return { launch, loaderVersion, javaMajor };
 }
 
-/** Instala (o reinstala) en segundo plano. El progreso viaja por WebSocket. */
+/**
+ * Instala (o reinstala) en segundo plano. El progreso viaja por WebSocket.
+ * Devuelve una promesa que se resuelve con { ok, error } al terminar (nunca se rechaza).
+ */
 export function startInstall(id) {
   if (running.has(id)) throw new HttpError(409, 'Ya hay una instalación en curso para este servidor');
   const server = getServer(id);
@@ -192,7 +195,7 @@ export function startInstall(id) {
   bus.emit('servers');
   const report = reporter(id);
 
-  doInstall(server, report)
+  return doInstall(server, report)
     .then(async (result) => {
       // Un modpack recién importado: descarga sus mods y copia sus archivos de configuración.
       if (server.modpack?.pendingApply) {
@@ -204,11 +207,13 @@ export function startInstall(id) {
     .then(({ launch, loaderVersion, javaMajor }) => {
       updateServer(id, { installState: 'ready', launch, loaderVersion, javaMajor, installedAt: new Date().toISOString() });
       bus.emit('install', id, { state: 'ready', message: 'Instalación completa. ¡Ya puedes iniciar el servidor!', progress: 1 });
+      return { ok: true };
     })
     .catch((err) => {
       console.error(`[install ${id}]`, err);
       updateServer(id, { installState: 'error', installError: err.message });
       bus.emit('install', id, { state: 'error', message: err.message, progress: null });
+      return { ok: false, error: err.message };
     })
     .finally(() => {
       running.delete(id);

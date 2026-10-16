@@ -268,6 +268,16 @@ label.check input {
   white-space: pre-wrap;
 }
 
+.update-row {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border-radius: var(--r-control);
+}
+
 .log-box {
   margin: 0;
   max-height: 160px;

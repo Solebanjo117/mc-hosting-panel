@@ -10,6 +10,7 @@ import * as worlds from '../services/worlds.js';
 import * as logs from '../services/logs.js';
 import * as scheduler from '../services/scheduler.js';
 import * as modpack from '../services/modpack.js';
+import { softwareStatus, startSoftwareUpdate, undoSoftwareUpdate, softwareJob } from '../services/softwareUpdate.js';
 import { bus } from '../lib/bus.js';
 import { getMetrics } from '../services/metrics.js';
 import { audit, applyFix, defaultProtection } from '../services/security.js';
@@ -91,6 +92,15 @@ manageRouter.get('/modpack/players', async (req, res) => {
 });
 
 // --- Logs ----------------------------------------------------------------------
+
+// --- Actualizar Paper/Fabric/Forge/NeoForge/Minecraft con respaldo -----------------------
+manageRouter.get('/software', async (req, res) => res.json(await softwareStatus(req.params.id)));
+manageRouter.get('/software/job', (req, res) => res.json({ job: softwareJob(req.params.id) }));
+manageRouter.post('/software/update', async (req, res) => {
+  const { target, mcVersion, updateContent } = req.body || {};
+  res.status(202).json({ job: await startSoftwareUpdate(req.params.id, { target, mcVersion, updateContent: updateContent !== false }) });
+});
+manageRouter.post('/software/undo', async (req, res) => res.status(202).json({ job: await undoSoftwareUpdate(req.params.id) }));
 
 manageRouter.get('/logs', (req, res) => res.json(logs.listLogs(req.params.id)));
 manageRouter.get('/logs/search', (req, res) => res.json(logs.searchAll(req.params.id, String(req.query.q || ''))));

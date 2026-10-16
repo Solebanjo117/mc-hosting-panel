@@ -94,7 +94,7 @@ export function Confirm({ title, message, confirmLabel, danger, onConfirm, onClo
   const [busy, setBusy] = useState(false);
   return (
     <Modal title={title} onClose={onClose}>
-      <p className="muted">{message}</p>
+      {typeof message === 'string' ? <p className="muted">{message}</p> : <div className="muted">{message}</div>}
       <div className="row" style={{ justifyContent: 'flex-end' }}>
         <button onClick={onClose}>Cancelar</button>
         <button

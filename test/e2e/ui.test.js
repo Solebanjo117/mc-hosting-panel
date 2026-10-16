@@ -99,6 +99,19 @@ describe('Panel en el navegador', { skip }, () => {
     assert.deepEqual(errors, []);
   });
 
+  it('actualiza Paper con un clic desde Ajustes', async () => {
+    mocks.state.paperBuild = 125;
+    const list = await page.evaluate(() => fetch('/api/servers').then((r) => r.json()));
+    await page.goto(`${panel.base}/servidor/${list[0].id}/ajustes`);
+    const card = page.locator('section', { has: page.getByRole('heading', { name: 'Actualizaciones' }) });
+    await card.getByText('build #125').waitFor();
+    await card.getByRole('button', { name: 'Actualizar', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Actualizar' }).click();
+    await card.getByText(/Listo: Paper build #125/).first().waitFor({ timeout: 60000 });
+    await card.getByRole('button', { name: 'Deshacer' }).waitFor();
+    assert.deepEqual(errors, []);
+  });
+
   it('en el celular las pestañas caben y la página no se desborda a lo ancho', async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     const list = await panel.client.request('GET', '/api/servers', { headers: { cookie: (await page.context().cookies()).map((c) => `${c.name}=${c.value}`).join('; ') } });
