@@ -51,6 +51,11 @@ function Shell({ username, onLogout }) {
           ☰
         </button>
         <span className="brand" style={{ padding: 0 }}>
+          <span className="brand-mark" aria-hidden="true">
+            {Array.from({ length: 9 }, (_, i) => (
+              <i key={i} />
+            ))}
+          </span>
           MC Hosting Panel
         </span>
       </header>

@@ -48,40 +48,35 @@ export default function Home() {
       </div>
 
       {servers.length > 0 && (
-        <div className="tiles">
-          <div className="tile">
-            <span className="tile-label">Encendidos</span>
-            <span className="tile-value">
-              {online.length}
-              <small> de {servers.length}</small>
-            </span>
+        <dl className="summary" aria-label="Resumen">
+          <div>
+            <dt>Encendidos</dt>
+            <dd>
+              {online.length} de {servers.length}
+            </dd>
           </div>
-          <div className="tile">
-            <span className="tile-label">Jugadores conectados</span>
-            <span className="tile-value">{players}</span>
+          <div>
+            <dt>Jugando ahora</dt>
+            <dd>{players}</dd>
           </div>
           {info && (
-            <div className="tile">
-              <span className="tile-label">RAM reservada</span>
-              <span className="tile-value">
-                {(reservedMb / 1024).toFixed(1).replace('.0', '')}
-                <small> de {Math.round(info.system.totalMemMb / 1024)} GB</small>
-              </span>
-              <div className="meter">
-                <i style={{ width: `${Math.min(100, (reservedMb / info.system.totalMemMb) * 100)}%` }} />
-              </div>
+            <div className="summary-ram">
+              <dt>RAM reservada</dt>
+              <dd>
+                {(reservedMb / 1024).toFixed(1).replace('.0', '')} de {Math.round(info.system.totalMemMb / 1024)} GB
+                <span className="meter" role="presentation">
+                  <i style={{ width: `${Math.min(100, (reservedMb / info.system.totalMemMb) * 100)}%` }} />
+                </span>
+              </dd>
             </div>
           )}
           {info && (
-            <div className="tile">
-              <span className="tile-label">Esta PC</span>
-              <span className="tile-value small-value">{info.system.cores} núcleos</span>
-              <span className="faint small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={info.system.cpuModel}>
-                {info.system.cpuModel}
-              </span>
+            <div className="summary-pc">
+              <dt>Esta PC</dt>
+              <dd title={info.system.cpuModel}>{info.system.cores} núcleos</dd>
             </div>
           )}
-        </div>
+        </dl>
       )}
 
       {loaded && servers.length === 0 ? (
@@ -96,11 +91,11 @@ export default function Home() {
           </Link>
         </div>
       ) : (
-        <div className="server-cards">
+        <ul className="rack" aria-label="Servidores">
           {servers.map((s) => (
             <ServerCard key={s.id} server={s} rt={runtime[s.id]} dash={dash[s.id]} />
           ))}
-        </div>
+        </ul>
       )}
 
       <div className="note" style={{ marginTop: '2rem', maxWidth: '75ch' }}>
@@ -144,51 +139,53 @@ function ServerCard({ server, rt, dash }) {
   const memPct = dash?.spark?.mem?.map((v) => (v == null || !dash.spark.memoryLimitMb ? null : Math.round((v / dash.spark.memoryLimitMb) * 100)));
 
   return (
-    <article className={`server-card${on ? ' is-on' : ''}`}>
-      <header className="server-card-head">
-        <ServerIcon server={server} />
-        <div style={{ minWidth: 0 }} className="grow">
-          <Link to={base} className="server-card-name">
+    <li className={`rack-slot${on ? ' is-on' : ''}`}>
+      <div className="rack-id">
+        <ServerIcon server={server} size={48} />
+        <div style={{ minWidth: 0 }}>
+          <Link to={base} className="rack-name nameplate">
             {server.name}
           </Link>
-          <div className="muted small">
-            {TYPE_LABEL[server.type]} {server.mcVersion} · puerto {server.port}
+          <div className="rack-meta">
+            <Status state={state} />
+            <span className="muted small">
+              {TYPE_LABEL[server.type]} {server.mcVersion}, puerto {server.port}
+            </span>
           </div>
         </div>
-        <Status state={state} />
-      </header>
+      </div>
 
-      <div className="server-card-players">
+      <div className="rack-players">
         {state === 'running' ? (
           players.length ? (
             <>
               <div className="heads">
-                {players.slice(0, 8).map((p) => (
+                {players.slice(0, 6).map((p) => (
                   <PlayerHead key={p} name={p} size={28} title={p} />
                 ))}
-                {players.length > 8 && <span className="heads-more">+{players.length - 8}</span>}
+                {players.length > 6 && <span className="heads-more">+{players.length - 6}</span>}
               </div>
-              <span className="small muted">
-                {players.length} {players.length === 1 ? 'jugador' : 'jugadores'}
+              <span className="small">
+                {players.length} jugando
               </span>
             </>
           ) : (
             <span className="small faint">Nadie conectado</span>
           )
         ) : (
-          <span className="small faint">{on ? 'Arrancando…' : 'Sin jugadores'}</span>
+          on && <span className="small faint">Arrancando…</span>
         )}
       </div>
 
       <div className="sparks">
         <Spark label="Jugadores" values={dash?.spark?.players} format={(v) => `${v}`} color="var(--prismarine)" min={0} />
         <Spark label="RAM" values={memPct} format={(v) => `${v}%`} color="var(--lapis)" min={0} max={100} />
-        <Spark label="TPS" values={dash?.spark?.tps} format={(v) => `${v}`} color="var(--gold)" min={0} max={20} />
+        <Spark label="TPS" values={dash?.spark?.tps} format={(v) => `${v}`} color="var(--lamp)" min={0} max={20} />
       </div>
 
-      <footer className="server-card-foot">
+      <div className="rack-actions">
         {h ? (
-          <Link to={`${base}/seguridad`} className={`health-chip ${h.cls}`} title={dash.health.top.map((c) => c.title).join(' · ')}>
+          <Link to={`${base}/seguridad`} className={`health-chip ${h.cls}`} title={dash.health.top.map((c) => c.title).join('\n')}>
             <i aria-hidden="true" />
             {issues ? `${issues} ${issues === 1 ? 'aviso' : 'avisos'}` : h.label}
           </Link>
@@ -210,8 +207,8 @@ function ServerCard({ server, rt, dash }) {
             Abrir
           </Link>
         </div>
-      </footer>
-    </article>
+      </div>
+    </li>
   );
 }
 
@@ -242,7 +239,7 @@ function Spark({ label, values, format, color, min = 0, max }) {
         <span className="faint small">{label}</span>
         <span className="small">
           {shown != null ? format(shown) : '—'}
-          {minutesAgo ? <span className="faint"> · hace {minutesAgo} min</span> : null}
+          {minutesAgo ? <span className="faint">, hace {minutesAgo} min</span> : null}
         </span>
       </div>
       <svg

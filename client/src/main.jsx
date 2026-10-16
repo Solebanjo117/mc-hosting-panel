@@ -4,10 +4,11 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { ToastProvider } from './ui.jsx';
 // Fuentes incluidas en el build: el panel se ve igual aunque no haya internet.
-import '@fontsource/ibm-plex-sans/latin-400.css';
-import '@fontsource/ibm-plex-sans/latin-500.css';
-import '@fontsource/ibm-plex-sans/latin-600.css';
-import '@fontsource/ibm-plex-sans/latin-ext-400.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-400.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-500.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-600.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-700.css';
+import '@fontsource/atkinson-hyperlegible-next/latin-ext-400.css';
 import '@fontsource/jetbrains-mono/latin-400.css';
 import '@fontsource/pixelify-sans/latin-500.css';
 import './styles.css';

@@ -26,6 +26,11 @@ export default function Login({ setup, onDone }) {
   return (
     <div className="auth">
       <form className="auth-card panel" onSubmit={submit}>
+        <span className="brand-mark auth-lamp" aria-hidden="true">
+          {Array.from({ length: 9 }, (_, i) => (
+            <i key={i} />
+          ))}
+        </span>
         <div className="stack" style={{ gap: '0.4rem' }}>
           <h1>{setup ? 'Bienvenido' : 'MC Hosting Panel'}</h1>
           <p className="muted">

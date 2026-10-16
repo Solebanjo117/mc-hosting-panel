@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
+import { ServerIcon } from './Home.jsx';
 import { Progress, Status, useAction } from '../ui.jsx';
 import ConsoleTab from './server/ConsoleTab.jsx';
 import SettingsTab from './server/SettingsTab.jsx';
@@ -103,6 +104,7 @@ export default function ServerView() {
   return (
     <div className="page">
       <header className="server-head">
+        <ServerIcon server={server} size={64} />
         <div style={{ minWidth: 0 }}>
           <h1 style={{ overflowWrap: 'anywhere' }}>{server.name}</h1>
           <div className="server-meta">

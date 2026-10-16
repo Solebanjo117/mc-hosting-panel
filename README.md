@@ -31,6 +31,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Seguridad:** revisión por servidor con arreglos de un clic, protección contra oleadas de bots (bloqueo temporal de IP y lista blanca de emergencia), panel limitado a tu red, historial de inicios de sesión, y una guía sobre DDoS (qué se puede y qué no se puede hacer desde casa).
 - **Clonar servidores** para probar mods o versiones sin arriesgar el original.
 - **El panel se actualiza solo** desde Ajustes (con git o con el instalador) y puede **abrirse al iniciar Windows**.
+- **Diseño "Deepslate y redstone":** superficies de pizarra, el nombre de cada servidor como en la lista del juego y su estado como una lámpara de redstone que se enciende, parpadea al arrancar y se pone roja si se cae.
 - **Accesible:** se revisa con axe (WCAG 2.1 AA) en cada cambio; se usa con teclado y lector de pantalla.
 - Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.

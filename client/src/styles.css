@@ -1,31 +1,43 @@
 :root {
-  /* Materiales del mundo: noche de pizarra, arenisca, prismarina, oro y redstone. */
-  --night: #161c2a;
-  --slate: #1d2537;
-  --slate-2: #243049;
-  --slate-3: #2e3b58;
-  --line: #34415f;
-  --sand: #ece5d3;
-  --sand-dim: #a9a594;
-  --sand-faint: #959aa3;
-  --prismarine: #4fb3a9;
-  --prismarine-deep: #2f7f78;
-  --gold: #e8b64b;
-  --redstone: #e0503f;
-  --lapis: #6d8ee8;
+  /*
+   * Deepslate y redstone: el panel es el cuarto de control bajo el mundo.
+   * Superficies de pizarra profunda, la prismarina para actuar y el estado de cada servidor
+   * como una lámpara de redstone (lo único que brilla).
+   */
+  --night: #1d1e21; /* pizarra profunda: fondo */
+  --side: #18191b; /* la barra lateral, un nivel más abajo */
+  --slate: #27282c; /* losa pulida: superficies */
+  --slate-2: #313236; /* controles */
+  --slate-3: #3b3d42; /* controles al pasar el mouse */
+  --line: #45474d;
+  --sand: #ece7dc; /* hueso: texto */
+  --sand-dim: #b3ada2;
+  --sand-faint: #a19d95;
+  --prismarine: #5cc2b4; /* acciones, enlaces y foco */
+  --prismarine-deep: #2f7f75;
+  --gold: #e8954e; /* avisos: cobre */
+  --redstone: #ef6a58; /* peligro y caídas */
+  --lapis: #8aa6f0;
+  --lamp: #ffc757; /* lámpara de redstone encendida */
+  --lamp-off: #4a362a; /* lámpara apagada */
 
-  --font-ui: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
-  --font-pixel: 'Pixelify Sans', 'IBM Plex Sans', system-ui, sans-serif;
+  /* Bisel de bloque: luz arriba, sombra abajo (como los botones y losas del juego). */
+  --bevel: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --bevel-strong: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 0 rgba(0, 0, 0, 0.28);
+
+  --font-ui: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+  --font-pixel: 'Pixelify Sans', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', Consolas, 'Cascadia Mono', monospace;
 
+  /* Escala 1.2 sobre 15 px */
   --step--1: 0.8125rem;
   --step-0: 0.9375rem;
   --step-1: 1.125rem;
-  --step-2: 1.5rem;
-  --step-3: 2rem;
+  --step-2: 1.375rem;
+  --step-3: 1.875rem;
 
-  --r-control: 6px;
-  --r-panel: 10px;
+  --r-control: 4px;
+  --r-panel: 4px;
   color-scheme: dark;
 }
 
@@ -62,8 +74,14 @@ h3 {
 }
 
 h1 {
-  font-family: var(--font-pixel);
   font-size: var(--step-3);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+/* El nombre de un servidor se escribe como en la lista de servidores del juego. */
+.nameplate {
+  font-family: var(--font-pixel);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
@@ -108,6 +126,17 @@ main:focus {
 
 ::selection {
   background: var(--prismarine-deep);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .muted {
@@ -140,12 +169,19 @@ button,
   min-height: 34px;
   padding: 0 0.9rem;
   border-radius: var(--r-control);
-  border: 1px solid var(--line);
+  border: 1px solid #1a1b1e;
   background: var(--slate-2);
+  box-shadow: var(--bevel);
   color: var(--sand);
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
+}
+
+button:active:not(:disabled),
+.btn:active {
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.3);
+  transform: translateY(1px);
 }
 
 button:hover:not(:disabled),
@@ -160,27 +196,30 @@ button:disabled {
 
 .btn-go {
   background: var(--prismarine);
-  border-color: var(--prismarine);
-  color: #0f2422;
+  border-color: #1f5a53;
+  box-shadow: var(--bevel-strong);
+  color: #0e2622;
+  font-weight: 700;
 }
 
 .btn-go:hover:not(:disabled) {
-  background: #64c4ba;
+  background: #6fd0c2;
 }
 
 .btn-stop {
-  border-color: rgba(224, 80, 63, 0.55);
-  color: #f3a59b;
-  background: rgba(224, 80, 63, 0.08);
+  border-color: rgba(239, 106, 88, 0.55);
+  color: #f6b0a6;
+  background: rgba(239, 106, 88, 0.08);
 }
 
 .btn-stop:hover:not(:disabled) {
-  background: rgba(224, 80, 63, 0.2);
+  background: rgba(239, 106, 88, 0.2);
 }
 
 .btn-ghost {
   background: transparent;
   border-color: transparent;
+  box-shadow: none;
 }
 
 .btn-ghost:hover:not(:disabled) {
@@ -197,9 +236,10 @@ select,
 textarea {
   font: inherit;
   color: var(--sand);
-  background: var(--night);
-  border: 1px solid var(--line);
+  background: #17181a;
+  border: 1px solid #3a3c41;
   border-radius: var(--r-control);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.35);
   padding: 0.5rem 0.65rem;
   width: 100%;
   min-height: 36px;
@@ -210,6 +250,14 @@ select:focus,
 textarea:focus {
   border-color: var(--prismarine);
   outline: none;
+}
+
+input[type='range'] {
+  accent-color: var(--prismarine);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 input[type='checkbox'] {
@@ -272,9 +320,10 @@ label.check input {
 
 .panel {
   background: var(--slate);
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--r-panel);
-  padding: 1.25rem;
+  box-shadow: var(--bevel);
+  padding: 1.25rem 1.35rem;
 }
 
 .panel > h2 {
@@ -282,9 +331,9 @@ label.check input {
 }
 
 .error-box {
-  border: 1px solid rgba(224, 80, 63, 0.5);
-  background: rgba(224, 80, 63, 0.1);
-  color: #f6b9b0;
+  border: 1px solid rgba(239, 106, 88, 0.5);
+  background: rgba(239, 106, 88, 0.1);
+  color: #f8c0b7;
   border-radius: var(--r-control);
   padding: 0.6rem 0.8rem;
   font-size: var(--step--1);
@@ -318,7 +367,7 @@ label.check input {
   padding: 0.4rem 0.8rem;
   color: var(--sand-dim);
   font-size: var(--step--1);
-  background: rgba(232, 182, 75, 0.06);
+  background: rgba(232, 149, 78, 0.07);
 }
 
 /* ---------- Estructura ---------- */
@@ -330,8 +379,8 @@ label.check input {
 }
 
 .sidebar {
-  background: var(--slate);
-  border-right: 1px solid var(--line);
+  background: var(--side);
+  border-right: 1px solid #111214;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -358,17 +407,17 @@ label.check input {
   gap: 2px;
 }
 
+/* Una lámpara de redstone vista de frente: la marca del panel. */
 .brand-mark i {
-  background: var(--slate-3);
+  background: var(--lamp-off);
 }
 
-.brand-mark i:nth-child(1),
-.brand-mark i:nth-child(3) {
-  background: var(--prismarine);
+.brand-mark i:nth-child(2n + 1) {
+  background: var(--lamp);
 }
 
-.brand-mark i:nth-child(8) {
-  background: var(--gold);
+.brand-mark i:nth-child(5) {
+  background: #fff1c9;
 }
 
 .side-section {
@@ -381,9 +430,10 @@ label.check input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 0.4rem 0.4rem;
+  padding: 0.6rem 0.4rem 0.4rem 0.55rem;
   color: var(--sand-faint);
   font-size: var(--step--1);
+  font-weight: 600;
 }
 
 .side-link {
@@ -399,14 +449,14 @@ label.check input {
 }
 
 .side-link:hover {
-  background: var(--slate-2);
+  background: #222326;
   color: var(--sand);
 }
 
 .side-link.active {
-  background: var(--slate-2);
+  background: var(--slate);
   color: var(--sand);
-  box-shadow: inset 3px 0 0 var(--prismarine);
+  box-shadow: var(--bevel), inset 3px 0 0 var(--prismarine);
 }
 
 .side-link .name {
@@ -423,7 +473,7 @@ label.check input {
 }
 
 .side-foot {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid #2a2b2f;
   padding: 0.6rem 0.75rem;
   display: grid;
   gap: 2px;
@@ -466,46 +516,77 @@ label.check input {
   }
   .sidebar.open {
     transform: none;
-    box-shadow: 0 0 0 100vmax rgba(5, 8, 15, 0.6);
+    box-shadow: 0 0 0 100vmax rgba(8, 8, 9, 0.6);
   }
   .mobile-bar {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--line);
-    background: var(--slate);
+    border-bottom: 1px solid #111214;
+    background: var(--side);
   }
   h1 {
     font-size: var(--step-2);
   }
 }
 
-/* ---------- Estado ---------- */
+/* ---------- Estado: la lámpara de redstone ---------- */
 
+/*
+ * Cada servidor tiene una lámpara: apagada es un bloque oscuro con su rejilla, encendida brilla,
+ * arrancando o apagándose parpadea como un circuito, y caída se ve roja.
+ */
 .dot {
-  width: 9px;
-  height: 9px;
+  --size: 12px;
+  width: var(--size);
+  height: var(--size);
   flex: none;
-  background: var(--sand-faint);
-  /* cuadrado, como un bloque */
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%),
+    linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%),
+    var(--lamp-off);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+  transition: background-color 0.35s, box-shadow 0.35s;
 }
 
 .dot.running {
-  background: var(--prismarine);
-  box-shadow: 0 0 0 3px rgba(79, 179, 169, 0.2);
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%),
+    linear-gradient(0deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%),
+    var(--lamp);
+  box-shadow: inset 0 0 0 1px rgba(150, 90, 20, 0.6), 0 0 10px 1px rgba(255, 199, 87, 0.45);
 }
 
 .dot.starting,
-.dot.stopping,
+.dot.stopping {
+  animation: lamp-flicker 0.9s steps(1) infinite;
+}
+
 .dot.installing {
-  background: var(--gold);
-  animation: blink 1.2s steps(2) infinite;
+  background: var(--lapis);
+  animation: lamp-flicker 1.2s steps(1) infinite;
 }
 
 .dot.crashed,
 .dot.error {
-  background: var(--redstone);
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%),
+    linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%),
+    var(--redstone);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 8px rgba(239, 106, 88, 0.45);
+}
+
+@keyframes lamp-flicker {
+  0% {
+    background-color: var(--lamp-off);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    background-color: var(--lamp);
+    box-shadow: inset 0 0 0 1px rgba(150, 90, 20, 0.6), 0 0 8px rgba(255, 199, 87, 0.35);
+  }
 }
 
 @keyframes blink {
@@ -554,10 +635,31 @@ label.check input {
 
 .server-head {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: end;
-  margin-bottom: 1.25rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.6rem 1.1rem;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+
+.server-head h1 {
+  font-family: var(--font-pixel);
+  font-weight: 500;
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+
+.server-head .server-icon {
+  box-shadow: 0 0 0 1px #111214, var(--bevel);
+}
+
+.server-head .status {
+  color: var(--sand);
+  font-weight: 600;
+}
+
+.server-head .dot {
+  --size: 14px;
 }
 
 .server-meta {
@@ -596,6 +698,7 @@ label.check input {
 
 .tab.active {
   color: var(--sand);
+  font-weight: 700;
   border-bottom-color: var(--prismarine);
 }
 
@@ -603,39 +706,50 @@ label.check input {
   margin-bottom: 0.9rem;
 }
 
+/* Subsecciones: un interruptor de varias posiciones, encajado en la piedra. */
 .subtabs {
-  display: flex;
-  gap: 0.35rem;
+  display: inline-flex;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
   margin-bottom: 1.5rem;
   overflow-x: auto;
   scrollbar-width: none;
+  background: #151618;
+  border-radius: var(--r-control);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .subtab {
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
+  padding: 0.35rem 0.85rem;
+  border-radius: 3px;
   color: var(--sand-dim);
   text-decoration: none;
   font-size: var(--step--1);
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .subtab:hover {
   color: var(--sand);
-  border-color: var(--slate-3);
 }
 
 .subtab.active {
   color: var(--sand);
   background: var(--slate-3);
-  border-color: var(--prismarine);
+  box-shadow: var(--bevel);
 }
 
 @media (max-width: 640px) {
   .server-head {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .server-head > :last-child {
+    grid-column: 1 / -1;
+  }
+  .server-head .server-icon {
+    width: 48px;
+    height: 48px;
   }
 }
 
@@ -654,8 +768,9 @@ label.check input {
 }
 
 .terminal {
-  background: #0d121c;
-  border: 1px solid var(--line);
+  background: #141517;
+  border: 1px solid #0f1011;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.4);
   border-radius: var(--r-panel);
   display: flex;
   flex-direction: column;
@@ -673,7 +788,7 @@ label.check input {
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #c9cfd8;
+  color: #d3d0c8;
 }
 
 .terminal-out .l-warn {
@@ -698,8 +813,8 @@ label.check input {
 
 .terminal-in {
   display: flex;
-  border-top: 1px solid var(--line);
-  background: #111827;
+  border-top: 1px solid #2a2b2f;
+  background: #101113;
 }
 
 .terminal-in span {
@@ -912,20 +1027,32 @@ label.check input {
 
 .segmented {
   display: inline-flex;
-  border: 1px solid var(--line);
+  gap: 2px;
+  padding: 3px;
+  background: #151618;
   border-radius: var(--r-control);
-  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .segmented button {
   border: 0;
-  border-radius: 0;
+  border-radius: 3px;
   background: transparent;
+  box-shadow: none;
+  color: var(--sand-dim);
+  min-height: 30px;
+}
+
+.segmented button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--sand);
 }
 
 .segmented button.on {
   background: var(--slate-3);
+  box-shadow: var(--bevel);
   color: var(--sand);
+  font-weight: 700;
 }
 
 /* ---------- Crear servidor ---------- */
@@ -949,9 +1076,8 @@ label.check input {
 }
 
 .type-option strong {
-  font-family: var(--font-pixel);
   font-size: var(--step-1);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .type-option span {
@@ -962,7 +1088,7 @@ label.check input {
 
 .type-option.on {
   border-color: var(--prismarine);
-  box-shadow: inset 0 0 0 1px var(--prismarine);
+  box-shadow: inset 0 0 0 1px var(--prismarine), var(--bevel);
   background: var(--slate-2);
 }
 
@@ -971,7 +1097,7 @@ label.check input {
 .modal-back {
   position: fixed;
   inset: 0;
-  background: rgba(5, 8, 15, 0.7);
+  background: rgba(8, 8, 9, 0.72);
   display: grid;
   place-items: center;
   z-index: 50;
@@ -1035,8 +1161,8 @@ label.check input {
   place-items: center;
   padding: 1.5rem;
   background:
-    repeating-linear-gradient(90deg, transparent 0 47px, #1b2232 47px 48px),
-    repeating-linear-gradient(0deg, var(--night) 0 47px, #1b2232 47px 48px);
+    repeating-linear-gradient(90deg, transparent 0 47px, #232427 47px 48px),
+    repeating-linear-gradient(0deg, var(--night) 0 47px, #232427 47px 48px);
 }
 
 .auth-card {
@@ -1046,7 +1172,30 @@ label.check input {
 }
 
 .auth-card h1 {
+  font-family: var(--font-pixel);
+  font-weight: 500;
   font-size: var(--step-3);
+}
+
+/* Al abrir el panel, la lámpara se enciende: el único momento animado sin que hagas nada. */
+.auth-lamp {
+  width: 44px;
+  height: 44px;
+  gap: 3px;
+}
+
+.auth-lamp i {
+  animation: lamp-on 0.5s steps(1) 0.35s backwards;
+}
+
+@keyframes lamp-on {
+  from {
+    background: var(--lamp-off);
+  }
+}
+
+.rack-players:empty {
+  display: none;
 }
 
 /* ---------- Inicio ---------- */
@@ -1151,7 +1300,7 @@ label.check input {
 }
 
 .doc pre {
-  background: #0d121c;
+  background: #141517;
   border: 1px solid var(--line);
   border-radius: var(--r-control);
   padding: 0.9rem 1rem;
@@ -1187,7 +1336,7 @@ label.check input {
   border-left: 3px solid var(--gold);
   padding: 0.3rem 1rem;
   color: var(--sand-dim);
-  background: rgba(232, 182, 75, 0.06);
+  background: rgba(232, 149, 78, 0.07);
 }
 
 .doc-layout {
@@ -1348,7 +1497,7 @@ label.check input {
 
 .logview {
   margin: 0;
-  background: #0d121c;
+  background: #141517;
   border: 1px solid var(--line);
   border-radius: var(--r-panel);
   padding: 0.75rem 0.9rem;
@@ -1408,7 +1557,7 @@ label.check input {
   padding: 0.9rem 1rem;
   display: grid;
   gap: 0.5rem;
-  background: rgba(232, 182, 75, 0.05);
+  background: rgba(232, 149, 78, 0.06);
 }
 
 .code-big {
@@ -1505,7 +1654,7 @@ label.check input {
 }
 
 .table tr.row-selected td {
-  background: rgba(79, 179, 169, 0.08);
+  background: rgba(92, 194, 180, 0.08);
 }
 
 .folder-list {
@@ -1761,103 +1910,156 @@ label.check input {
   min-height: 380px;
   border: 1px solid var(--line);
   border-radius: var(--r-panel);
-  background: #0b0f18;
+  background: #121314;
 }
 .map-off {
   display: grid;
   place-items: center;
 }
 
-/* Tablero de inicio */
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-.tile {
+/* Tablero de inicio: una franja de resumen y un rack con una ranura por servidor */
+.summary {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.85rem 1rem;
-  background: var(--slate);
-  border: 1px solid var(--line);
-  border-radius: var(--r-panel);
+  flex-wrap: wrap;
+  margin: 0 0 1.75rem;
+  border-top: 1px solid #2c2d31;
+  border-bottom: 1px solid #2c2d31;
+}
+.summary > div {
+  padding: 0.7rem 1.4rem 0.75rem 0;
+  margin-right: 1.4rem;
+  border-right: 1px solid #2c2d31;
   min-width: 0;
 }
-.tile-label {
-  color: var(--sand-dim);
-  font-size: var(--step--1);
+.summary > div:last-child {
+  border-right: 0;
+  margin-right: 0;
 }
-.tile-value {
-  font-size: var(--step-3);
-  font-weight: 600;
-  line-height: 1.1;
+.summary dt {
+  font-size: var(--step--1);
+  color: var(--sand-faint);
+}
+.summary dd {
+  margin: 0.1rem 0 0;
+  font-size: var(--step-1);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.tile-value small {
-  font-size: var(--step-0);
-  font-weight: 400;
-  color: var(--sand-dim);
+.summary .meter {
+  width: 9rem;
 }
-.tile-value.small-value {
-  font-size: var(--step-2);
+@media (max-width: 640px) {
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .summary > div {
+    border-right: 0;
+    margin-right: 0;
+    padding-right: 0.5rem;
+  }
+  .summary .meter {
+    width: 100%;
+  }
 }
-.server-cards {
+
+.rack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
-  gap: 1rem;
+  gap: 6px;
 }
-.server-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: 1rem;
+.rack-slot {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) minmax(130px, 0.8fr) minmax(260px, 1.6fr) auto;
+  gap: 1rem 1.5rem;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
   background: var(--slate);
-  border: 1px solid var(--line);
   border-radius: var(--r-panel);
+  box-shadow: var(--bevel);
   min-width: 0;
 }
-.server-card.is-on {
-  border-color: rgba(79, 179, 169, 0.45);
-  box-shadow: 0 0 0 1px rgba(79, 179, 169, 0.12), 0 8px 24px -16px rgba(79, 179, 169, 0.6);
+.rack-slot.is-on {
+  box-shadow: var(--bevel), inset 3px 0 0 var(--lamp);
 }
-.server-card-head {
+.rack-id {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.9rem;
   align-items: center;
+  min-width: 0;
 }
-.server-card-name {
+.rack-name {
+  display: block;
   color: var(--sand);
-  font-weight: 600;
   font-size: var(--step-1);
   text-decoration: none;
-  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.server-card-name:hover {
+.rack-name:hover {
   color: var(--prismarine);
+}
+.rack-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin-top: 0.25rem;
+}
+.rack-players {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 30px;
+}
+.rack-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+@media (max-width: 1180px) {
+  .rack-slot {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rack-players {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+  .sparks {
+    grid-column: 1 / -1;
+  }
+  .rack-actions {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    border-top: 1px solid #333438;
+    padding-top: 0.75rem;
+  }
+}
+@media (max-width: 560px) {
+  .rack-slot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rack-players {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
 }
 .server-icon {
   flex: none;
-  border-radius: 6px;
+  border-radius: 3px;
   image-rendering: pixelated;
-  background: var(--night);
+  background: #151618;
 }
 .server-icon.placeholder {
   display: grid;
   place-items: center;
   font-family: var(--font-pixel);
-  color: var(--gold);
-  border: 1px solid var(--line);
-}
-.server-card-players {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 30px;
+  color: var(--lamp);
+  box-shadow: inset 0 0 0 1px #111214, var(--bevel);
 }
 .heads {
   display: flex;
@@ -1866,7 +2068,7 @@ label.check input {
 .heads-more {
   width: 28px;
   height: 28px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 2px solid var(--slate);
   margin-left: -6px;
   image-rendering: pixelated;
@@ -1911,14 +2113,6 @@ label.check input {
   stroke: var(--sand-dim);
   stroke-width: 1;
   stroke-dasharray: 2 2;
-}
-.server-card-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  border-top: 1px solid var(--line);
-  padding-top: 0.75rem;
 }
 .health-chip {
   display: inline-flex;
@@ -1991,7 +2185,7 @@ label.check input {
   background: var(--redstone);
 }
 .health-item.bad {
-  border-color: rgba(224, 80, 63, 0.5);
+  border-color: rgba(239, 106, 88, 0.5);
 }
 
 /* Vista previa de la lista de servidores de Minecraft */
@@ -2226,7 +2420,7 @@ label.check input {
   width: 90px;
   height: 10px;
   border-radius: 2px;
-  background: linear-gradient(90deg, rgba(79, 179, 169, 0.15), rgba(79, 179, 169, 1));
+  background: linear-gradient(90deg, rgba(92, 194, 180, 0.15), rgba(92, 194, 180, 1));
 }
 .timeline {
   display: grid;
@@ -2394,13 +2588,10 @@ label.check input {
   display: flex;
   flex-direction: column;
   background: var(--slate);
-  border: 1px solid var(--line);
   border-radius: var(--r-panel);
+  box-shadow: var(--bevel);
   overflow: hidden;
   min-width: 0;
-}
-.mcard:hover {
-  border-color: var(--slate-3);
 }
 .mcard-banner {
   display: block;
@@ -2430,7 +2621,7 @@ label.check input {
   width: 52px;
   height: 52px;
   flex: none;
-  border-radius: 10px;
+  border-radius: 4px;
   border: 3px solid var(--slate);
   background: var(--slate-2);
   object-fit: cover;
@@ -2508,7 +2699,7 @@ label.check input {
   width: 100%;
   max-height: 420px;
   object-fit: contain;
-  background: #0b0f18;
+  background: #121314;
   border-radius: var(--r-control);
 }
 .gallery-thumbs {
@@ -2570,14 +2761,6 @@ label.check input {
   padding-top: 26px;
 }
 
-@media (max-width: 520px) {
-  .tile {
-    padding: 0.7rem 0.8rem;
-  }
-  .tile-value {
-    font-size: var(--step-2);
-  }
-}
 
 /* Recortador del ícono */
 .cropper {
@@ -2591,7 +2774,7 @@ label.check input {
   max-width: 100%;
   aspect-ratio: 1;
   border-radius: 6px;
-  background: repeating-conic-gradient(#2a3348 0 25%, #222a3d 0 50%) 0 0 / 16px 16px;
+  background: repeating-conic-gradient(#34363b 0 25%, #2b2c30 0 50%) 0 0 / 16px 16px;
   cursor: grab;
   touch-action: none;
   outline: 2px solid var(--prismarine);
