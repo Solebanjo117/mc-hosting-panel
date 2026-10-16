@@ -7,7 +7,7 @@
   --line: #34415f;
   --sand: #ece5d3;
   --sand-dim: #a9a594;
-  --sand-faint: #767a80;
+  --sand-faint: #959aa3;
   --prismarine: #4fb3a9;
   --prismarine-deep: #2f7f78;
   --gold: #e8b64b;
@@ -78,6 +78,27 @@ h3 {
 
 p {
   margin: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.5rem 0.9rem;
+  background: var(--gold);
+  color: var(--night);
+  border-radius: var(--r-control);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+main:focus {
+  outline: none;
 }
 
 :focus-visible {
@@ -728,7 +749,19 @@ label.check input {
   font-weight: 500;
 }
 
+.stat-note {
+  display: block;
+  margin-top: 0.4rem;
+  font-weight: 400;
+}
+
+.stat dd .chip {
+  font-size: var(--step--1);
+  font-weight: 400;
+}
+
 .meter {
+  display: block;
   height: 4px;
   background: var(--slate-2);
   margin-top: 0.45rem;
@@ -741,6 +774,7 @@ label.check input {
 }
 
 .address {
+  font-weight: 400;
   font-family: var(--font-mono);
   font-size: var(--step--1);
   background: var(--night);

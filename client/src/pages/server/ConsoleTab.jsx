@@ -178,6 +178,9 @@ export default function ConsoleTab({ server, runtime, state }) {
         <div
           className="terminal-out"
           ref={outRef}
+          tabIndex={0}
+          role="log"
+          aria-label="Salida de la consola"
           onScroll={(e) => {
             const el = e.currentTarget;
             stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
@@ -224,16 +227,18 @@ export default function ConsoleTab({ server, runtime, state }) {
         <dl className="stat-list" style={{ margin: 0 }}>
           <div className="stat">
             <dt>Jugadores</dt>
-            <dd>{state === 'running' ? `${players.length} en línea` : '—'}</dd>
-            {players.length > 0 && (
-              <div className="row" style={{ gap: '0.3rem', marginTop: '0.4rem' }}>
-                {players.map((p) => (
-                  <span key={p} className="chip">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            )}
+            <dd>
+              {state === 'running' ? `${players.length} en línea` : '—'}
+              {players.length > 0 && (
+                <span className="row" style={{ gap: '0.3rem', marginTop: '0.4rem' }}>
+                  {players.map((p) => (
+                    <span key={p} className="chip">
+                      {p}
+                    </span>
+                  ))}
+                </span>
+              )}
+            </dd>
           </div>
           <div className="stat">
             <dt>TPS</dt>
@@ -241,10 +246,12 @@ export default function ConsoleTab({ server, runtime, state }) {
           </div>
           <div className="stat">
             <dt>Memoria</dt>
-            <dd>{stats ? `${(stats.memoryMb / 1024).toFixed(1)} / ${(server.memoryMb / 1024).toFixed(1)} GB` : '—'}</dd>
-            <div className="meter">
-              <i style={{ width: `${memPct}%` }} />
-            </div>
+            <dd>
+              {stats ? `${(stats.memoryMb / 1024).toFixed(1)} / ${(server.memoryMb / 1024).toFixed(1)} GB` : '—'}
+              <span className="meter" role="presentation">
+                <i style={{ width: `${memPct}%` }} />
+              </span>
+            </dd>
           </div>
           <div className="stat">
             <dt>CPU</dt>
@@ -256,22 +263,24 @@ export default function ConsoleTab({ server, runtime, state }) {
           </div>
           <div className="stat">
             <dt>Dirección en tu casa</dt>
-            {lanIp && (
-              <div className="address">
-                <span>
-                  {lanIp}:{server.port}
+            <dd>
+              {lanIp && (
+                <span className="address">
+                  <span>
+                    {lanIp}:{server.port}
+                  </span>
+                  <CopyButton text={`${lanIp}:${server.port}`} />
                 </span>
-                <CopyButton text={`${lanIp}:${server.port}`} />
-              </div>
-            )}
-            {lanIp && server.bedrock?.enabled && (
-              <p className="small muted" style={{ marginTop: '0.4rem' }}>
-                Bedrock: {lanIp}, puerto {server.bedrock.port}
-              </p>
-            )}
-            <p className="small muted" style={{ marginTop: '0.4rem' }}>
-              Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
-            </p>
+              )}
+              {lanIp && server.bedrock?.enabled && (
+                <span className="small muted stat-note">
+                  Bedrock: {lanIp}, puerto {server.bedrock.port}
+                </span>
+              )}
+              <span className="small muted stat-note">
+                Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
+              </span>
+            </dd>
           </div>
         </dl>
 

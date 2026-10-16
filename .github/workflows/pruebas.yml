@@ -35,9 +35,9 @@ jobs:
       - name: Unitarias y casos de uso
         run: npm test
 
-      - name: Navegador (Playwright)
+      - name: Navegador y accesibilidad (Playwright + axe)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          npm i --no-save playwright
+          npm i --no-save playwright axe-core
           npx playwright install --with-deps chromium
           npm run test:e2e

@@ -9,7 +9,7 @@ import { startPanel, hasJava, ROOT, ADMIN } from '../helpers/panel.js';
 /**
  * Pruebas en el navegador (opcionales). Necesitan:
  *  - el panel compilado (npm run build)
- *  - Playwright: npm i --no-save playwright && npx playwright install chromium
+ *  - Playwright: npm i --no-save playwright axe-core && npx playwright install chromium
  *    (o PLAYWRIGHT_MODULE=/ruta/a/node_modules/playwright si ya lo tienes en otro lado)
  */
 async function loadPlaywright() {
@@ -26,6 +26,26 @@ async function loadPlaywright() {
 }
 
 const pw = await loadPlaywright();
+
+/** axe-core (revisión de accesibilidad): npm i --no-save axe-core */
+let AXE = null;
+try {
+  AXE = createRequire(path.join(ROOT, 'package.json')).resolve('axe-core/axe.min.js');
+} catch {
+  /* sin axe-core: se salta esa prueba */
+}
+
+/** Problemas de accesibilidad (WCAG 2.1 A y AA) de la página abierta. */
+async function axeViolations(page) {
+  await page.addScriptTag({ path: AXE });
+  return page.evaluate(async () => {
+    const r = await window.axe.run(document, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      resultTypes: ['violations'],
+    });
+    return r.violations.map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 4).map((n) => `${n.target.join(' ')} → ${n.failureSummary.split('\n').slice(1, 2).join('')}`) }));
+  });
+}
 const built = fs.existsSync(path.join(ROOT, 'dist', 'index.html'));
 const skip = !hasJava() ? 'Se necesita Java' : !built ? 'Compila el panel primero (npm run build)' : !pw ? 'Instala Playwright para las pruebas en el navegador' : false;
 
@@ -133,6 +153,33 @@ describe('Panel en el navegador', { skip }, () => {
     await card.getByText(/Pregenerando · Mundo normal/).waitFor();
     await card.getByText(/Terminada · Mundo normal/).waitFor({ timeout: 30000 });
     assert.deepEqual(errors, []);
+  });
+
+  it('pasa la revisión de accesibilidad (axe, WCAG 2.1 AA) en todas las pantallas', { skip: !AXE && 'Instala axe-core (npm i --no-save axe-core)' }, async () => {
+    // axe se inyecta como script: en esta pestaña se ignora la política de seguridad (CSP) del panel.
+    const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 860 }, locale: 'es-MX' });
+    await ctx.addCookies(await page.context().cookies());
+    const tab = await ctx.newPage();
+    await tab.goto(panel.base);
+    const list = await tab.evaluate(() => fetch('/api/servers').then((r) => r.json()));
+    const sv = `/servidor/${list[0].id}`;
+    const pages = ['/', '/nuevo', '/nuevo/modpack', '/ajustes', '/guia'];
+    for (const sub of ['', '/jugadores', '/actividad', '/contenido', '/datapacks', '/mundos', '/mapa', '/respaldos', '/archivos', '/conexion', '/bedrock', '/seguridad', '/rendimiento', '/logs', '/ajustes', '/tareas']) pages.push(`${sv}${sub}`);
+    const found = [];
+    for (const p of pages) {
+      await tab.goto(`${panel.base}${p}`);
+      await tab.waitForLoadState('networkidle');
+      for (const v of await axeViolations(tab)) found.push(`${p}: [${v.impact}] ${v.id} (${v.help})\n    ${v.nodes.join('\n    ')}`);
+    }
+    await ctx.close();
+    // La pantalla de inicio de sesión (sin sesión).
+    const anon = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 860 }, locale: 'es-MX' });
+    const login = await anon.newPage();
+    await login.goto(panel.base);
+    await login.getByRole('button', { name: /Entrar/ }).waitFor();
+    for (const v of await axeViolations(login)) found.push(`login: [${v.impact}] ${v.id} (${v.help})\n    ${v.nodes.join('\n    ')}`);
+    await anon.close();
+    assert.deepEqual(found, [], `Problemas de accesibilidad:\n${found.join('\n')}`);
   });
 
   it('en el celular las pestañas caben y la página no se desborda a lo ancho', async () => {

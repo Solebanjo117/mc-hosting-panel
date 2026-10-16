@@ -43,6 +43,9 @@ function Shell({ username, onLogout }) {
 
   return (
     <div className="shell">
+      <a className="skip-link" href="#contenido">
+        Saltar al contenido
+      </a>
       <header className="mobile-bar">
         <button className="btn-ghost" onClick={() => setOpen(true)} aria-label="Abrir menú">
           ☰
@@ -102,7 +105,7 @@ function Shell({ username, onLogout }) {
         </div>
       </aside>
 
-      <main className="main">
+      <main className="main" id="contenido" tabIndex={-1}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/nuevo" element={<CreateServer />} />

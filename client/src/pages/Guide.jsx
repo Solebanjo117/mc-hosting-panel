@@ -28,6 +28,9 @@ export default function Guide() {
       h.id = slug(h.textContent);
       if (h.tagName === 'H2' && !/^índice$/i.test(h.textContent.trim())) toc.push({ id: h.id, text: h.textContent });
     }
+    // Accesibilidad: los bloques de código se pueden recorrer con el teclado y las casillas son solo texto.
+    for (const pre of doc.querySelectorAll('pre')) pre.tabIndex = 0;
+    for (const box of doc.querySelectorAll('input[type="checkbox"]')) box.replaceWith(doc.createTextNode(box.checked ? '☑ ' : '☐ '));
     for (const a of doc.querySelectorAll('a[href^="http"]')) {
       a.target = '_blank';
       a.rel = 'noreferrer';

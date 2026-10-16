@@ -10,10 +10,17 @@ export function Status({ state }) {
   );
 }
 
-export function Progress({ value }) {
+export function Progress({ value, label = 'Progreso' }) {
   const indeterminate = value == null;
   return (
-    <div className={`progress${indeterminate ? ' indeterminate' : ''}`} role="progressbar" aria-valuenow={indeterminate ? undefined : Math.round(value * 100)}>
+    <div
+      className={`progress${indeterminate ? ' indeterminate' : ''}`}
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={indeterminate ? undefined : Math.round(value * 100)}
+    >
       <i style={{ width: `${indeterminate ? 30 : Math.round(value * 100)}%` }} />
     </div>
   );

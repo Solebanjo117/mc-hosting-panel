@@ -73,3 +73,61 @@ describe('Consola y estado en vivo (WebSocket)', { skip: !hasJava() && 'Se neces
     ws.close();
   });
 });
+
+/** Caso de uso: "Que nadie pueda tumbar el panel abriendo conexiones o mandando basura por el WebSocket". */
+describe('Límites del WebSocket', () => {
+  let panel;
+  before(async () => {
+    panel = await startPanel({ env: { MCP_WS_MAX_PER_IP: '3', MCP_WS_MAX_MESSAGES: '10' } });
+  });
+  after(async () => {
+    await panel?.close();
+  });
+  const closed = (ws) => new Promise((resolve) => ws.once('close', (code) => resolve(code)));
+
+  it('cierra la conexión si manda un mensaje enorme, y el panel sigue funcionando', async () => {
+    const ws = await connect(panel);
+    const code = closed(ws);
+    ws.send('x'.repeat(64 * 1024));
+    assert.equal(await code, 1009);
+    assert.equal((await panel.client.get('/api/servers')).status, 200);
+  });
+
+  it('cierra la conexión si manda demasiados mensajes seguidos', async () => {
+    const ws = await connect(panel);
+    const code = closed(ws);
+    for (let i = 0; i < 15; i++) ws.send(JSON.stringify({ type: 'unsubscribe', id: 'x' }));
+    assert.equal(await code, 1008);
+  });
+
+  it('limita las conexiones abiertas desde una misma IP y las libera al cerrarse', async () => {
+    const open = [await connect(panel), await connect(panel), await connect(panel)];
+    await assert.rejects(connect(panel), (err) => err.status === 429);
+    const code = closed(open[0]);
+    open[0].close();
+    await code;
+    await waitFor(async () => {
+      try {
+        const ws = await connect(panel);
+        open.push(ws);
+        return true;
+      } catch {
+        return false;
+      }
+    }, { message: 'que se libere el lugar' });
+    for (const ws of open) ws.close();
+  });
+
+  it('ignora mensajes que no son JSON o no tienen sentido', async () => {
+    await new Promise((r) => setTimeout(r, 300)); // que se cierren las anteriores
+    const ws = await connect(panel);
+    ws.send('no es json');
+    ws.send('null');
+    ws.send(JSON.stringify({ type: 'subscribe', id: { $ne: 1 } }));
+    ws.send(JSON.stringify({ type: 'subscribe', id: 'no-existe' }));
+    await new Promise((r) => setTimeout(r, 300));
+    assert.equal(ws.readyState, WebSocket.OPEN);
+    assert.deepEqual(ws.messages, []);
+    ws.close();
+  });
+});
