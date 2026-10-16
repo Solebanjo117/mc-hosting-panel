@@ -13,7 +13,7 @@ jobs:
   instalador:
     name: Instalador (.exe)
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
     defaults:
       run:
         shell: pwsh
@@ -43,7 +43,10 @@ jobs:
         run: |
           $v = Get-Content build\version.txt
           $dir = Join-Path $env:RUNNER_TEMP 'MC Hosting Panel'
-          $p = Start-Process -Wait -PassThru -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          # Start-Process -Wait esperaría también al panel que abre el instalador: se espera solo al instalador.
+          $p = Start-Process -PassThru -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          $null = $p.Handle # sin esto ExitCode puede quedar vacío
+          $p.WaitForExit()
           if ($p.ExitCode -ne 0) { throw "El instalador terminó con $($p.ExitCode)" }
           if (-not (Test-Path "$dir\node\node.exe")) { throw 'Falta node.exe' }
           if (-not (Test-Path "$dir\dist\index.html")) { throw 'Falta la interfaz' }
@@ -57,7 +60,8 @@ jobs:
           Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$dir*" } | Stop-Process -Force
           # Reinstalar encima (una actualización) conserva data.
           Start-Sleep -Seconds 2
-          Start-Process -Wait -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          $p = Start-Process -PassThru -FilePath "build\MC-Hosting-Panel-Setup-$v.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`""
+          $p.WaitForExit()
           if (-not (Test-Path "$dir\data\db.json")) { throw 'La actualización borró la carpeta data' }
           Start-Sleep -Seconds 3
           Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$dir*" } | Stop-Process -Force
