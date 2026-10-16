@@ -237,6 +237,7 @@ function PlayersCard({ server, data }) {
           <p className="muted small" style={{ margin: '0.25rem 0 0', maxWidth: '62ch' }}>
             Para entrar necesitan los mismos mods. Descarga este archivo y mándaselo por WhatsApp o Discord: trae {mp ? 'el modpack completo' : 'los mods del servidor'}
             {mp ? ', los mods que agregaste' : ''} y tu servidor ya agregado en Multijugador.
+            {mp ? ' Los mods del modpack que quitaste o desactivaste en el servidor no se incluyen.' : ''}
           </p>
         </div>
         {ready ? (

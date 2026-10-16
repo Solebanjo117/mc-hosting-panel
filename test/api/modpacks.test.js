@@ -277,6 +277,36 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       assert.ok(entries.includes('overrides/mods/cliente-embebido.jar'));
     });
 
+    it('los mods del modpack que quitaste o desactivaste en el servidor tampoco van para los jugadores', async () => {
+      // Modrinth: desactivar un mod del pack.
+      await c.ok('POST', `/api/servers/${mrServer.id}/content/toggle`, { filename: 'del-pack.jar', enabled: false });
+      let res = await c.request('GET', `/api/servers/${mrServer.id}/modpack/players`, { raw: true });
+      let summary = JSON.parse(decodeURIComponent(res.headers.get('x-pack-summary')));
+      assert.deepEqual(summary.removed, ['del-pack.jar']);
+      let index = zipJson(Buffer.from(await res.arrayBuffer()), 'modrinth.index.json');
+      assert.ok(!index.files.some((f) => f.path === 'mods/del-pack.jar'));
+      assert.ok(index.files.some((f) => f.path === 'mods/shaders.jar'), 'los mods solo del juego se conservan');
+      await c.ok('POST', `/api/servers/${mrServer.id}/content/toggle`, { filename: 'del-pack.jar', enabled: true });
+      res = await c.request('GET', `/api/servers/${mrServer.id}/modpack/players`, { raw: true });
+      index = zipJson(Buffer.from(await res.arrayBuffer()), 'modrinth.index.json');
+      assert.ok(index.files.some((f) => f.path === 'mods/del-pack.jar'), 'al reactivarlo vuelve');
+
+      // CurseForge: quitar un mod por referencia y uno que venía dentro del pack.
+      await c.ok('POST', `/api/servers/${cfServer.id}/content/uninstall`, { filename: 'mod-comun-1.jar' });
+      await c.ok('POST', `/api/servers/${cfServer.id}/content/uninstall`, { filename: 'embebido.jar' });
+      res = await c.request('GET', `/api/servers/${cfServer.id}/modpack/players`, { raw: true });
+      summary = JSON.parse(decodeURIComponent(res.headers.get('x-pack-summary')));
+      assert.deepEqual(summary.removed.sort(), ['embebido.jar', 'mod-comun-1.jar']);
+      const buf = Buffer.from(await res.arrayBuffer());
+      const manifest = zipJson(buf, 'manifest.json');
+      assert.ok(!manifest.files.some((f) => f.projectID === 3001), 'sin el mod quitado');
+      assert.ok(manifest.files.some((f) => f.projectID === 3002), 'el minimapa (solo del juego) sigue');
+      assert.ok(manifest.files.some((f) => f.projectID === 3004), 'el que hubo que bajar a mano sigue');
+      const entries = zipEntries(buf);
+      assert.ok(!entries.includes('overrides/mods/embebido.jar'));
+      assert.ok(entries.includes('overrides/mods/cliente-embebido.jar'));
+    });
+
     it('un servidor con mods pero sin modpack también arma su archivo; uno de plugins no lo necesita', async () => {
       const fabric = await panel.createServer({ name: 'Solo mods', type: 'fabric', mcVersion: '1.21.4' });
       await c.ok('POST', `/api/servers/${fabric.id}/content/install`, { projectId: 'needs-api' });

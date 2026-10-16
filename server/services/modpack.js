@@ -384,6 +384,7 @@ async function curseforgeJobs(index, server, report) {
     }
     jobs.push({
       path: `${folder}/${f.fileName}`,
+      cf: { projectID: Number(w.projectID), fileID: Number(w.fileID) },
       urls: [f.downloadUrl],
       sha1: f.hashes?.find((h) => h.algo === 1)?.value || null,
       trusted: true, // viene de la API de CurseForge, no del archivo
@@ -409,6 +410,8 @@ export async function applyModpack(id, report = () => {}) {
   const clientOnly = [];
   const installed = [];
   const records = [];
+  // CurseForge identifica los mods por número: se guarda qué archivo es cada uno (para el paquete de jugadores).
+  const fileMap = Object.fromEntries(jobs.filter((j) => j.cf).map((j) => [j.path, j.cf]));
 
   let done = 0;
   await pool(jobs, 6, async (job) => {
@@ -475,6 +478,7 @@ export async function applyModpack(id, report = () => {}) {
     clientOnly: [...new Set(clientOnly)].sort(),
     skippedClient: plan.skipped,
     files: [...new Set(installed)],
+    ...(Object.keys(fileMap).length ? { fileMap } : {}),
   };
   db.flush();
   if (failed.length) {
@@ -690,6 +694,17 @@ async function modrinthExtras(records) {
  * Arma el modpack para los jugadores: el original (con sus mods del juego) más los mods que
  * agregaste al servidor, y la dirección del servidor ya puesta en la lista de Multijugador.
  */
+/**
+ * ¿Este archivo del modpack se instaló en el servidor y luego se quitó o desactivó?
+ * Los mods solo de cliente, los que no se pudieron descargar y lo que nunca fue al servidor se conservan.
+ */
+function droppedFromServer(dir, mp, rel) {
+  if (!mp?.files || !/^mods\/[^/]+\.jar$/i.test(rel)) return false;
+  if ((mp.clientOnly || []).includes(path.basename(rel))) return false;
+  if (!mp.files.includes(rel)) return false;
+  return !fs.existsSync(path.join(dir, rel));
+}
+
 export async function playersPack(id) {
   const server = requireServer(id);
   if (!['fabric', 'forge', 'neoforge'].includes(server.type)) {
@@ -712,19 +727,30 @@ export async function playersPack(id) {
 
   const out = new AdmZip();
   const overrides = format === 'curseforge' ? String(base.index.overrides || 'overrides').replace(/\/$/, '') : 'overrides';
+  const summary = { linked: [], embedded: [], serverOnly: [], removed: [] };
+  const dropped = (rel) => {
+    if (!droppedFromServer(dir, mp, rel)) return false;
+    summary.removed.push(path.basename(rel));
+    return true;
+  };
   if (base) {
     for (const e of base.zip.getEntries()) {
       if (e.isDirectory || e.entryName === 'modrinth.index.json' || e.entryName === 'manifest.json') continue;
       if (e.entryName.startsWith('server-overrides/')) continue; // solo para el servidor
+      // Mods del modpack que se quitaron o desactivaron en el servidor tampoco van para los jugadores.
+      if (e.entryName.startsWith(`${overrides}/mods/`) && dropped(e.entryName.slice(overrides.length + 1))) continue;
       out.addFile(e.entryName, e.getData());
     }
   }
 
-  const summary = { linked: [], embedded: [], serverOnly: [] };
   let index;
   if (format === 'curseforge') {
     index = structuredClone(base.index);
-    index.files = [...(index.files || [])];
+    const byIds = new Map(Object.entries(mp?.fileMap || {}).map(([rel, ids]) => [`${ids.projectID}:${ids.fileID}`, rel]));
+    index.files = (index.files || []).filter((f) => {
+      const rel = byIds.get(`${f.projectID}:${f.fileID}`);
+      return !rel || !dropped(rel);
+    });
     for (const item of extras) {
       const r = records.get(item.filename);
       if (r?.source === 'curseforge' && r.versionId) {
@@ -747,7 +773,7 @@ export async function playersPack(id) {
           dependencies: { minecraft: server.mcVersion, [MR_LOADER_KEY[server.type]]: server.loaderVersion },
           files: [],
         };
-    index.files = [...(index.files || [])];
+    index.files = (index.files || []).filter((f) => !dropped(f.path));
     for (const item of extras) {
       const file = path.join(dir, 'mods', item.filename);
       const info = mrInfo.get(item.filename);
