@@ -1178,6 +1178,16 @@ label.check input {
 }
 
 /* Al abrir el panel, la lámpara se enciende: el único momento animado sin que hagas nada. */
+.forgot summary {
+  cursor: pointer;
+  color: var(--prismarine);
+  width: max-content;
+}
+
+.forgot p {
+  margin-top: 0.5rem;
+}
+
 .auth-lamp {
   width: 44px;
   height: 44px;

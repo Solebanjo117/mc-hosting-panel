@@ -70,6 +70,7 @@ Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pul
 |---|---|
 | `iniciar.bat` | Prepara (la primera vez) y abre el panel; lo vuelve a abrir tras actualizar desde Ajustes |
 | `actualizar.bat` | Baja la última versión con `git pull` y recompila; no toca tus servidores |
+| `restablecer-contrasena.bat` | Si olvidaste la contraseña: muestra tu usuario y pone una nueva (solo en la PC del panel) |
 | `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
 
@@ -91,6 +92,10 @@ data/
 ```
 
 Para mover el panel a otra PC copia la carpeta completa, incluida `data/`.
+
+## Si olvidaste la contraseña
+
+En la PC donde corre el panel abre **Restablecer contraseña**: en el menú Inicio (*MC Hosting Panel - Restablecer contraseña*) si lo instalaste con el instalador, o `restablecer-contrasena.bat` en la carpeta del panel si usas git. Te muestra tu usuario, eliges una contraseña nueva (y si quieres otro usuario) y se aplica al momento, o al abrir el panel si estaba cerrado. Se cierran las sesiones abiertas y tus servidores no se tocan. No se puede hacer desde otro dispositivo: solo quien usa esa PC puede restablecerla.
 
 ## Seguridad
 

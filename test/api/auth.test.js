@@ -1,6 +1,10 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startPanel, Client, ADMIN } from '../helpers/panel.js';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { startPanel, Client, ADMIN, ROOT, waitFor, freePort } from '../helpers/panel.js';
 
 /**
  * Caso de uso: "La primera vez creo mi usuario; después solo entro yo, con contraseña,
@@ -87,5 +91,98 @@ describe('Cuenta y sesión', () => {
     const r = await panel.client.get('/api/no-existe');
     assert.equal(r.status, 404);
     assert.ok(r.body.error);
+  });
+});
+
+/**
+ * Caso de uso: "Olvidé la contraseña del panel: la cambio desde la PC donde corre, sin perder nada".
+ */
+describe('Olvidé mi contraseña', () => {
+  /** Corre el script de restablecer con las respuestas ya escritas. */
+  function resetScript(dataDir, port, answers) {
+    return new Promise((resolve) => {
+      const child = spawn(process.execPath, ['scripts/restablecer-contrasena.mjs'], {
+        cwd: ROOT,
+        env: { ...process.env, MCP_DATA_DIR: dataDir, PORT: String(port) },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      let out = '';
+      child.stdout.on('data', (d) => (out += d));
+      child.stderr.on('data', (d) => (out += d));
+      child.on('exit', (code) => resolve({ code, out }));
+      child.stdin.end(answers.join('\n') + '\n');
+    });
+  }
+
+  let panel;
+  before(async () => {
+    panel = await startPanel();
+  });
+  after(() => panel?.close());
+
+  it('con el panel abierto: muestra el usuario, cambia la contraseña al momento y cierra las sesiones', async () => {
+    const old = panel.client;
+    // Alguien se equivocó tantas veces que quedó bloqueado: restablecer también lo desbloquea.
+    const c = new Client(panel.base);
+    for (let i = 0; i < 8; i++) await c.post('/api/auth/login', { username: 'admin', password: `intento-${i}-xx` });
+    assert.equal((await c.post('/api/auth/login', ADMIN)).status, 429);
+
+    const r = await resetScript(panel.dataDir, panel.port, ['', 'olvidada-123', 'olvidada-123']);
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, /Tu usuario es: admin/);
+    assert.match(r.out, /Ya puedes entrar como "admin"/);
+    assert.ok(!fs.existsSync(path.join(panel.dataDir, 'restablecer-contrasena.json')), 'el panel lo aplicó y lo borró');
+    assert.ok(!r.out.includes('olvidada-123'), 'la contraseña no se muestra');
+
+    assert.equal((await old.get('/api/servers')).status, 401, 'la sesión de antes ya no sirve');
+    assert.equal((await c.post('/api/auth/login', ADMIN)).status, 401, 'la contraseña vieja ya no sirve');
+    await c.ok('POST', '/api/auth/login', { username: 'admin', password: 'olvidada-123' });
+    const log = await c.ok('GET', '/api/auth/log');
+    assert.ok(log.some((l) => l.reset && l.ip === 'esta PC' && l.username === 'admin'));
+    panel.client = c;
+  });
+
+  it('también puede cambiar el usuario, y no acepta contraseñas cortas o que no coinciden', async () => {
+    let r = await resetScript(panel.dataDir, panel.port, ['', 'corta', 'otra-clave-1', 'no-igual-1', 'x', 'y', 'z']);
+    assert.equal(r.code, 1);
+    assert.match(r.out, /muy corta/);
+    assert.match(r.out, /No coinciden/);
+    assert.match(r.out, /No se cambió nada/);
+    r = await resetScript(panel.dataDir, panel.port, ['a b', 'clave-segura-9', 'clave-segura-9']);
+    assert.equal(r.code, 1, 'usuario inválido');
+
+    r = await resetScript(panel.dataDir, panel.port, ['juan', 'clave-segura-9', 'clave-segura-9']);
+    assert.equal(r.code, 0, r.out);
+    const c = new Client(panel.base);
+    assert.equal((await c.post('/api/auth/login', { username: 'admin', password: 'clave-segura-9' })).status, 401);
+    await c.ok('POST', '/api/auth/login', { username: 'juan', password: 'clave-segura-9' });
+    assert.ok(panel.readDb().servers, 'lo demás sigue igual');
+  });
+
+  it('ignora un archivo de restablecer que no es válido', async () => {
+    const file = path.join(panel.dataDir, 'restablecer-contrasena.json');
+    fs.writeFileSync(file, JSON.stringify({ username: 'juan', passwordHash: 'texto-plano' }));
+    await waitFor(() => !fs.existsSync(file), { message: 'que lo descarte' });
+    await new Client(panel.base).ok('POST', '/api/auth/login', { username: 'juan', password: 'clave-segura-9' });
+  });
+
+  it('con el panel cerrado: se aplica al abrirlo', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-reset-'));
+    try {
+      fs.writeFileSync(path.join(dir, 'db.json'), JSON.stringify({ admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) }, settings: {} }));
+      const r = await resetScript(dir, await freePort(), ['', 'al-abrir-123', 'al-abrir-123']);
+      assert.equal(r.code, 0, r.out);
+      assert.match(r.out, /Se aplicará cuando abras el panel/);
+      const pending = fs.readFileSync(path.join(dir, 'restablecer-contrasena.json'), 'utf8');
+
+      const p = await startPanel({ setup: false, db: { admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) } }, beforeStart: (d) => fs.writeFileSync(path.join(d, 'restablecer-contrasena.json'), pending) });
+      try {
+        await new Client(p.base).ok('POST', '/api/auth/login', { username: 'admin', password: 'al-abrir-123' });
+      } finally {
+        await p.close();
+      }
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -65,6 +65,16 @@ export default function Login({ setup, onDone }) {
         <button className="btn-go" disabled={busy} style={{ minHeight: 40 }}>
           {setup ? 'Crear cuenta y entrar' : 'Entrar'}
         </button>
+        {!setup && (
+          <details className="forgot small">
+            <summary>¿Olvidaste tu contraseña?</summary>
+            <p className="muted">
+              En la PC donde corre el panel abre <strong>Restablecer contraseña</strong>: está en el menú Inicio («MC Hosting Panel - Restablecer
+              contraseña») o, si lo instalaste con git, es <span className="mono">restablecer-contrasena.bat</span> en la carpeta del panel. Ahí ves tu
+              usuario y eliges una contraseña nueva; no se puede hacer desde otro dispositivo.
+            </p>
+          </details>
+        )}
       </form>
     </div>
   );

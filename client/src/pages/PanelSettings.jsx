@@ -199,7 +199,15 @@ function PanelAccess() {
                     {formatDate(l.at)}
                   </td>
                   <td className="mono small">{l.ip}</td>
-                  <td>{l.ok ? 'Correcto' : <span style={{ color: '#f3a59b' }}>Contraseña incorrecta ({l.username || 'sin usuario'})</span>}</td>
+                  <td>
+                    {l.reset ? (
+                      <span style={{ color: 'var(--gold)' }}>Contraseña restablecida desde la PC del panel</span>
+                    ) : l.ok ? (
+                      'Correcto'
+                    ) : (
+                      <span style={{ color: '#f6b0a6' }}>Contraseña incorrecta ({l.username || 'sin usuario'})</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

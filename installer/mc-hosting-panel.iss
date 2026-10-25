@@ -56,6 +56,7 @@ Name: "{app}\data"; Flags: uninsneveruninstall
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\node\node.exe"; Parameters: "server\index.js --abrir"; WorkingDir: "{app}"; IconFilename: "{app}\panel.ico"; Comment: "Abre el panel de tus servidores de Minecraft"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\node\node.exe"; Parameters: "server\index.js --abrir"; WorkingDir: "{app}"; IconFilename: "{app}\panel.ico"; Tasks: desktopicon
+Name: "{autoprograms}\{#AppName} - Restablecer contraseña"; Filename: "{app}\node\node.exe"; Parameters: "scripts\restablecer-contrasena.mjs --pausa"; WorkingDir: "{app}"; IconFilename: "{app}\panel.ico"; Comment: "Si olvidaste la contraseña del panel"
 ; Mismo nombre que crea el panel desde Ajustes, así se reconocen.
 Name: "{userstartup}\{#AppName}"; Filename: "{app}\node\node.exe"; Parameters: "server\index.js"; WorkingDir: "{app}"; IconFilename: "{app}\panel.ico"; Flags: runminimized; Tasks: startup
 

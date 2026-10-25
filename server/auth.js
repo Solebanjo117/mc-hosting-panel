@@ -1,6 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { DATA_DIR } from './config.js';
 import { db } from './db.js';
 import { HttpError } from './lib/util.js';
 
@@ -96,6 +99,40 @@ authRouter.post('/logout', (_req, res) => {
   res.clearCookie(COOKIE, { path: '/' });
   res.json({ ok: true });
 });
+
+/**
+ * Restablecer la contraseña olvidada desde la PC del panel: scripts/restablecer-contrasena.mjs deja
+ * este archivo en la carpeta data (solo quien usa esa PC puede escribir ahí) y el panel lo aplica
+ * al arrancar o, si ya está abierto, en un par de segundos. Cierra todas las sesiones abiertas.
+ */
+export const RESET_FILE = path.join(DATA_DIR, 'restablecer-contrasena.json');
+
+export function applyPendingReset() {
+  if (!fs.existsSync(RESET_FILE)) return false;
+  let req;
+  try {
+    req = JSON.parse(fs.readFileSync(RESET_FILE, 'utf8'));
+  } catch {
+    req = null;
+  }
+  fs.rmSync(RESET_FILE, { force: true });
+  const username = String(req?.username || db.data.admin?.username || '');
+  if (!/^\$2[aby]\$\d\d\$.{53}$/.test(String(req?.passwordHash || '')) || !/^[A-Za-z0-9_.-]{3,32}$/.test(username)) {
+    console.error('  Se ignoró un archivo para restablecer la contraseña que no es válido.');
+    return false;
+  }
+  db.data.admin = { ...(db.data.admin || {}), username, passwordHash: req.passwordHash, tokenVersion: (db.data.admin?.tokenVersion || 0) + 1 };
+  attempts.clear();
+  if (!Array.isArray(db.data.loginLog)) db.data.loginLog = [];
+  db.data.loginLog.unshift({ at: new Date().toISOString(), ip: 'esta PC', username, ok: true, reset: true });
+  db.data.loginLog = db.data.loginLog.slice(0, 40);
+  db.flush();
+  console.log(`  Contraseña restablecida desde esta PC (usuario ${username}). Se cerraron las sesiones abiertas.`);
+  return true;
+}
+
+applyPendingReset();
+setInterval(applyPendingReset, 1500).unref();
 
 authRouter.post('/password', requireAuth, async (req, res) => {
   const { current, password } = req.body || {};

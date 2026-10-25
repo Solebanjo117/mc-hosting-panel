@@ -122,7 +122,7 @@ export class Client {
  *  - setup: crea la cuenta de administrador e inicia sesión.
  *  - db: valores iniciales extra para db.json (por ejemplo settings).
  */
-export async function startPanel({ mocks, setup = true, db = {}, env = {}, playitAgent = false } = {}) {
+export async function startPanel({ mocks, setup = true, db = {}, env = {}, playitAgent = false, beforeStart = null } = {}) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-test-'));
   const port = await freePort();
   const java = findJava();
@@ -145,6 +145,8 @@ export async function startPanel({ mocks, setup = true, db = {}, env = {}, playi
     if (process.platform === 'win32') fs.copyFileSync(process.execPath, path.join(dir, 'playitd.exe'));
     else fs.writeFileSync(path.join(dir, 'playitd'), '#!/bin/sh\necho "playit connected"\nexec sleep 600\n', { mode: 0o755 });
   }
+
+  if (beforeStart) await beforeStart(dataDir);
 
   const child = spawn(process.execPath, ['server/index.js'], {
     cwd: ROOT,
