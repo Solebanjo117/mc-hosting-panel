@@ -46,7 +46,7 @@ describe('Horario de energía, mantenimiento, simulacro y copia en la nube', { s
   });
 
   it('mantenimiento: cambia el MOTD y la lista blanca, y los restaura al terminar', async () => {
-    await c.ok('PUT', `/api/servers/${s.id}/properties`, { motd: 'Mi servidor', 'white-list': 'false' });
+    await c.ok('PUT', `/api/servers/${s.id}/properties`, { motd: 'Mi servidor', 'white-list': 'false', 'online-mode': 'false' });
     const before = fs.readFileSync(path.join(dir, 'server.properties'), 'utf8');
     assert.match(before, /motd=Mi servidor/);
     const m = await c.ok('POST', `/api/servers/${s.id}/maintenance`, { message: 'Volvemos a las 8', helpers: ['Ana', 'mal nombre!!'], until: 'hoy 20:00' });

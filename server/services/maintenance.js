@@ -51,6 +51,7 @@ export async function enter(id, { message = '', helpers = [], until = '', restar
       server.maintenance.warnings = [...(server.maintenance.warnings || []), `${h}: ${err.message}`];
     }
   }
+  if (!fs.existsSync(listFile(id))) fs.writeFileSync(listFile(id), JSON.stringify(prev.list, null, 2));
   const inst = instance(id);
   if (isRunning(id)) {
     inst.send('whitelist on');
