@@ -13,7 +13,9 @@ import '@fontsource/jetbrains-mono/latin-400.css';
 import '@fontsource/pixelify-sans/latin-500.css';
 import './styles.css';
 import { registerServiceWorker } from './notify.js';
+import { applyTheme, getTheme } from './theme.js';
 
+applyTheme(getTheme());
 registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(
