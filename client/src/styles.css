@@ -4169,3 +4169,32 @@ button.bg-drop:hover:not(:disabled) {
   outline: 2px solid var(--swatch);
   outline-offset: 2px;
 }
+
+
+/* ---------- Página pública de un servidor ---------- */
+.public-card {
+  width: min(640px, 100%);
+  gap: 1.1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.public-card h1 {
+  font-size: var(--step-2);
+}
+
+.public-card h2 {
+  font-size: var(--step-0);
+}
+
+.public-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: center;
+}
+
+.public-status .status {
+  font-weight: 600;
+  color: var(--sand);
+}

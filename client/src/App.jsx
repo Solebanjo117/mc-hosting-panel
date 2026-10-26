@@ -3,6 +3,7 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { api } from './api.js';
 import { LiveProvider, useLive, serverState } from './live.jsx';
 import Login from './pages/Login.jsx';
+import PublicStatus from './pages/PublicStatus.jsx';
 import Home from './pages/Home.jsx';
 import ServerView from './pages/ServerView.jsx';
 import { Electric, ELECTRIC_STATES, GrassBlock, PageLoading } from './ui.jsx';
@@ -18,6 +19,8 @@ const Appearance = lazy(() => import('./pages/Appearance.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
+  const location = useLocation();
+  const isPublic = /^\/estado\//.test(location.pathname);
 
   const check = () =>
     api('/auth/status')
@@ -31,6 +34,13 @@ export default function App() {
     return () => window.removeEventListener('auth-lost', lost);
   }, []);
 
+  if (isPublic) {
+    return (
+      <Routes>
+        <Route path="/estado/:id" element={<PublicStatus />} />
+      </Routes>
+    );
+  }
   if (!auth) {
     return (
       <div className="loading" aria-busy="true">

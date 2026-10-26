@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PublicSection from './PublicSection.jsx';
 import { api, formatDate, qs } from '../../api.js';
 import { CopyButton, Modal, useAction, useToast } from '../../ui.jsx';
 import { useLive } from '../../live.jsx';
@@ -107,6 +108,8 @@ export default function NetworkTab({ server, state }) {
           </p>
         </div>
       </section>
+
+      <PublicSection server={server} />
 
       <section className="panel stack" style={{ gap: '0.8rem' }}>
         <div className="row">
