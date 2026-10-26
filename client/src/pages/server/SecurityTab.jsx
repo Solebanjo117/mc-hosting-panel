@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import DrillSection from './DrillSection.jsx';
 import { api, formatDate } from '../../api.js';
 import { useAction, useToast } from '../../ui.jsx';
 
@@ -48,6 +49,7 @@ export default function SecurityTab({ server }) {
   return (
     <div className="stack" style={{ gap: '1.5rem', maxWidth: 960 }}>
       <HealthPanel server={server} />
+      <DrillSection server={server} />
       {lockdown && (
         <section className="panel" style={{ borderColor: 'rgba(232,182,75,0.6)' }}>
           <div className="row">

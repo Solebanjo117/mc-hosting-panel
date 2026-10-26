@@ -4198,3 +4198,63 @@ button.bg-drop:hover:not(:disabled) {
   font-weight: 600;
   color: var(--sand);
 }
+
+
+/* ---------- Horario de energía ---------- */
+.power-grid {
+  display: grid;
+  grid-template-columns: 2.6rem repeat(24, minmax(0, 1fr));
+  gap: 2px;
+  user-select: none;
+}
+
+.power-row {
+  display: contents;
+}
+
+.power-hour {
+  font-size: 10px;
+  color: var(--sand-faint);
+  text-align: left;
+}
+
+.power-day {
+  font-size: var(--step--1);
+  color: var(--sand-dim);
+  align-self: center;
+}
+
+.power-cell {
+  min-height: 0;
+  height: 22px;
+  padding: 0;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  cursor: crosshair;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.power-cell:hover:not(:disabled) {
+  border-color: var(--grass);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.power-cell.on,
+.power-cell.on:hover:not(:disabled) {
+  background: var(--grass);
+  border-color: var(--grass-light);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 8px color-mix(in srgb, var(--grass) 50%, transparent);
+}
+
+@media (max-width: 640px) {
+  .power-grid {
+    grid-template-columns: 2rem repeat(24, minmax(0, 1fr));
+    gap: 1px;
+  }
+  .power-cell {
+    height: 14px;
+  }
+}

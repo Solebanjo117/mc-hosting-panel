@@ -8,6 +8,7 @@ import { installedJavas, requiredJava } from './java.js';
 import { instance } from './processManager.js';
 import { isPortFree } from './network.js';
 import { listBackups } from './backups.js';
+import { check as mirrorCheck } from './backupMirror.js';
 import { audit } from './security.js';
 import * as playit from './playit.js';
 import { systemInfo } from './procstats.js';
@@ -131,6 +132,11 @@ export async function healthCheck(id) {
   if (!last) add('warn', 'backup', 'Todavía no hay respaldos', 'Haz uno o activa los respaldos automáticos.', 'respaldos');
   else if (Date.now() - last > 3 * DAY) add('warn', 'backup', `El último respaldo es de hace ${Math.floor((Date.now() - last) / DAY)} días`, auto ? '' : 'Activa los respaldos automáticos.', 'respaldos');
   else add('ok', 'backup', 'Respaldo reciente', auto ? 'Respaldos automáticos activos.' : 'Considera activar los automáticos.');
+  const mirror = mirrorCheck(id, backups[0]?.file);
+  if (mirror.configured) {
+    if (mirror.ok) add('ok', 'mirror', 'Respaldos copiados a la nube');
+    else add('warn', 'mirror', 'La copia de respaldos en la nube se quedó atrás', mirror.reason, 'respaldos');
+  }
 
   // Recursos de la PC
   const free = diskFree();

@@ -33,6 +33,10 @@ const EVENT = {
   crash: { label: (e) => `El servidor se cayó${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-crash', icon: '✕' },
   backup: { label: (e) => `Respaldo${e.detail ? ` ${e.detail}` : ''}`, cls: 'ev-backup', icon: '⤓' },
   update: { label: (e) => `Actualizado${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-server', icon: '↑' },
+  maintenance: { label: (e) => `Mantenimiento: ${e.detail || ''}`, cls: 'ev-server', icon: '🔧' },
+  drill: { label: () => 'Simulacro de caída', cls: 'ev-server', icon: '⚡' },
+  zone: { label: (e) => `${e.player} entró a ${e.detail}`, cls: 'ev-join', icon: '📍' },
+  achievement: { label: (e) => `Logro: ${e.detail}`, cls: 'ev-backup', icon: '★' },
 };
 
 export default function ActivityTab({ server, state }) {

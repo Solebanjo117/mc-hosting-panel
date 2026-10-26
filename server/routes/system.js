@@ -15,6 +15,7 @@ import { checkUpdate, startUpdate, updateStatus } from '../services/appUpdate.js
 import { startupStatus, setStartup } from '../services/startup.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
 import { getAppearance, setAppearance, saveImage, removeImage, MAX_IMAGE_BYTES } from '../services/appearance.js';
+import * as backupMirror from '../services/backupMirror.js';
 
 export const systemRouter = express.Router();
 
@@ -46,6 +47,11 @@ systemRouter.get('/dashboard', async (_req, res) => {
   );
   res.json({ servers: out });
 });
+
+// --- Copia de respaldos en una carpeta sincronizada (OneDrive, Google Drive, Dropbox…) -----
+
+systemRouter.get('/backup-mirror', (_req, res) => res.json({ ...backupMirror.settings(), suggestions: backupMirror.suggestions() }));
+systemRouter.put('/backup-mirror', (req, res) => res.json({ ...backupMirror.setSettings(req.body || {}), suggestions: backupMirror.suggestions() }));
 
 // --- Comandos rápidos de la consola ------------------------------------------------
 

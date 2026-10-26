@@ -47,6 +47,7 @@ class Instance {
       pid: this.proc?.pid || null,
       xbox: this.xbox,
       lastCrash: this.lastCrash,
+      drill: this.drill || null,
     };
   }
 
@@ -385,6 +386,16 @@ class Instance {
       this.panelLine('No respondió a "stop"; forzando cierre.');
       proc.kill('SIGKILL');
     }
+  }
+
+  /** Simulacro de caída: mata el proceso como lo haría un fallo real para probar el reinicio y los avisos. */
+  drillCrash() {
+    if (!this.proc || this.status !== 'running') throw new HttpError(409, 'El servidor tiene que estar encendido para el simulacro');
+    this.manualStop = false;
+    this.drill = { at: new Date().toISOString() };
+    this.panelLine('Simulacro de caída: el panel va a cerrar el proceso de golpe para comprobar el reinicio automático y las notificaciones.');
+    this.proc.kill('SIGKILL');
+    return this.drill;
   }
 
   kill() {

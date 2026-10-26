@@ -8,6 +8,7 @@ import { db, getServer } from '../db.js';
 import { HttpError, safeJoin } from '../lib/util.js';
 import { instance, isRunning } from './processManager.js';
 import { readProperties } from './properties.js';
+import { mirror } from './backupMirror.js';
 
 // Carpetas que se regeneran solas y no vale la pena respaldar.
 const EXCLUDE = new Set(['libraries', 'versions', 'cache', 'logs', 'crash-reports', '.fabric', '.paper-remapped', 'bundler']);
@@ -76,6 +77,7 @@ export async function createBackup(id, mode = 'completo', reason = 'manual') {
     if (running) inst.panelLine(`Respaldo creado: ${file}`);
     record(id, 'backup', { detail: reason === 'manual' ? 'manual' : reason === 'auto' ? 'automático' : reason });
     pruneBackups(id);
+    mirror(id, dest).then((copied) => copied && running && inst.panelLine('Respaldo copiado a la carpeta sincronizada.'));
     return listBackups(id).find((b) => b.file === file);
   } finally {
     if (running && isRunning(id)) inst.send('save-on');

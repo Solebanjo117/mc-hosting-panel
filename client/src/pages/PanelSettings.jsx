@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
+import BackupMirror from './BackupMirror.jsx';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -40,6 +41,7 @@ export default function PanelSettings() {
 
       <PanelUpdate />
 
+      <BackupMirror />
       <PlayitSettings />
       <DnsSettings />
       <CurseForgeSettings />
