@@ -110,7 +110,7 @@ export function ToastProvider({ children }) {
     (message, kind = 'ok') => {
       const id = Math.random();
       setItems((list) => [...list, { id, message, kind }]);
-      setTimeout(() => dismiss(id), kind === 'error' ? 7000 : 3500);
+      setTimeout(() => dismiss(id), kind === 'error' ? 7000 : kind === 'achievement' ? 8000 : 3500);
     },
     [dismiss]
   );

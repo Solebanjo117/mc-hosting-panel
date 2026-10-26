@@ -23,6 +23,7 @@ import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
 import { publicSettings, setPublicSettings, publicAddress } from '../services/publicPage.js';
+import * as achievements from '../services/achievements.js';
 
 export const serversRouter = express.Router();
 
@@ -281,6 +282,8 @@ serversRouter.get('/:id/stats', (req, res) => res.json(playerStats(load(req).id)
 // --- Revisión general, ícono del servidor -----------------------------------------------
 
 serversRouter.get('/:id/health', async (req, res) => res.json(await healthCheck(load(req).id)));
+
+serversRouter.get('/:id/achievements', (req, res) => res.json(achievements.list(load(req).id)));
 
 // --- Página pública e invitación --------------------------------------------------------
 serversRouter.get('/:id/public', async (req, res) => {

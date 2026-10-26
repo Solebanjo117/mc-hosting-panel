@@ -21,6 +21,7 @@ const LogsTab = lazy(() => import('./server/LogsTab.jsx'));
 const SecurityTab = lazy(() => import('./server/SecurityTab.jsx'));
 const MapTab = lazy(() => import('./server/MapTab.jsx'));
 const ActivityTab = lazy(() => import('./server/ActivityTab.jsx'));
+const ChatTab = lazy(() => import('./server/ChatTab.jsx'));
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -36,6 +37,7 @@ function sections(contentLabel) {
       label: 'Jugadores',
       items: [
         { path: 'jugadores', label: 'Lista y permisos' },
+        { path: 'chat', label: 'Chat' },
         { path: 'actividad', label: 'Actividad y ranking' },
       ],
     },
@@ -186,6 +188,7 @@ export default function ServerView() {
         <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
         <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
         <Route path="actividad" element={<ActivityTab server={server} state={state} />} />
+        <Route path="chat" element={<ChatTab server={server} runtime={rt} state={state} />} />
         <Route path="mapa" element={<MapTab server={server} state={state} />} />
         <Route path="tareas" element={<SchedulesTab server={server} />} />
         <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />

@@ -5,7 +5,7 @@
  */
 
 const KEY = 'mcp-notify';
-const DEFAULTS = { enabled: false, joins: true, crash: true };
+const DEFAULTS = { enabled: false, joins: true, crash: true, zones: true };
 
 export function notifyPrefs() {
   try {

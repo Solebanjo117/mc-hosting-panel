@@ -60,6 +60,10 @@ function persist() {
 setInterval(persist, 60_000).unref();
 process.on('exit', persist);
 
+/** Sesiones y eventos de un servidor, para los logros. */
+export const sessionsOf = (id) => sessions(load(id).events);
+export const eventsOf = (id) => load(id).events;
+
 export function removeActivity(id) {
   store.delete(id);
   live.delete(id);

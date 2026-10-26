@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import { notify } from './notify.js';
+import { useToast } from './ui.jsx';
+import { playSound } from './sounds.js';
 
 /**
  * Estado en vivo del panel: lista de servidores, estado de cada proceso,
@@ -9,6 +11,7 @@ import { notify } from './notify.js';
 const LiveContext = createContext(null);
 
 export function LiveProvider({ children }) {
+  const toast = useToast();
   const [servers, setServers] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [runtime, setRuntime] = useState({});
@@ -86,7 +89,11 @@ export function LiveProvider({ children }) {
           const name = serversRef.current.find((s) => s.id === id)?.name || 'el servidor';
           if (prev) {
             const before = new Set(prev.players || []);
-            for (const p of snap.players || []) if (!before.has(p)) notify('joins', `${p} entró`, `Se conectó a ${name}.`, `/servidor/${id}`);
+            for (const p of snap.players || []) {
+              if (before.has(p)) continue;
+              notify('joins', `${p} entró`, `Se conectó a ${name}.`, `/servidor/${id}`);
+              playSound('join');
+            }
             if (snap.status === 'crashed' && prev.status !== 'crashed') {
               notify('crash', `${name} se cayó`, snap.lastCrash?.findings?.[0]?.title || 'Abre el panel para ver la causa.', `/servidor/${id}`);
             }
@@ -95,6 +102,16 @@ export function LiveProvider({ children }) {
           setRuntime((p) => ({ ...p, [id]: snap }));
         } else if (msg.type === 'servers') {
           refresh();
+        } else if (msg.type === 'achievement') {
+          const name = serversRef.current.find((s) => s.id === msg.id)?.name || 'el servidor';
+          toast(`★ ¡Logro de ${name}! ${msg.title}: ${msg.desc}`, 'achievement');
+          playSound('achievement');
+        } else if (msg.type === 'backup') {
+          playSound('backup');
+        } else if (msg.type === 'zone') {
+          const name = serversRef.current.find((s) => s.id === msg.id)?.name || 'el servidor';
+          notify('zones', `${msg.player} entró a ${msg.zone}`, `En ${name}.`, `/servidor/${msg.id}/jugadores`);
+          toast(`📍 ${msg.player} entró a ${msg.zone} (${name})`);
         } else if (msg.type === 'playit') {
           const { type: _t, ...rest } = msg;
           setPlayit(rest);

@@ -135,7 +135,7 @@ export async function paperBuild(mcVersion) {
   const build = sorted.find((b) => b.channel === 'STABLE') || sorted[0];
   const dl = build.downloads?.['server:default'];
   if (!dl?.url) throw new HttpError(502, 'La respuesta de Paper no trae URL de descarga');
-  return { build: build.id, url: dl.url, channel: build.channel };
+  return { build: build.id, url: dl.url, channel: build.channel, changes: (build.changes || []).map((c) => String(c.summary || c.message || '').trim()).filter(Boolean) };
 }
 
 export async function fabricLauncherUrl(mcVersion, wantedLoader = null) {

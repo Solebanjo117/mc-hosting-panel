@@ -210,6 +210,7 @@ async function modrinthVersions(server, profile, projectId) {
       type: v.version_type,
       date: v.date_published,
       downloads: v.downloads,
+      changelog: v.changelog || '',
       file: file ? { url: file.url, name: file.filename, size: file.size, sha1: file.hashes?.sha1 } : null,
       dependencies: (v.dependencies || [])
         .filter((d) => d.dependency_type === 'required' && d.project_id)
@@ -236,6 +237,7 @@ async function hangarVersions(server, slug) {
       type: (v.channel?.name || 'release').toLowerCase(),
       date: v.createdAt,
       downloads: v.stats?.totalDownloads ?? null,
+      changelog: v.description || '',
       file: dl.downloadUrl ? { url: dl.downloadUrl, name: dl.fileInfo?.name || `${slug}-${v.name}.jar`, size: dl.fileInfo?.sizeBytes } : null,
       externalUrl: dl.externalUrl || null,
       platformVersions: v.platformDependencies?.PAPER || [],

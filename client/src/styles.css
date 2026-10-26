@@ -4258,3 +4258,141 @@ button.bg-drop:hover:not(:disabled) {
     height: 14px;
   }
 }
+
+
+/* ---------- Chat ---------- */
+.chat-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chat-out {
+  font-family: var(--font-ui);
+  font-size: var(--step-0);
+  white-space: normal;
+}
+
+.chat-line {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.15rem 0;
+}
+
+.chat-time {
+  color: var(--sand-faint);
+  font-size: var(--step--1);
+  min-width: 4.5rem;
+}
+
+.chat-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chat-who.server {
+  color: var(--prismarine);
+}
+
+.chat-presence,
+.chat-death {
+  color: var(--sand-dim);
+}
+
+.chat-death .chat-text {
+  color: #f2a196;
+}
+
+.chat-text {
+  overflow-wrap: anywhere;
+}
+
+mark.mention {
+  background: color-mix(in srgb, var(--gold) 30%, transparent);
+  color: var(--sand);
+  border-radius: 4px;
+  padding: 0 0.2em;
+}
+
+/* ---------- Logros ---------- */
+.ach-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.5rem;
+}
+
+.ach {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0.75;
+}
+
+.ach.on {
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--gold) 60%, transparent);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
+
+.ach-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--sand-faint);
+}
+
+.ach.on .ach-icon {
+  color: var(--gold);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--gold) 60%, transparent);
+}
+
+.ach-body {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.ach-body .meter {
+  margin-top: 0.3rem;
+}
+
+/* El aviso de logro: el cartel del juego, dorado. */
+.toast.achievement {
+  border-color: color-mix(in srgb, var(--gold) 70%, transparent);
+}
+
+.toast.achievement::before {
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold);
+}
+
+.changelog-compact {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.changelog .doc h1,
+.changelog .doc h2,
+.changelog .doc h3 {
+  font-size: var(--step-0);
+  margin: 0.6rem 0 0.3rem;
+  border: 0;
+  padding: 0;
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, formatDate } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { Confirm, useAction } from '../../ui.jsx';
+import Changelog from '../../changelog.jsx';
 
 /**
  * Actualizar Paper / Fabric / Forge / NeoForge / Minecraft con un clic, con respaldo antes y "Deshacer".
@@ -154,7 +155,19 @@ export default function SoftwareUpdate({ server, running }) {
       {ask === 'loader' && (
         <Confirm
           title={`Actualizar ${st.loaderName}`}
-          message={`Se instala ${st.loaderName} ${loader.latestLabel}.${running ? ' El servidor se apaga unos segundos y vuelve a encender.' : ''}`}
+          message={
+            <div className="stack" style={{ gap: '0.6rem' }}>
+              <p>
+                Se instala {st.loaderName} {loader.latestLabel}.{running ? ' El servidor se apaga unos segundos y vuelve a encender.' : ''}
+              </p>
+              {loader.changes && (
+                <details open={loader.changes.length <= 8}>
+                  <summary>Qué cambió en este build</summary>
+                  <Changelog lines={loader.changes} compact />
+                </details>
+              )}
+            </div>
+          }
           confirmLabel="Actualizar"
           onClose={() => setAsk(null)}
           onConfirm={() => go('update', { target: 'loader' })}
