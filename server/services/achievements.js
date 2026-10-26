@@ -2,7 +2,6 @@ import { db, getServer } from '../db.js';
 import { HttpError } from '../lib/util.js';
 import { bus } from '../lib/bus.js';
 import { record, sessionsOf, eventsOf, playerStats } from './activity.js';
-import { listBackups } from './backups.js';
 
 /**
  * Logros del servidor: se calculan con lo que el panel ya sabe (sesiones, respaldos, caídas,
@@ -26,7 +25,7 @@ export const DEFINITIONS = [
   { id: 'veterano-30', title: 'Un mes en pie', desc: 'El servidor tiene 30 días.', test: (f) => f.ageDays >= 30, progress: (f) => Math.min(1, f.ageDays / 30) },
   { id: 'veterano-365', title: 'Un año en pie', desc: 'El servidor cumple un año.', test: (f) => f.ageDays >= 365, progress: (f) => Math.min(1, f.ageDays / 365) },
   { id: 'estable-7', title: 'Roca sólida', desc: '7 días seguidos sin caídas (con gente jugando).', test: (f) => f.stableDays >= 7, progress: (f) => Math.min(1, f.stableDays / 7) },
-  { id: 'respaldos-10', title: 'Previsor', desc: '10 respaldos guardados.', test: (f) => f.backups >= 10, progress: (f) => Math.min(1, f.backups / 10) },
+  { id: 'respaldos-10', title: 'Previsor', desc: '10 respaldos hechos.', test: (f) => f.backups >= 10, progress: (f) => Math.min(1, f.backups / 10) },
   { id: 'minero-100k', title: 'Minería industrial', desc: '100 000 bloques minados entre todos.', test: (f) => f.blocksMined >= 100_000, progress: (f) => Math.min(1, f.blocksMined / 100_000) },
   { id: 'viajero-100km', title: 'Trotamundos', desc: '100 km recorridos entre todos.', test: (f) => f.distanceKm >= 100, progress: (f) => Math.min(1, f.distanceKm / 100) },
   { id: 'madrugadores', title: 'Madrugadores', desc: 'Alguien jugó entre las 4 y las 6 de la mañana.', test: (f) => f.earlyBird, progress: (f) => (f.earlyBird ? 1 : 0) },
@@ -77,7 +76,7 @@ export function facts(id) {
     uniquePlayers: new Set(sessions.map((s) => s.player)).size,
     ageDays: Math.floor((now - (Date.parse(server.createdAt || 0) || now)) / DAY),
     stableDays: playedSince ? Math.floor((now - since) / DAY) : 0,
-    backups: listBackups(id).length,
+    backups: events.filter((e) => e.type === 'backup').length,
     blocksMined,
     distanceKm: Math.round(distanceKm * 10) / 10,
     earlyBird,
