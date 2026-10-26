@@ -9,6 +9,7 @@ import ImportModpack from './pages/ImportModpack.jsx';
 import ServerView from './pages/ServerView.jsx';
 import Guide from './pages/Guide.jsx';
 import PanelSettings from './pages/PanelSettings.jsx';
+import { GrassBlock } from './ui.jsx';
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -25,7 +26,14 @@ export default function App() {
     return () => window.removeEventListener('auth-lost', lost);
   }, []);
 
-  if (!auth) return null;
+  if (!auth) {
+    return (
+      <div className="loading" aria-busy="true">
+        <GrassBlock />
+        <p className="small">Abriendo el panel…</p>
+      </div>
+    );
+  }
   if (!auth.authenticated) return <Login setup={auth.setupRequired} onDone={check} />;
 
   return (
@@ -40,6 +48,13 @@ function Shell({ username, onLogout }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
+  // En el celular, Esc cierra el menú.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   return (
     <div className="shell">
@@ -47,26 +62,20 @@ function Shell({ username, onLogout }) {
         Saltar al contenido
       </a>
       <header className="mobile-bar">
-        <button className="btn-ghost" onClick={() => setOpen(true)} aria-label="Abrir menú">
+        <button className="btn-ghost" onClick={() => setOpen(true)} aria-label="Abrir menú" aria-expanded={open}>
           ☰
         </button>
         <span className="brand" style={{ padding: 0 }}>
-          <span className="brand-mark" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </span>
+          <GrassBlock />
           MC Hosting Panel
         </span>
       </header>
 
+      {open && <button type="button" className="side-backdrop" onClick={() => setOpen(false)} aria-label="Cerrar menú" />}
+
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <NavLink to="/" className="brand" end>
-          <span className="brand-mark" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </span>
+          <GrassBlock />
           MC Hosting Panel
         </NavLink>
 
@@ -83,7 +92,11 @@ function Shell({ username, onLogout }) {
               <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
                 <i className={`dot ${serverState(s, runtime[s.id])}`} aria-hidden="true" />
                 <span className="name">{s.name}</span>
-                <span className="faint">{runtime[s.id]?.players?.length || ''}</span>
+                {runtime[s.id]?.players?.length ? (
+                  <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>
+                    {runtime[s.id].players.length}
+                  </span>
+                ) : null}
               </NavLink>
             ))}
           </div>

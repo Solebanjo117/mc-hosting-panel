@@ -1,29 +1,41 @@
 :root {
   /*
-   * Deepslate y redstone: el panel es el cuarto de control bajo el mundo.
-   * Superficies de pizarra profunda, la prismarina para actuar y el estado de cada servidor
-   * como una lámpara de redstone (lo único que brilla).
+   * Deepslate y pasto: el panel es la interfaz del juego, con acabado premium.
+   * Piedra profunda con grano de píxel, botones y losas con el bisel duro de 2 px de las
+   * pantallas de Minecraft, el pasto para encender, la prismarina para moverse y el estado
+   * de cada servidor como una lámpara de redstone (lo único que brilla).
    */
-  --night: #1d1e21; /* pizarra profunda: fondo */
-  --side: #18191b; /* la barra lateral, un nivel más abajo */
-  --slate: #27282c; /* losa pulida: superficies */
+  --night: #141518; /* roca madre: fondo */
+  --side: #0f1012; /* la barra lateral, un nivel más abajo */
+  --slate: #26272b; /* losa pulida: superficies */
   --slate-2: #313236; /* controles */
-  --slate-3: #3b3d42; /* controles al pasar el mouse */
+  --slate-3: #3d3f45; /* controles al pasar el mouse */
   --line: #45474d;
+  --edge: #0a0a0b; /* el borde negro de 2 px de toda la interfaz del juego */
   --sand: #ece7dc; /* hueso: texto */
   --sand-dim: #b3ada2;
   --sand-faint: #a19d95;
-  --prismarine: #5cc2b4; /* acciones, enlaces y foco */
+  --grass: #62b347; /* pasto: la acción principal (encender, crear, guardar) */
+  --grass-light: #9fdc74;
+  --grass-deep: #2f6a1f;
+  --prismarine: #5cc2b4; /* navegación, enlaces y selección */
   --prismarine-deep: #2f7f75;
   --gold: #e8954e; /* avisos: cobre */
   --redstone: #ef6a58; /* peligro y caídas */
   --lapis: #8aa6f0;
   --lamp: #ffc757; /* lámpara de redstone encendida */
   --lamp-off: #4a362a; /* lámpara apagada */
+  --xp: #7ef33c; /* barra de experiencia */
 
-  /* Bisel de bloque: luz arriba, sombra abajo (como los botones y losas del juego). */
-  --bevel: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-  --bevel-strong: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -2px 0 rgba(0, 0, 0, 0.28);
+  /* Grano de píxel: una textura de 16×16 dibujada en SVG, sin archivos ni internet.
+     La suave va en fondos y losas; la marcada, en la tierra de la portada y el bloque de pasto. */
+  --grain-soft: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.028%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.09%22/%3E%3C/svg%3E");
+  --grain: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.07%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.22%22/%3E%3C/svg%3E");
+
+  /* Bisel de bloque, como los botones del juego: luz arriba-izquierda, sombra abajo-derecha. */
+  --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.07), inset -1px -1px 0 rgba(0, 0, 0, 0.45);
+  --bevel-strong: inset 2px 2px 0 rgba(255, 255, 255, 0.22), inset -2px -2px 0 rgba(0, 0, 0, 0.35);
+  --bevel-pressed: inset 2px 2px 0 rgba(0, 0, 0, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.05);
 
   --font-ui: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
   --font-pixel: 'Pixelify Sans', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
@@ -36,9 +48,10 @@
   --step-2: 1.375rem;
   --step-3: 1.875rem;
 
-  --r-control: 4px;
-  --r-panel: 4px;
+  --r-control: 2px;
+  --r-panel: 3px;
   color-scheme: dark;
+  scrollbar-color: var(--slate-3) var(--night);
 }
 
 * {
@@ -54,6 +67,8 @@ body,
 body {
   margin: 0;
   background: var(--night);
+  background-image: var(--grain-soft);
+  background-size: 32px 32px;
   color: var(--sand);
   font-family: var(--font-ui);
   font-size: var(--step-0);
@@ -169,24 +184,27 @@ button,
   min-height: 34px;
   padding: 0 0.9rem;
   border-radius: var(--r-control);
-  border: 1px solid #1a1b1e;
+  border: 2px solid var(--edge);
   background: var(--slate-2);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
   color: var(--sand);
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color 0.12s, border-color 0.12s;
 }
 
 button:active:not(:disabled),
 .btn:active {
-  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: var(--bevel-pressed);
   transform: translateY(1px);
 }
 
+/* Al pasar el mouse el botón se aclara y su borde se vuelve hueso, como en el juego. */
 button:hover:not(:disabled),
 .btn:hover {
   background: var(--slate-3);
+  border-color: #c9c3b6;
 }
 
 button:disabled {
@@ -195,25 +213,30 @@ button:disabled {
 }
 
 .btn-go {
-  background: var(--prismarine);
-  border-color: #1f5a53;
-  box-shadow: var(--bevel-strong);
-  color: #0e2622;
+  background: var(--grass);
+  box-shadow: inset 2px 2px 0 var(--grass-light), inset -2px -2px 0 var(--grass-deep);
+  color: #0b2410;
   font-weight: 700;
 }
 
 .btn-go:hover:not(:disabled) {
-  background: #6fd0c2;
+  background: #74c457;
+  border-color: #e9f5dc;
+}
+
+.btn-go:active:not(:disabled) {
+  box-shadow: inset 2px 2px 0 var(--grass-deep), inset -1px -1px 0 var(--grass-light);
 }
 
 .btn-stop {
-  border-color: rgba(239, 106, 88, 0.55);
   color: #f6b0a6;
-  background: rgba(239, 106, 88, 0.08);
+  background: #3a2320;
+  box-shadow: inset 2px 2px 0 rgba(255, 170, 150, 0.18), inset -2px -2px 0 rgba(0, 0, 0, 0.4);
 }
 
 .btn-stop:hover:not(:disabled) {
-  background: rgba(239, 106, 88, 0.2);
+  background: #4b2a26;
+  border-color: #f3b4aa;
 }
 
 .btn-ghost {
@@ -224,6 +247,7 @@ button:disabled {
 
 .btn-ghost:hover:not(:disabled) {
   background: var(--slate-2);
+  border-color: transparent;
 }
 
 .btn-sm {
@@ -236,11 +260,11 @@ select,
 textarea {
   font: inherit;
   color: var(--sand);
-  background: #17181a;
-  border: 1px solid #3a3c41;
+  background: #0e0f11;
+  border: 2px solid #4a4c52;
   border-radius: var(--r-control);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.35);
-  padding: 0.5rem 0.65rem;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.5);
+  padding: 0.45rem 0.65rem;
   width: 100%;
   min-height: 36px;
 }
@@ -248,7 +272,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--prismarine);
+  border-color: var(--sand);
   outline: none;
 }
 
@@ -320,9 +344,11 @@ label.check input {
 
 .panel {
   background: var(--slate);
-  border: 0;
+  background-image: var(--grain-soft);
+  background-size: 32px 32px;
+  border: 2px solid var(--edge);
   border-radius: var(--r-panel);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
   padding: 1.25rem 1.35rem;
 }
 
@@ -398,26 +424,49 @@ label.check input {
   text-decoration: none;
 }
 
-.brand-mark {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 2px;
+/*
+ * La marca del panel: un bloque de pasto en isométrico, dibujado solo con CSS.
+ * Tres caras (arriba, izquierda, derecha) con el grano de píxel y la franja de pasto en los lados.
+ */
+.block {
+  --s: 26px;
+  position: relative;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
 }
 
-/* Una lámpara de redstone vista de frente: la marca del panel. */
-.brand-mark i {
-  background: var(--lamp-off);
+.block i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 50%;
+  transform-origin: top left;
+  background-image: var(--grain);
+  background-size: calc(var(--s) / 2) calc(var(--s) / 2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
-.brand-mark i:nth-child(2n + 1) {
-  background: var(--lamp);
+.block .top {
+  background-color: #8cc853;
+  transform: translate(50%, 0) scale(1.41421, 0.70711) rotate(45deg);
+  transform-origin: center;
 }
 
-.brand-mark i:nth-child(5) {
-  background: #fff1c9;
+.block .left {
+  top: 25%;
+  background-color: #7a5634;
+  background-image: var(--grain), linear-gradient(#4f9a37 0 20%, #3a7a28 20% 24%, transparent 24%);
+  transform: skewY(26.565deg);
+}
+
+.block .right {
+  left: 50%;
+  top: 50%;
+  background-color: #8f6740;
+  background-image: var(--grain), linear-gradient(#5aa83e 0 20%, #3f8a2c 20% 24%, transparent 24%);
+  transform: skewY(-26.565deg);
 }
 
 .side-section {
@@ -457,6 +506,11 @@ label.check input {
   background: var(--slate);
   color: var(--sand);
   box-shadow: var(--bevel), inset 3px 0 0 var(--prismarine);
+}
+
+/* Al abrir el menú en el celular, tocar fuera lo cierra. */
+.side-backdrop {
+  display: none;
 }
 
 .side-link .name {
@@ -516,7 +570,19 @@ label.check input {
   }
   .sidebar.open {
     transform: none;
-    box-shadow: 0 0 0 100vmax rgba(8, 8, 9, 0.6);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
+  }
+  .side-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    min-height: 0;
+    background: rgba(8, 8, 9, 0.65);
+    box-shadow: none;
   }
   .mobile-bar {
     display: flex;
@@ -603,17 +669,21 @@ label.check input {
   color: var(--sand-dim);
 }
 
+/* La barra de progreso es la barra de experiencia: verde, con muescas, sobre un canal oscuro. */
 .progress {
-  height: 6px;
-  background: var(--night);
-  border-radius: 3px;
+  height: 10px;
+  background: #0e0f11;
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 1px;
   overflow: hidden;
 }
 
 .progress > i {
   display: block;
   height: 100%;
-  background: var(--gold);
+  background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(0, 0, 0, 0.3) 9px 10px), linear-gradient(var(--xp), #55c21f);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.3);
   transition: width 0.25s;
 }
 
@@ -647,6 +717,7 @@ label.check input {
   font-size: clamp(1.6rem, 3.2vw, 2.25rem);
   letter-spacing: 0.01em;
   line-height: 1.1;
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
 }
 
 .server-head .server-icon {
@@ -674,32 +745,41 @@ label.check input {
 .tabs {
   position: relative;
   display: flex;
-  gap: 0.2rem;
-  border-bottom: 1px solid var(--line);
+  gap: 3px;
+  padding: 0 0.25rem;
+  border-bottom: 2px solid var(--edge);
   margin-bottom: 1.5rem;
   overflow-x: auto;
   scrollbar-width: none;
 }
 
+/* Cada sección es una pestaña del inventario: la abierta sobresale y se une a la losa de abajo. */
 .tab {
-  padding: 0.6rem 0.95rem;
+  padding: 0.55rem 0.95rem;
   color: var(--sand-dim);
   text-decoration: none;
   font-size: var(--step-0);
   font-weight: 500;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border: 2px solid transparent;
+  border-bottom: 0;
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  margin-bottom: 0;
   white-space: nowrap;
 }
 
 .tab:hover {
   color: var(--sand);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .tab.active {
   color: var(--sand);
   font-weight: 700;
-  border-bottom-color: var(--prismarine);
+  background: var(--slate);
+  border-color: var(--edge);
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.1), inset -2px 0 0 rgba(0, 0, 0, 0.3);
+  margin-bottom: -2px;
+  padding-bottom: calc(0.55rem + 2px);
 }
 
 .tabs:has(+ .subtabs) {
@@ -715,9 +795,10 @@ label.check input {
   margin-bottom: 1.5rem;
   overflow-x: auto;
   scrollbar-width: none;
-  background: #151618;
+  background: #0e0f11;
+  border: 1px solid var(--edge);
   border-radius: var(--r-control);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .subtab {
@@ -737,7 +818,7 @@ label.check input {
 .subtab.active {
   color: var(--sand);
   background: var(--slate-3);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
 }
 
 @media (max-width: 640px) {
@@ -768,9 +849,9 @@ label.check input {
 }
 
 .terminal {
-  background: #141517;
-  border: 1px solid #0f1011;
-  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.4);
+  background: #0e0f11;
+  border: 2px solid var(--edge);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
   border-radius: var(--r-panel);
   display: flex;
   flex-direction: column;
@@ -877,8 +958,9 @@ label.check input {
 
 .meter {
   display: block;
-  height: 4px;
-  background: var(--slate-2);
+  height: 6px;
+  background: #0e0f11;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
   margin-top: 0.45rem;
 }
 
@@ -886,6 +968,7 @@ label.check input {
   display: block;
   height: 100%;
   background: var(--prismarine);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .address {
@@ -932,12 +1015,12 @@ label.check input {
 
 .table td {
   padding: 0.55rem 0.6rem;
-  border-bottom: 1px solid rgba(52, 65, 95, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   vertical-align: middle;
 }
 
 .table tr:hover td {
-  background: rgba(46, 59, 88, 0.35);
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .table .actions {
@@ -1029,9 +1112,10 @@ label.check input {
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  background: #151618;
+  background: #0e0f11;
+  border: 1px solid var(--edge);
   border-radius: var(--r-control);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .segmented button {
@@ -1050,7 +1134,7 @@ label.check input {
 
 .segmented button.on {
   background: var(--slate-3);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
   color: var(--sand);
   font-weight: 700;
 }
@@ -1087,9 +1171,9 @@ label.check input {
 }
 
 .type-option.on {
-  border-color: var(--prismarine);
-  box-shadow: inset 0 0 0 1px var(--prismarine), var(--bevel);
-  background: var(--slate-2);
+  border-color: var(--grass);
+  box-shadow: inset 2px 2px 0 rgba(159, 220, 116, 0.35), inset -2px -2px 0 rgba(47, 106, 31, 0.6);
+  background: #2c3a28;
 }
 
 /* ---------- Modal y avisos ---------- */
@@ -1109,11 +1193,18 @@ label.check input {
   max-height: 90vh;
   overflow-y: auto;
   background: var(--slate);
-  border: 1px solid var(--line);
+  background-image: var(--grain-soft);
+  background-size: 32px 32px;
+  border: 2px solid var(--edge);
   border-radius: var(--r-panel);
+  box-shadow: var(--bevel-strong), 0 24px 48px -16px rgba(0, 0, 0, 0.8);
   padding: 1.4rem;
   display: grid;
   gap: 1rem;
+}
+
+.modal:focus {
+  outline: none;
 }
 
 .modal.wide {
@@ -1130,18 +1221,50 @@ label.check input {
   max-width: min(420px, calc(100vw - 2rem));
 }
 
+/* Los avisos aparecen como el cartel de un logro: marco de piedra con una ranura de color. */
 .toast {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 0.75rem;
+  align-items: center;
   background: var(--slate-2);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--prismarine);
+  border: 2px solid var(--edge);
   border-radius: var(--r-control);
-  padding: 0.65rem 0.9rem;
+  padding: 0.65rem 0.9rem 0.65rem 0.6rem;
   font-size: var(--step--1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  text-align: left;
+  min-height: 0;
+  white-space: normal;
+  font-weight: 400;
+  color: var(--sand);
+  box-shadow: var(--bevel-strong), 0 12px 28px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.25s ease-out;
+  cursor: pointer;
 }
 
-.toast.error {
-  border-left-color: var(--redstone);
+.toast::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: var(--grass);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.toast:hover:not(:disabled) {
+  background: var(--slate-3);
+  border-color: var(--edge);
+}
+
+.toast.error::before {
+  background: var(--redstone);
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
 }
 
 .editor {
@@ -1155,29 +1278,88 @@ label.check input {
 
 /* ---------- Pantalla de acceso ---------- */
 
+/* La pantalla de acceso es la pantalla de título: fondo de tierra en penumbra y una losa al centro. */
 .auth {
   min-height: 100%;
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 47px, #232427 47px 48px),
-    repeating-linear-gradient(0deg, var(--night) 0 47px, #232427 47px 48px);
+  background-color: #2a2017;
+  background-image: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0.55) 70%, rgba(0, 0, 0, 0.8) 100%), var(--grain);
+  background-size: 100% 100%, 64px 64px;
 }
 
 .auth-card {
-  width: min(400px, 100%);
+  width: min(420px, 100%);
   display: grid;
   gap: 1.1rem;
+  position: relative;
 }
 
 .auth-card h1 {
   font-family: var(--font-pixel);
   font-weight: 500;
   font-size: var(--step-3);
+  text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
 }
 
-/* Al abrir el panel, la lámpara se enciende: el único momento animado sin que hagas nada. */
+/* El texto amarillo e inclinado de la pantalla de título, latiendo despacio. */
+.splash {
+  position: absolute;
+  right: -0.5rem;
+  top: 1.1rem;
+  transform: rotate(-14deg);
+  font-family: var(--font-pixel);
+  font-size: var(--step-0);
+  color: #ffff55;
+  text-shadow: 2px 2px 0 #3f3f15;
+  animation: splash 1.1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes splash {
+  from {
+    transform: rotate(-14deg) scale(1);
+  }
+  to {
+    transform: rotate(-14deg) scale(1.06);
+  }
+}
+
+/* Al abrir el panel el bloque cae y se asienta: el único momento animado sin que hagas nada. */
+.auth-block {
+  --s: 56px;
+  animation: block-drop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+}
+
+@keyframes block-drop {
+  from {
+    transform: translateY(-18px);
+    opacity: 0;
+  }
+}
+
+/* Pantalla de carga mientras el panel comprueba la sesión. */
+.loading {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  color: var(--sand-dim);
+}
+
+.loading .block {
+  --s: 44px;
+  animation: block-bob 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes block-bob {
+  to {
+    transform: translateY(-6px);
+  }
+}
+
 .forgot summary {
   cursor: pointer;
   color: var(--prismarine);
@@ -1186,22 +1368,6 @@ label.check input {
 
 .forgot p {
   margin-top: 0.5rem;
-}
-
-.auth-lamp {
-  width: 44px;
-  height: 44px;
-  gap: 3px;
-}
-
-.auth-lamp i {
-  animation: lamp-on 0.5s steps(1) 0.35s backwards;
-}
-
-@keyframes lamp-on {
-  from {
-    background: var(--lamp-off);
-  }
 }
 
 .rack-players:empty {
@@ -1380,15 +1546,6 @@ label.check input {
   }
   .doc-toc {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
   }
 }
 
@@ -1987,12 +2144,15 @@ label.check input {
   align-items: center;
   padding: 0.9rem 1.1rem;
   background: var(--slate);
+  background-image: var(--grain-soft);
+  background-size: 32px 32px;
+  border: 2px solid var(--edge);
   border-radius: var(--r-panel);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
   min-width: 0;
 }
 .rack-slot.is-on {
-  box-shadow: var(--bevel), inset 3px 0 0 var(--lamp);
+  box-shadow: var(--bevel-strong), inset 4px 0 0 var(--lamp);
 }
 .rack-id {
   display: flex;
@@ -2069,7 +2229,9 @@ label.check input {
   place-items: center;
   font-family: var(--font-pixel);
   color: var(--lamp);
-  box-shadow: inset 0 0 0 1px #111214, var(--bevel);
+  background-image: var(--grain-soft);
+  background-size: 32px 32px;
+  box-shadow: inset 0 0 0 1px #111214, var(--bevel-strong);
 }
 .heads {
   display: flex;
@@ -2553,12 +2715,17 @@ label.check input {
   z-index: 60;
   width: 220px;
   padding: 0.35rem;
-  background: var(--slate);
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
-  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+  background: rgba(16, 0, 16, 0.96);
+  border: 2px solid #2b0d7a;
+  outline: 1px solid #100010;
+  border-radius: 0;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.8);
   display: grid;
   gap: 1px;
+}
+
+.player-menu button:hover:not(:disabled) {
+  border-color: transparent;
 }
 .player-menu-head {
   display: flex;
@@ -2598,8 +2765,9 @@ label.check input {
   display: flex;
   flex-direction: column;
   background: var(--slate);
+  border: 2px solid var(--edge);
   border-radius: var(--r-panel);
-  box-shadow: var(--bevel);
+  box-shadow: var(--bevel-strong);
   overflow: hidden;
   min-width: 0;
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, qs, formatDate, formatNumber, TYPE_LABEL } from '../api.js';
 import { useLive } from '../live.jsx';
-import { Modal } from '../ui.jsx';
+import { Modal, usePageTitle } from '../ui.jsx';
 
 const LOADER_LABEL = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', quilt: 'Quilt' };
 
@@ -10,6 +10,7 @@ const SITE_LABEL = { modrinth: 'Modrinth', curseforge: 'CurseForge' };
 
 export default function ImportModpack() {
   const [mode, setMode] = useState('modrinth');
+  usePageTitle('Crear desde un modpack');
   const [choice, setChoice] = useState(null); // { kind: 'store', source, project, version } | { kind: 'file', file, plan }
 
   const tab = (id, label) => (

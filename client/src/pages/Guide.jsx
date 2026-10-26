@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { marked } from 'marked';
 import { api } from '../api.js';
+import { usePageTitle } from '../ui.jsx';
 
 // Mismo formato de anclas que GitHub, para que funcionen los enlaces del índice del manual.
 const slug = (text) =>
@@ -13,6 +14,7 @@ const slug = (text) =>
 export default function Guide() {
   const [md, setMd] = useState('');
   const [error, setError] = useState('');
+  usePageTitle('Guía para abrir puertos');
 
   useEffect(() => {
     api('/system/docs/puertos')

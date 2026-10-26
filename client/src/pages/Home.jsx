@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
-import { PlayerHead, Status, useAction } from '../ui.jsx';
+import { PlayerHead, Status, useAction, usePageTitle } from '../ui.jsx';
 
 const HEALTH = {
   ok: { label: 'Todo bien', cls: 'ok' },
@@ -15,6 +15,7 @@ export default function Home() {
   const { servers, runtime, loaded } = useLive();
   const [info, setInfo] = useState(null);
   const [dash, setDash] = useState({});
+  usePageTitle('Tus servidores');
 
   useEffect(() => {
     api('/system/info').then(setInfo).catch(() => {});

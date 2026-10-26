@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
-import { Confirm, useAction, useToast } from '../ui.jsx';
+import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 
@@ -19,6 +19,7 @@ export default function PanelSettings() {
   const [downloading, setDownloading] = useState(null);
   const [run, busy] = useAction();
   const toast = useToast();
+  usePageTitle('Ajustes del panel');
 
   const loadJava = () => api('/system/java').then(setJava);
   useEffect(() => {

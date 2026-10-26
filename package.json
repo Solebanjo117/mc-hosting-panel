@@ -1,6 +1,6 @@
 {
   "name": "mc-hosting-panel",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "description": "Panel propio de hosting de Minecraft Java: crea, administra y comparte servidores desde tu PC con Windows.",
   "private": true,
   "type": "module",

@@ -3,7 +3,7 @@ import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-rout
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
 import { ServerIcon } from './Home.jsx';
-import { Progress, Status, useAction } from '../ui.jsx';
+import { Progress, Status, useAction, usePageTitle } from '../ui.jsx';
 import ConsoleTab from './server/ConsoleTab.jsx';
 import SettingsTab from './server/SettingsTab.jsx';
 import FilesTab from './server/FilesTab.jsx';
@@ -89,6 +89,7 @@ export default function ServerView() {
   const state = serverState(server, rt);
   const [run, busy] = useAction();
   const location = useLocation();
+  usePageTitle(server?.name);
 
   if (!server) {
     return <div className="page">{loaded ? <p className="muted">Este servidor no existe o fue eliminado.</p> : null}</div>;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useLive } from '../live.jsx';
+import { usePageTitle } from '../ui.jsx';
 
 const TYPES = [
   { id: 'paper', label: 'Paper', text: 'Plugins Bukkit/Spigot/Paper. La mejor opción para un servidor con amigos.' },
@@ -26,6 +27,7 @@ export default function CreateServer() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [totalGb, setTotalGb] = useState(16);
+  usePageTitle('Crear servidor');
 
   useEffect(() => {
     api('/system/info')

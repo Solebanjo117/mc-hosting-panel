@@ -1,5 +1,27 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { STATUS_LABEL } from './api.js';
+
+/** La marca del panel: un bloque de pasto en isométrico dibujado con CSS. */
+export function GrassBlock({ className = '', size }) {
+  return (
+    <span className={`block ${className}`} style={size ? { '--s': `${size}px` } : undefined} aria-hidden="true">
+      <i className="left" />
+      <i className="right" />
+      <i className="top" />
+    </span>
+  );
+}
+
+/** Pone el título de la pestaña del navegador: «Página – MC Hosting Panel». */
+export function usePageTitle(title) {
+  useEffect(() => {
+    const before = document.title;
+    document.title = title ? `${title} – MC Hosting Panel` : 'MC Hosting Panel';
+    return () => {
+      document.title = before;
+    };
+  }, [title]);
+}
 
 export function Status({ state }) {
   return (
@@ -27,14 +49,22 @@ export function Progress({ value, label = 'Progreso' }) {
 }
 
 export function Modal({ title, children, onClose, wide }) {
+  const ref = useRef(null);
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose?.();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+  // El foco entra al diálogo (al primer campo o botón) y al cerrarlo vuelve a donde estaba.
+  useEffect(() => {
+    const opener = document.activeElement;
+    const first = ref.current?.querySelector('input, select, textarea, button:not([aria-label="Cerrar"])');
+    (first || ref.current)?.focus({ preventScroll: true });
+    return () => opener?.focus?.({ preventScroll: true });
+  }, []);
   return (
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref} tabIndex={-1}>
         <div className="row">
           <h2 className="grow">{title}</h2>
           {onClose && (
@@ -53,19 +83,23 @@ const ToastContext = createContext(() => {});
 
 export function ToastProvider({ children }) {
   const [items, setItems] = useState([]);
-  const push = useCallback((message, kind = 'ok') => {
-    const id = Math.random();
-    setItems((list) => [...list, { id, message, kind }]);
-    setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), kind === 'error' ? 7000 : 3500);
-  }, []);
+  const dismiss = useCallback((id) => setItems((list) => list.filter((t) => t.id !== id)), []);
+  const push = useCallback(
+    (message, kind = 'ok') => {
+      const id = Math.random();
+      setItems((list) => [...list, { id, message, kind }]);
+      setTimeout(() => dismiss(id), kind === 'error' ? 7000 : 3500);
+    },
+    [dismiss]
+  );
   return (
     <ToastContext.Provider value={push}>
       {children}
-      <div className="toasts" aria-live="polite">
+      <div className="toasts" role="status" aria-live="polite">
         {items.map((t) => (
-          <div key={t.id} className={`toast ${t.kind}`}>
+          <button key={t.id} type="button" className={`toast ${t.kind}`} onClick={() => dismiss(t.id)} title="Cerrar aviso">
             {t.message}
-          </div>
+          </button>
         ))}
       </div>
     </ToastContext.Provider>
