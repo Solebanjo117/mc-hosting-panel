@@ -1,9 +1,13 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GrassBlock, useAction, usePageTitle, useToast } from '../ui.jsx';
+import { useLive } from '../live.jsx';
+import { SkinModel } from '../Backdrops.jsx';
+import { playSound } from '../sounds.js';
 import {
   ACCENTS,
   BACKGROUNDS,
+  PALETTES,
   FITS,
   FONTS,
   POSITIONS,
@@ -24,6 +28,7 @@ import {
 export default function Appearance({ username }) {
   usePageTitle('Perfil y apariencia');
   const a = useAppearance();
+  const { servers } = useLive();
   const toast = useToast();
   const [run, busy] = useAction();
   const save = (patch) => run(() => saveAppearance(patch));
@@ -83,7 +88,44 @@ export default function Appearance({ username }) {
             </label>
           </div>
         )}
-        {!glass && a.background !== 'custom' && <p className="muted small">Los fondos de luz son del tema Cristal. Con Bloques puedes usar tu propia foto.</p>}
+        {!glass && !['custom', 'mapa', 'skin'].includes(a.background) && <p className="muted small">Los fondos de luz son del tema Cristal. Con Bloques puedes usar tu foto, el mapa o una skin.</p>}
+        {a.background === 'mapa' && (
+          <div className="stack" style={{ gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--line)' }}>
+            <h3>Mapa en vivo</h3>
+            <label className="field" style={{ maxWidth: 420 }}>
+              <span>Servidor cuyo mapa se ve de fondo</span>
+              <select value={a.mapServer} onChange={(e) => save({ mapServer: e.target.value })}>
+                <option value="">El primero que tenga mapa</option>
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                    {s.map?.enabled ? '' : ' (sin mapa activado)'}
+                  </option>
+                ))}
+              </select>
+              <span>Necesita BlueMap activado en ese servidor (pestaña Mundo → Mapa) y el servidor encendido. Sigue a los jugadores solo.</span>
+            </label>
+          </div>
+        )}
+        {a.background === 'skin' && (
+          <div className="stack" style={{ gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--line)' }}>
+            <h3>Tu skin</h3>
+            <div className="row" style={{ alignItems: 'flex-start', gap: '1.5rem' }}>
+              <label className="field" style={{ maxWidth: 320 }}>
+                <span>Nombre del jugador</span>
+                <input defaultValue={a.skinName} maxLength={16} placeholder="Tu nombre de Minecraft" onBlur={(e) => e.target.value.trim() !== a.skinName && save({ skinName: e.target.value.trim() })} />
+                <span>La skin se descarga de mc-heads.net; con cuentas de Bedrock o sin internet se ve el jugador por defecto.</span>
+              </label>
+              {a.skinName && <SkinModel name={a.skinName} size={4} />}
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="panel stack">
+        <h2 style={{ margin: 0 }}>Paleta por bioma</h2>
+        <p className="muted small">Tiñe las luces del fondo y el color de acento como un bioma del juego.</p>
+        <Radios name="Paleta por bioma" items={PALETTES} value={a.palette} onChange={(palette) => save({ palette })} />
       </section>
 
       <section className="panel stack">
@@ -117,6 +159,33 @@ export default function Appearance({ username }) {
           </div>
         </section>
       )}
+
+      <section className="panel stack">
+        <h2 style={{ margin: 0 }}>Sonidos</h2>
+        <label className="check">
+          <input type="checkbox" checked={a.sounds.enabled} onChange={(e) => save({ sounds: { enabled: e.target.checked } })} />
+          <span>Sonidos del juego en el panel (sintetizados, no pesan nada). Suenan después de que hagas clic en la página.</span>
+        </label>
+        {a.sounds.enabled && (
+          <div className="row" style={{ gap: '1rem' }}>
+            {[
+              ['join', 'Cuando alguien entra (ding de nivel)'],
+              ['backup', 'Al terminar un respaldo (cofre)'],
+              ['achievement', 'Al conseguir un logro (fanfarria)'],
+            ].map(([k, label]) => (
+              <label key={k} className="check">
+                <input type="checkbox" checked={a.sounds[k]} onChange={(e) => save({ sounds: { [k]: e.target.checked } })} />
+                <span>
+                  {label}{' '}
+                  <button type="button" className="btn-sm btn-ghost" onClick={() => playSound(k)} disabled={!a.sounds[k]}>
+                    Probar
+                  </button>
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Movimiento</h2>

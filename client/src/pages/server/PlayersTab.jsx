@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import { PlayerHead, useAction } from '../../ui.jsx';
+import ZonesSection from './ZonesSection.jsx';
 
 
 export default function PlayersTab({ server, runtime }) {
@@ -12,6 +13,12 @@ export default function PlayersTab({ server, runtime }) {
   useEffect(() => {
     load().catch(() => {});
   }, [load, runtime?.players?.length, runtime?.status]);
+  // Mientras esta pestaña está abierta, el panel pregunta dónde está cada jugador.
+  useEffect(() => {
+    api(`/servers/${server.id}/positions/watch`, { method: 'POST', body: { on: true } }).catch(() => {});
+    return () => api(`/servers/${server.id}/positions/watch`, { method: 'POST', body: { on: false } }).catch(() => {});
+  }, [server.id]);
+  const positions = runtime?.positions || {};
 
   const act = (action, target, reason, msg) =>
     run(() => api(`/servers/${server.id}/players`, { method: 'POST', body: { action, name: target, reason } }).then(setData), msg);
@@ -39,6 +46,11 @@ export default function PlayersTab({ server, runtime }) {
                 <tr key={p}>
                   <td>
                     <Player name={p} />
+                    {positions[p] && (
+                      <span className="faint small mono" style={{ marginLeft: '0.5rem' }} title="Posición (x, y, z)">
+                        {positions[p].x}, {positions[p].y}, {positions[p].z}
+                      </span>
+                    )}
                   </td>
                   <td className="actions">
                     <button className="btn-sm" disabled={busy} onClick={() => act('op', p, '', `${p} ahora es operador`)}>
@@ -121,6 +133,7 @@ export default function PlayersTab({ server, runtime }) {
           busy={busy}
         />
       </div>
+      <ZonesSection server={server} />
     </div>
   );
 }

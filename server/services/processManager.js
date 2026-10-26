@@ -13,6 +13,7 @@ import { aikarFlags } from './optimize.js';
 import { analyze } from './crashAnalyzer.js';
 import { observe as observeConnections, tick as tickProtection } from './floodGuard.js';
 import { compareVersions } from '../lib/util.js';
+import { onPosition } from './positions.js';
 
 const MAX_LINES = 1500;
 const STOP_TIMEOUT_MS = 45_000;
@@ -35,6 +36,7 @@ class Instance {
     this.silent = null; // { until, patterns }
     this.xbox = null; // estado de inicio de sesión de MCXboxBroadcast
     this.lastCrash = null; // { at, code, findings }
+    this.positions = {}; // nombre -> { x, y, z, at }
   }
 
   snapshot() {
@@ -48,6 +50,7 @@ class Instance {
       xbox: this.xbox,
       lastCrash: this.lastCrash,
       drill: this.drill || null,
+      positions: this.positions,
     };
   }
 
@@ -106,6 +109,13 @@ class Instance {
   /** TPS, inicio de sesión de Xbox (MCXboxBroadcast) y comandos desconocidos. */
   parseExtras(line) {
     observeConnections(this, line);
+    const pos = line.match(/: ([A-Za-z0-9_.]{2,17}) has the following entity data: \[(-?[\d.]+)d, (-?[\d.]+)d, (-?[\d.]+)d\]/);
+    if (pos) {
+      const p = { x: Math.round(Number(pos[2])), y: Math.round(Number(pos[3])), z: Math.round(Number(pos[4])), at: Date.now() };
+      this.positions = { ...this.positions, [pos[1]]: p };
+      onPosition(this.id, pos[1], p);
+      return;
+    }
     let m = line.match(/TPS from last 1m, 5m, 15m: (?:§.)?\*?([\d.]+)/);
     if (m) {
       this.tps = { value: Math.min(20, Number(m[1])), at: Date.now() };
@@ -332,6 +342,7 @@ class Instance {
     this.stats = null;
     this.tps = null;
     this.players.clear();
+    this.positions = {};
     const server = getServer(this.id);
     if (this.manualStop || code === 0) {
       this.panelLine(`Servidor detenido (código ${code}).`);

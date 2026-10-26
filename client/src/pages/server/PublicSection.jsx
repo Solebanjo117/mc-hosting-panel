@@ -11,7 +11,11 @@ export default function PublicSection({ server }) {
     load().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [server.id]);
-  const save = (patch, msg) => run(() => api(`/servers/${server.id}/public`, { method: 'PUT', body: patch }).then(setCfg), msg);
+  // La casilla cambia al momento; el servidor confirma después (calcular la dirección pública tarda).
+  const save = (patch, msg) => {
+    setCfg((c) => ({ ...c, ...patch }));
+    return run(() => api(`/servers/${server.id}/public`, { method: 'PUT', body: patch }).then(setCfg), msg);
+  };
   if (!cfg) return null;
   const link = `${location.origin}/estado/${server.id}`;
   return (

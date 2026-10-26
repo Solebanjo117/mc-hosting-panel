@@ -13,7 +13,8 @@ import { HttpError } from '../lib/util.js';
 export const DIR = path.join(DATA_DIR, 'appearance');
 
 export const THEMES = ['glass', 'blocks'];
-export const BACKGROUNDS = ['aurora', 'cueva', 'atardecer', 'fin', 'nether', 'oceano', 'nevada', 'custom'];
+export const BACKGROUNDS = ['aurora', 'cueva', 'atardecer', 'fin', 'nether', 'oceano', 'nevada', 'custom', 'mapa', 'skin'];
+export const PALETTES = ['ninguna', 'jungla', 'desierto', 'taiga', 'cerezo', 'pantano', 'champinon'];
 export const ACCENTS = ['pasto', 'esmeralda', 'prismarina', 'diamante', 'amatista', 'oro', 'cobre', 'redstone'];
 export const FONTS = ['pixel', 'clasica'];
 export const SIZES = ['pequena', 'normal', 'grande'];
@@ -31,6 +32,10 @@ export const DEFAULTS = {
   glassOpacity: 38, // 0–90: qué tan opaco es el cristal
   glassBlur: 16, // 0–30 px
   custom: { fit: 'cover', position: 'center', dim: 35, blur: 0, pixelated: false },
+  mapServer: '', // servidor cuyo mapa BlueMap se usa de fondo
+  skinName: '', // jugador cuya skin gira de fondo
+  palette: 'ninguna', // paleta por bioma
+  sounds: { enabled: false, join: true, backup: true, achievement: true },
   imageAt: 0, // marca de tiempo de la foto subida (0 = no hay)
 };
 
@@ -42,7 +47,7 @@ const pick = (v, list, fallback) => (list.includes(v) ? v : fallback);
 
 export function getAppearance() {
   const saved = db.data.settings.appearance || {};
-  return { ...DEFAULTS, ...saved, custom: { ...DEFAULTS.custom, ...(saved.custom || {}) }, imageAt: imageFile() ? saved.imageAt || 1 : 0 };
+  return { ...DEFAULTS, ...saved, custom: { ...DEFAULTS.custom, ...(saved.custom || {}) }, sounds: { ...DEFAULTS.sounds, ...(saved.sounds || {}) }, imageAt: imageFile() ? saved.imageAt || 1 : 0 };
 }
 
 /** Aplica un cambio parcial; lo que no es válido se rechaza con 400. */
@@ -62,6 +67,16 @@ export function setAppearance(patch) {
   if (patch.electric !== undefined) next.electric = Boolean(patch.electric);
   if (patch.glassOpacity !== undefined) next.glassOpacity = clamp(patch.glassOpacity, 0, 90, cur.glassOpacity);
   if (patch.glassBlur !== undefined) next.glassBlur = clamp(patch.glassBlur, 0, 30, cur.glassBlur);
+  if (patch.palette !== undefined) next.palette = PALETTES.includes(patch.palette) ? patch.palette : bad('palette');
+  if (patch.mapServer !== undefined) next.mapServer = String(patch.mapServer || '').slice(0, 40);
+  if (patch.skinName !== undefined) {
+    const n = String(patch.skinName || '').trim();
+    next.skinName = !n || /^[A-Za-z0-9_.]{2,17}$/.test(n) ? n : bad('skinName');
+  }
+  if (patch.sounds !== undefined) {
+    const s = patch.sounds && typeof patch.sounds === 'object' ? patch.sounds : bad('sounds');
+    next.sounds = { enabled: Boolean(s.enabled ?? cur.sounds.enabled), join: Boolean(s.join ?? cur.sounds.join), backup: Boolean(s.backup ?? cur.sounds.backup), achievement: Boolean(s.achievement ?? cur.sounds.achievement) };
+  }
   if (patch.custom !== undefined) {
     const c = patch.custom && typeof patch.custom === 'object' ? patch.custom : bad('custom');
     next.custom = {

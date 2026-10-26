@@ -9,6 +9,8 @@ import ServerView from './pages/ServerView.jsx';
 import { Electric, ELECTRIC_STATES, GrassBlock, PageLoading } from './ui.jsx';
 import { STATUS_LABEL } from './api.js';
 import { useAppearance } from './appearance.js';
+import Backdrops from './Backdrops.jsx';
+import Widget, { openWidget } from './pages/Widget.jsx';
 
 // Las páginas que no se abren al entrar se descargan la primera vez que se visitan.
 const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
@@ -21,6 +23,7 @@ export default function App() {
   const [auth, setAuth] = useState(null);
   const location = useLocation();
   const isPublic = /^\/estado\//.test(location.pathname);
+  const isWidget = location.pathname === '/widget';
 
   const check = () =>
     api('/auth/status')
@@ -51,6 +54,13 @@ export default function App() {
   }
   if (!auth.authenticated) return <Login setup={auth.setupRequired} onDone={check} />;
 
+  if (isWidget) {
+    return (
+      <LiveProvider>
+        <Widget />
+      </LiveProvider>
+    );
+  }
   return (
     <LiveProvider>
       <Shell username={auth.username} onLogout={check} />
@@ -74,6 +84,7 @@ function Shell({ username, onLogout }) {
 
   return (
     <div className="shell">
+      <Backdrops servers={servers} />
       <a className="skip-link" href="#contenido">
         Saltar al contenido
       </a>
@@ -139,6 +150,9 @@ function Shell({ username, onLogout }) {
           <NavLink to="/apariencia" className="side-link">
             Perfil y apariencia
           </NavLink>
+          <button className="side-link btn-ghost" style={{ justifyContent: 'flex-start', fontWeight: 400 }} onClick={() => openWidget()} title="Una ventana pequeña siempre encima con tus servidores">
+            Abrir widget flotante
+          </button>
           <button
             className="side-link btn-ghost"
             style={{ justifyContent: 'flex-start', fontWeight: 400 }}

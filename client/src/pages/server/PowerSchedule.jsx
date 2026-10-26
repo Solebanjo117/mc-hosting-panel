@@ -60,7 +60,7 @@ export default function PowerSchedule({ server }) {
         Pinta las horas en que el servidor debe estar encendido (hora de esta PC). Al empezar una hora marcada se enciende solo; al terminar la última, se
         apaga con un aviso de un minuto en el chat. Las tareas programadas siguen funcionando aparte.
       </p>
-      <div className="power-grid" role="grid" aria-label="Horario semanal" onMouseLeave={() => paint.current && (paint.current.dirty = true)}>
+      <div className="power-grid" role="group" aria-label="Horario semanal" onMouseLeave={() => paint.current && (paint.current.dirty = true)}>
         <div className="power-corner" />
         {Array.from({ length: 24 }, (_, h) => (
           <div key={h} className="power-hour" aria-hidden="true">
@@ -68,13 +68,12 @@ export default function PowerSchedule({ server }) {
           </div>
         ))}
         {DAYS.map((label, d) => (
-          <div key={label} className="power-row" role="row">
+          <div key={label} className="power-row">
             <div className="power-day">{label}</div>
             {data.grid[d].map((on, h) => (
               <button
                 key={h}
                 type="button"
-                role="gridcell"
                 aria-label={`${label} ${h}:00 ${on ? 'encendido' : 'apagado'}`}
                 aria-pressed={on}
                 className={`power-cell${on ? ' on' : ''}`}

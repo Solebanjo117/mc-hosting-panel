@@ -23,6 +23,8 @@ import './services/dns.js';
 import './services/activity.js';
 import './services/power.js';
 import './services/achievements.js';
+import './services/positions.js';
+import './services/worldGrowth.js';
 import { attachWebSocket } from './ws.js';
 import { guardHttp, securityHeaders, sameOrigin } from './lib/netguard.js';
 import { autoStartServers, stopAll, rememberRunning } from './services/processManager.js';

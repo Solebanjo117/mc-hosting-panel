@@ -16,8 +16,22 @@ export const DEFAULTS = {
   glassOpacity: 38,
   glassBlur: 16,
   custom: { fit: 'cover', position: 'center', dim: 35, blur: 0, pixelated: false },
+  mapServer: '',
+  skinName: '',
+  palette: 'ninguna',
+  sounds: { enabled: false, join: true, backup: true, achievement: true },
   imageAt: 0,
 };
+
+export const PALETTES = [
+  { id: 'ninguna', label: 'Sin paleta', text: 'Los colores normales del tema.' },
+  { id: 'jungla', label: 'Jungla', text: 'Verdes húmedos y luz entre hojas.' },
+  { id: 'desierto', label: 'Desierto', text: 'Arena, terracota y cielo cálido.' },
+  { id: 'taiga', label: 'Taiga', text: 'Abetos, nieve y azul frío.' },
+  { id: 'cerezo', label: 'Cerezo', text: 'Rosa de flor de cerezo.' },
+  { id: 'pantano', label: 'Pantano', text: 'Verde turbio y niebla.' },
+  { id: 'champinon', label: 'Champiñón', text: 'Rojo y lila del bioma de hongos.' },
+];
 
 export const THEMES = [
   { id: 'glass', label: 'Cristal', text: 'Vidrio líquido: dobla la luz en los bordes, como las apps de Apple.' },
@@ -32,6 +46,8 @@ export const BACKGROUNDS = [
   { id: 'nether', label: 'Nether', text: 'Roca oscura con brasas que suben.' },
   { id: 'oceano', label: 'Océano', text: 'Azul profundo con luz que ondula.' },
   { id: 'nevada', label: 'Nevada', text: 'Noche de invierno con nieve cayendo.' },
+  { id: 'mapa', label: 'Mapa en vivo', text: 'El mapa BlueMap de tu mundo, siguiendo a los jugadores.' },
+  { id: 'skin', label: 'Tu skin', text: 'La skin de un jugador girando en 3D.' },
 ];
 
 export const ACCENTS = [
@@ -69,7 +85,7 @@ export const POSITIONS = [
 ];
 
 const KEY = 'mcp-appearance';
-const merge = (base, patch) => ({ ...base, ...patch, custom: { ...base.custom, ...(patch?.custom || {}) } });
+const merge = (base, patch) => ({ ...base, ...patch, custom: { ...base.custom, ...(patch?.custom || {}) }, sounds: { ...base.sounds, ...(patch?.sounds || {}) } });
 
 function load() {
   try {
@@ -105,6 +121,7 @@ export function applyAppearance(a) {
   h.dataset.accent = a.accent;
   h.dataset.font = a.font;
   h.dataset.size = a.size;
+  h.dataset.palette = a.palette || 'ninguna';
   const st = h.style;
   st.setProperty('--glass-opacity', String(a.glassOpacity / 100));
   st.setProperty('--glass-blur-px', `${a.glassBlur}px`);

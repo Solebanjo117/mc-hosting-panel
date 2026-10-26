@@ -4396,3 +4396,173 @@ mark.mention {
   border: 0;
   padding: 0;
 }
+
+
+/* ---------- Fondos vivos: mapa y skin ---------- */
+:root[data-bg='mapa'],
+:root[data-bg='skin'] {
+  --anim: none;
+  --anim-image: none;
+}
+
+.bg-preview[data-bg='mapa'] {
+  --bg-image: radial-gradient(40% 50% at 30% 60%, rgba(63, 207, 99, 0.5), transparent 70%), radial-gradient(30% 40% at 70% 30%, rgba(111, 214, 234, 0.4), transparent 70%), linear-gradient(#1b2a1d, #0d1a24);
+}
+
+.bg-preview[data-bg='skin'] {
+  --bg-image: radial-gradient(30% 40% at 50% 50%, rgba(150, 120, 255, 0.4), transparent 70%), linear-gradient(#141826, #0a0d13);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.backdrop-map iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+  filter: saturate(90%) brightness(0.55);
+}
+
+.backdrop-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(10, 13, 19, 0.85), rgba(10, 13, 19, 0.35) 40%, rgba(10, 13, 19, 0.5));
+}
+
+.backdrop-skin {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8vw;
+  opacity: 0.55;
+}
+
+.shell {
+  position: relative;
+  z-index: 1;
+}
+
+:root[data-bg='mapa'] .sidebar,
+:root[data-bg='skin'] .sidebar,
+:root[data-bg='mapa'] .mobile-bar,
+:root[data-bg='skin'] .mobile-bar {
+  background: rgba(14, 18, 26, 0.7);
+}
+
+/* La skin en 3D: escenario con perspectiva y el modelo girando despacio. */
+.skin-stage {
+  perspective: 900px;
+  perspective-origin: 50% 40%;
+  position: relative;
+}
+
+.skin-model {
+  position: absolute;
+  left: 50%;
+  top: 10%;
+  transform-style: preserve-3d;
+  animation: skin-turn 16s linear infinite;
+}
+
+.skin-part {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+
+.skin-part.swing {
+  animation: skin-swing 2.4s ease-in-out infinite alternate;
+}
+
+.skin-part.swing-alt {
+  animation: skin-swing 2.4s ease-in-out infinite alternate-reverse;
+}
+
+.skin-box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  margin-left: calc(var(--half, 0px));
+}
+
+.skin-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  image-rendering: pixelated;
+  backface-visibility: hidden;
+}
+
+@keyframes skin-turn {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes skin-swing {
+  from {
+    transform: rotateX(-14deg);
+  }
+  to {
+    transform: rotateX(14deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skin-model,
+  .skin-part {
+    animation: none;
+  }
+}
+
+/* ---------- Paletas por bioma: tiñen la luz del fondo y el acento ---------- */
+:root[data-palette='jungla'] { --grass: #4fd36a; --grass-light: #a8f3b4; --grass-deep: #15702d; }
+:root[data-palette='jungla'][data-theme='glass'] { --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.04), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(60, 200, 90, 0.38), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(190, 230, 80, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(20, 120, 70, 0.4), transparent 70%); }
+:root[data-palette='desierto'] { --grass: #e8b65a; --grass-light: #ffe3a3; --grass-deep: #8a5a10; }
+:root[data-palette='desierto'][data-theme='glass'] { --bg-color: #15100b; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 200, 110, 0.3), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(220, 120, 70, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(210, 150, 60, 0.3), transparent 70%); }
+:root[data-palette='taiga'] { --grass: #6fd6ea; --grass-light: #b6ecf5; --grass-deep: #1c6b7a; }
+:root[data-palette='taiga'][data-theme='glass'] { --bg-color: #0b1018; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.06), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 200, 230, 0.28), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(40, 110, 80, 0.3), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(200, 230, 255, 0.18), transparent 70%); }
+:root[data-palette='cerezo'] { --grass: #f08cc0; --grass-light: #ffd0e8; --grass-deep: #8a2c5e; }
+:root[data-palette='cerezo'][data-theme='glass'] { --bg-color: #140b12; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 150, 200, 0.35), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(255, 200, 230, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 100, 0.4), transparent 70%); }
+:root[data-palette='pantano'] { --grass: #8fbf5a; --grass-light: #cde9a8; --grass-deep: #3f6020; }
+:root[data-palette='pantano'][data-theme='glass'] { --bg-color: #0e120c; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.03), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 150, 70, 0.32), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(90, 110, 60, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(60, 80, 40, 0.45), transparent 70%); }
+:root[data-palette='champinon'] { --grass: #e85d6a; --grass-light: #ffb8c0; --grass-deep: #8a1f2a; }
+:root[data-palette='champinon'][data-theme='glass'] { --bg-color: #140c12; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(230, 90, 110, 0.32), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(170, 120, 200, 0.28), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 110, 0.4), transparent 70%); }
+
+/* ---------- Widget flotante ---------- */
+.widget {
+  padding: 0.6rem;
+  display: grid;
+  gap: 0.4rem;
+  min-height: 100vh;
+}
+
+.widget-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill, 6px);
+  background: var(--slate);
+}
+
+.widget-row .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
