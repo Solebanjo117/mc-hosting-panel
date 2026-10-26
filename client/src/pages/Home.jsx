@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
-import { PlayerHead, Status, useAction, usePageTitle } from '../ui.jsx';
+import { Electric, ELECTRIC_STATES, PlayerHead, Status, useAction, usePageTitle } from '../ui.jsx';
 
 const HEALTH = {
   ok: { label: 'Todo bien', cls: 'ok' },
@@ -141,13 +141,7 @@ function ServerCard({ server, rt, dash }) {
 
   return (
     <li className={`rack-slot${on ? ' is-on' : ''}`}>
-      {state === 'running' && (
-        <span className="electric" aria-hidden="true">
-          <i className="e-main" />
-          <i className="e-glow1" />
-          <i className="e-glow2" />
-        </span>
-      )}
+      {ELECTRIC_STATES.has(state) && <Electric state={state} />}
       <div className="rack-id">
         <ServerIcon server={server} size={48} />
         <div style={{ minWidth: 0 }}>

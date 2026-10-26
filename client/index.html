@@ -45,6 +45,19 @@
           <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise" />
           <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B" />
         </filter>
+        <!-- La misma chispa, más contenida, para cápsulas pequeñas (la barra lateral). -->
+        <filter id="electric-sm" color-interpolation-filters="sRGB" x="-20%" y="-40%" width="140%" height="180%">
+          <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="6" result="noise1" seed="3" />
+          <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1">
+            <animate attributeName="dy" values="300; 0" dur="5s" repeatCount="indefinite" calcMode="linear" />
+          </feOffset>
+          <feTurbulence type="turbulence" baseFrequency="0.035" numOctaves="6" result="noise2" seed="4" />
+          <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2">
+            <animate attributeName="dx" values="0; -300" dur="5s" repeatCount="indefinite" calcMode="linear" />
+          </feOffset>
+          <feBlend in="offsetNoise1" in2="offsetNoise2" mode="color-dodge" result="combinedNoise" />
+          <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="10" xChannelSelector="R" yChannelSelector="B" />
+        </filter>
       </defs>
     </svg>
     <div id="root"></div>

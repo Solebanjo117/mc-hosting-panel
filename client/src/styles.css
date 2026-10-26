@@ -37,8 +37,9 @@
   --bevel-strong: inset 2px 2px 0 rgba(255, 255, 255, 0.22), inset -2px -2px 0 rgba(0, 0, 0, 0.35);
   --bevel-pressed: inset 2px 2px 0 rgba(0, 0, 0, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.05);
 
-  --font-ui: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
-  --font-pixel: 'Pixelify Sans', 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  /* Todo el panel se escribe con la letra pixelada del juego; la consola y el código, en monoespaciada. */
+  --font-ui: 'Pixelify Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-pixel: 'Pixelify Sans', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', Consolas, 'Cascadia Mono', monospace;
 
   /* Escala 1.2 sobre 15 px */
@@ -2158,7 +2159,7 @@ label.check input {
   min-width: 0;
 }
 .rack-slot.is-on {
-  box-shadow: var(--bevel-strong), inset 4px 0 0 var(--lamp);
+  box-shadow: var(--bevel-strong);
 }
 .rack-id {
   display: flex;
@@ -3002,10 +3003,6 @@ label.check input {
   position: relative;
 }
 
-.rack-slot.is-on {
-  box-shadow: var(--bevel-strong), 0 0 40px -10px rgba(255, 199, 87, 0.4);
-}
-
 .electric {
   position: absolute;
   inset: -1px;
@@ -3013,11 +3010,30 @@ label.check input {
   pointer-events: none;
 }
 
+/* El color sigue al estado: verde encendido, ámbar arrancando o apagando, rojo caído, azul instalando. */
+.electric {
+  --electric: var(--lamp);
+  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--electric) 55%, transparent);
+}
+
+.electric.st-running {
+  --electric: var(--grass);
+}
+
+.electric.st-crashed,
+.electric.st-error {
+  --electric: var(--redstone);
+}
+
+.electric.st-installing {
+  --electric: var(--lapis);
+}
+
 .electric i {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 2px solid var(--lamp);
+  border: 2px solid var(--electric);
 }
 
 .electric .e-main {
@@ -3025,14 +3041,31 @@ label.check input {
 }
 
 .electric .e-glow1 {
-  border-color: rgba(255, 199, 87, 0.6);
+  border-color: color-mix(in srgb, var(--electric) 60%, transparent);
   filter: blur(1px);
 }
 
 .electric .e-glow2 {
-  border-color: var(--lamp);
   filter: blur(4px);
   opacity: 0.8;
+}
+
+/* La cápsula de la barra lateral: chispa más fina y contenida. */
+.side-link {
+  position: relative;
+}
+
+.electric.small i {
+  border-width: 1.5px;
+}
+
+.electric.small .e-main {
+  filter: url('#electric-sm');
+}
+
+.electric.small .e-glow2 {
+  filter: blur(3px);
+  opacity: 0.7;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3164,10 +3197,6 @@ label.check input {
     --lg-tint: rgba(22, 26, 36, 0.94);
     --side: rgba(14, 18, 26, 0.96);
   }
-}
-
-:root[data-theme='glass'] .rack-slot.is-on {
-  box-shadow: var(--lg-edge), var(--lg-shadow), 0 0 48px -10px rgba(255, 199, 87, 0.45);
 }
 
 :root[data-theme='glass'] .mcard {

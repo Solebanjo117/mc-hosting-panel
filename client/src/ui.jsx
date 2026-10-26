@@ -12,6 +12,19 @@ export function GrassBlock({ className = '', size }) {
   );
 }
 
+/** Borde eléctrico: chispas del color de la lámpara alrededor de algo encendido. */
+export const ELECTRIC_STATES = new Set(['running', 'starting', 'stopping', 'crashed', 'error', 'installing']);
+
+export function Electric({ state = 'running', small = false }) {
+  return (
+    <span className={`electric st-${state}${small ? ' small' : ''}`} aria-hidden="true">
+      <i className="e-main" />
+      <i className="e-glow1" />
+      <i className="e-glow2" />
+    </span>
+  );
+}
+
 /** Lo que se ve el instante en que una página o pestaña se descarga por primera vez. */
 export function PageLoading({ inline = false }) {
   return (

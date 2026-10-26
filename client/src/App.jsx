@@ -5,7 +5,8 @@ import { LiveProvider, useLive, serverState } from './live.jsx';
 import Login from './pages/Login.jsx';
 import Home from './pages/Home.jsx';
 import ServerView from './pages/ServerView.jsx';
-import { GrassBlock, PageLoading } from './ui.jsx';
+import { Electric, ELECTRIC_STATES, GrassBlock, PageLoading } from './ui.jsx';
+import { STATUS_LABEL } from './api.js';
 
 // Las páginas que no se abren al entrar se descargan la primera vez que se visitan.
 const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
@@ -90,9 +91,13 @@ function Shell({ username, onLogout }) {
               </NavLink>
             </div>
             {servers.length === 0 && <p className="faint small" style={{ padding: '0 0.5rem' }}>Todavía no hay servidores.</p>}
-            {servers.map((s) => (
+            {servers.map((s) => {
+              const st = serverState(s, runtime[s.id]);
+              // El estado se ve en el borde eléctrico (color según el estado); apagado no lleva nada.
+              return (
               <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
-                <i className={`dot ${serverState(s, runtime[s.id])}`} aria-hidden="true" />
+                {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
+                <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
                 <span className="name">{s.name}</span>
                 {runtime[s.id]?.players?.length ? (
                   <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>
@@ -100,7 +105,8 @@ function Shell({ username, onLogout }) {
                   </span>
                 ) : null}
               </NavLink>
-            ))}
+              );
+            })}
           </div>
         </div>
 
