@@ -141,6 +141,13 @@ function ServerCard({ server, rt, dash }) {
 
   return (
     <li className={`rack-slot${on ? ' is-on' : ''}`}>
+      {state === 'running' && (
+        <span className="electric" aria-hidden="true">
+          <i className="e-main" />
+          <i className="e-glow1" />
+          <i className="e-glow2" />
+        </span>
+      )}
       <div className="rack-id">
         <ServerIcon server={server} size={48} />
         <div style={{ minWidth: 0 }}>
@@ -148,7 +155,7 @@ function ServerCard({ server, rt, dash }) {
             {server.name}
           </Link>
           <div className="rack-meta">
-            <Status state={state} />
+            {state === 'running' ? <span className="sr-only">Encendido</span> : <Status state={state} />}
             <span className="muted small">
               {TYPE_LABEL[server.type]} {server.mcVersion}, puerto {server.port}
             </span>

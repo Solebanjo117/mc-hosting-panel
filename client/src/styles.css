@@ -2981,26 +2981,93 @@ label.check input {
   }
 }
 
+
+/* ---------- Texto solo para lectores de pantalla ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Borde eléctrico: los servidores encendidos chisporrotean ----------
+   Tres bordes superpuestos del color de la lámpara: uno deformado por un filtro SVG de turbulencia
+   animada (chispas), otro con desenfoque de 1 px y otro con 4 px (el halo). */
+.rack-slot {
+  position: relative;
+}
+
+.rack-slot.is-on {
+  box-shadow: var(--bevel-strong), 0 0 40px -10px rgba(255, 199, 87, 0.4);
+}
+
+.electric {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.electric i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--lamp);
+}
+
+.electric .e-main {
+  filter: url('#electric');
+}
+
+.electric .e-glow1 {
+  border-color: rgba(255, 199, 87, 0.6);
+  filter: blur(1px);
+}
+
+.electric .e-glow2 {
+  border-color: var(--lamp);
+  filter: blur(4px);
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .electric .e-main {
+    filter: none;
+  }
+}
+
 /* ======================================================================================
-   Tema Cristal: superficies translúcidas con desenfoque, bordes de luz y esquinas suaves,
-   al estilo de las apps de Apple. Es el tema por defecto; Bloques se elige en Ajustes.
+   Tema Cristal (Liquid Glass): vidrio que dobla la luz en los bordes, brillos especulares
+   desde arriba a la izquierda, cápsulas con esquinas concéntricas y controles que flotan
+   sobre el contenido. Es el tema por defecto; Bloques se elige en Ajustes.
+
+   Cada superficie de vidrio se compone de:
+     - un lavado especular (gradiente claro en diagonal) recortado al relleno,
+     - un borde de 1 px con luz en las esquinas opuestas (la luz entra y sale del canto),
+     - un filo interior claro arriba-izquierda,
+     - desenfoque del fondo y, en Chromium, una lente SVG que refracta lo que hay detrás.
    ====================================================================================== */
 
 :root[data-theme='glass'] {
-  --night: #0c0f15;
-  --side: rgba(12, 15, 21, 0.55);
-  --slate: rgba(255, 255, 255, 0.055);
-  --slate-2: rgba(255, 255, 255, 0.085);
-  --slate-3: rgba(255, 255, 255, 0.13);
-  --line: rgba(255, 255, 255, 0.11);
-  --edge: rgba(255, 255, 255, 0.12);
-  --sand: #f2f3f6;
-  --sand-dim: #b6bcc8;
-  --sand-faint: #959cab;
+  --night: #0a0d13;
+  --side: rgba(14, 18, 26, 0.5);
+  --slate: rgba(255, 255, 255, 0.06);
+  --slate-2: rgba(255, 255, 255, 0.09);
+  --slate-3: rgba(255, 255, 255, 0.14);
+  --line: rgba(255, 255, 255, 0.1);
+  --edge: rgba(255, 255, 255, 0.14);
+  --sand: #f4f5f8;
+  --sand-dim: #b9bfcb;
+  --sand-faint: #979eac;
   --grass: #3fcf63;
   --grass-light: #8ff0a4;
-  --grass-deep: #1f8f3c;
-  --prismarine: #6ad5e8;
+  --grass-deep: #187a33;
+  --prismarine: #6fd6ea;
   --prismarine-deep: #2b8d9e;
   --lapis: #9ab4ff;
   --grain: none;
@@ -3008,14 +3075,20 @@ label.check input {
   --bevel: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --bevel-strong: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   --bevel-pressed: inset 0 1px 2px rgba(0, 0, 0, 0.35);
-  --glass: rgba(255, 255, 255, 0.055);
-  --glass-border: rgba(255, 255, 255, 0.11);
-  --glass-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
-  --r-control: 10px;
-  --r-panel: 16px;
+  --r-control: 12px;
+  --r-pill: 999px;
+  --r-panel: 22px;
+
+  /* El lavado especular y el borde con luz, como capas de fondo (relleno y borde). */
+  --lg-wash: linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035) 38%, rgba(255, 255, 255, 0.015) 62%, rgba(255, 255, 255, 0.07));
+  --lg-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.1) 32%, rgba(255, 255, 255, 0.06) 68%, rgba(255, 255, 255, 0.42));
+  --lg-tint: rgba(18, 22, 32, 0.38);
+  --lg-edge: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(255, 255, 255, 0.07);
+  --lg-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --lg-blur: blur(16px) saturate(170%);
 }
 
-/* El fondo: noche profunda con tres manchas de luz suaves (pasto, prismarina y amatista). */
+/* El fondo: noche profunda con luz de pasto, prismarina y amatista, y un destello diagonal. */
 :root[data-theme='glass'] body {
   background: var(--night);
   background-image: none;
@@ -3028,84 +3101,13 @@ label.check input {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(60% 50% at 8% 0%, rgba(63, 207, 99, 0.2), transparent 70%),
-    radial-gradient(50% 45% at 100% 20%, rgba(106, 213, 232, 0.14), transparent 70%),
-    radial-gradient(60% 50% at 60% 110%, rgba(140, 110, 255, 0.16), transparent 70%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
+    radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%),
+    radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
 }
 
-:where(:root[data-theme='glass']) button,
-:where(:root[data-theme='glass']) .btn {
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-}
-
-:where(:root[data-theme='glass']) button:hover:not(:disabled),
-:where(:root[data-theme='glass']) .btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-:where(:root[data-theme='glass']) button:active:not(:disabled),
-:where(:root[data-theme='glass']) .btn:active {
-  box-shadow: var(--bevel-pressed);
-  transform: scale(0.98);
-}
-
-:root[data-theme='glass'] .btn-go {
-  background: linear-gradient(180deg, #5be07a, #2eb84f);
-  border-color: rgba(143, 240, 164, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px -6px rgba(63, 207, 99, 0.7);
-  color: #06230f;
-}
-
-:root[data-theme='glass'] .btn-go:hover:not(:disabled) {
-  background: linear-gradient(180deg, #6ee889, #39c45b);
-  border-color: rgba(143, 240, 164, 0.7);
-}
-
-:root[data-theme='glass'] .btn-go:active:not(:disabled) {
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
-}
-
-:root[data-theme='glass'] .btn-stop {
-  background: rgba(239, 106, 88, 0.14);
-  border-color: rgba(239, 106, 88, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  color: #ffb3a8;
-}
-
-:root[data-theme='glass'] .btn-stop:hover:not(:disabled) {
-  background: rgba(239, 106, 88, 0.24);
-  border-color: rgba(239, 106, 88, 0.55);
-}
-
-:root[data-theme='glass'] .btn-ghost,
-:root[data-theme='glass'] .btn-ghost:hover:not(:disabled) {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-}
-
-:root[data-theme='glass'] .btn-ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-:where(:root[data-theme='glass']) input,
-:where(:root[data-theme='glass']) select,
-:where(:root[data-theme='glass']) textarea {
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-:where(:root[data-theme='glass']) input:focus,
-:where(:root[data-theme='glass']) select:focus,
-:where(:root[data-theme='glass']) textarea:focus {
-  border-color: var(--prismarine);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(106, 213, 232, 0.22);
-}
+/* ---- Superficies de vidrio ---- */
 
 :root[data-theme='glass'] .panel,
 :root[data-theme='glass'] .rack-slot,
@@ -3117,17 +3119,63 @@ label.check input {
 :root[data-theme='glass'] .player-card,
 :root[data-theme='glass'] .update-row,
 :root[data-theme='glass'] .login-code,
-:root[data-theme='glass'] .empty {
-  background: var(--glass);
-  background-image: none;
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+:root[data-theme='glass'] .empty,
+:root[data-theme='glass'] .modal,
+:root[data-theme='glass'] .toast,
+:root[data-theme='glass'] .player-menu,
+:root[data-theme='glass'] .auth-card,
+:root[data-theme='glass'] .tabs,
+:root[data-theme='glass'] .subtabs,
+:root[data-theme='glass'] .segmented {
+  border: 1px solid transparent;
+  background:
+    var(--lg-wash) padding-box,
+    linear-gradient(var(--lg-tint), var(--lg-tint)) padding-box,
+    var(--lg-rim) border-box;
+  box-shadow: var(--lg-edge), var(--lg-shadow);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+
+/* En Chromium, la lente: fuerte en cápsulas y controles flotantes, suave en losas grandes. */
+@supports (backdrop-filter: url('#lg-lens')) {
+  :root[data-theme='glass'] .tabs,
+  :root[data-theme='glass'] .subtabs,
+  :root[data-theme='glass'] .segmented,
+  :root[data-theme='glass'] .toast,
+  :root[data-theme='glass'] .player-menu {
+    backdrop-filter: url('#lg-lens') blur(3px) saturate(170%);
+    -webkit-backdrop-filter: url('#lg-lens') blur(3px) saturate(170%);
+  }
+  :root[data-theme='glass'] .panel,
+  :root[data-theme='glass'] .rack-slot,
+  :root[data-theme='glass'] .mcard,
+  :root[data-theme='glass'] .modal,
+  :root[data-theme='glass'] .auth-card,
+  :root[data-theme='glass'] .sidebar {
+    backdrop-filter: url('#lg-lens-soft') var(--lg-blur);
+    -webkit-backdrop-filter: url('#lg-lens-soft') var(--lg-blur);
+  }
+}
+
+/* Quien pide menos transparencia recibe superficies casi sólidas. */
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme='glass'] {
+    --lg-tint: rgba(22, 26, 36, 0.94);
+    --side: rgba(14, 18, 26, 0.96);
+  }
 }
 
 :root[data-theme='glass'] .rack-slot.is-on {
-  box-shadow: var(--glass-shadow), inset 3px 0 0 var(--lamp);
+  box-shadow: var(--lg-edge), var(--lg-shadow), 0 0 48px -10px rgba(255, 199, 87, 0.45);
+}
+
+:root[data-theme='glass'] .mcard {
+  border-radius: 18px;
+}
+
+:root[data-theme='glass'] .mcard-banner {
+  border-radius: 0;
 }
 
 :root[data-theme='glass'] .sec-item {
@@ -3137,14 +3185,16 @@ label.check input {
 :root[data-theme='glass'] .health-item,
 :root[data-theme='glass'] .address,
 :root[data-theme='glass'] .note,
-:root[data-theme='glass'] .error-box {
-  background: rgba(0, 0, 0, 0.22);
-  border-color: rgba(255, 255, 255, 0.1);
-  border-radius: var(--r-control);
+:root[data-theme='glass'] .error-box,
+:root[data-theme='glass'] .log-box {
+  background: rgba(0, 0, 0, 0.26);
+  border-color: rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
 }
 
 :root[data-theme='glass'] .note {
   border-left: 3px solid var(--gold);
+  border-radius: 6px 14px 14px 6px;
 }
 
 :root[data-theme='glass'] .error-box {
@@ -3155,29 +3205,154 @@ label.check input {
 :root[data-theme='glass'] .chip,
 :root[data-theme='glass'] .mcard-tags span {
   background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-/* Estructura: la barra lateral y la barra del celular son cristal sobre el fondo. */
+/* ---- Botones: cápsulas de vidrio ---- */
+
+:where(:root[data-theme='glass']) button,
+:where(:root[data-theme='glass']) .btn {
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.12)) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)) padding-box,
+    var(--lg-rim) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px 0 rgba(255, 255, 255, 0.06), 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.12s, filter 0.15s;
+}
+
+:where(:root[data-theme='glass']) button:hover:not(:disabled),
+:where(:root[data-theme='glass']) .btn:hover {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18)) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)) padding-box,
+    var(--lg-rim) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.08), 0 10px 22px -10px rgba(0, 0, 0, 0.7);
+}
+
+:where(:root[data-theme='glass']) button:active:not(:disabled),
+:where(:root[data-theme='glass']) .btn:active {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  transform: scale(0.97);
+}
+
+/* La acción principal: vidrio teñido de pasto con texto blanco y halo. */
+:root[data-theme='glass'] .btn-go {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.14)) padding-box,
+    linear-gradient(rgba(24, 122, 51, 0.92), rgba(24, 122, 51, 0.92)) padding-box,
+    linear-gradient(135deg, rgba(200, 255, 210, 0.8), rgba(143, 240, 164, 0.25) 35%, rgba(143, 240, 164, 0.2) 65%, rgba(200, 255, 210, 0.6)) border-box;
+  color: #fff;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px -8px rgba(63, 207, 99, 0.65);
+}
+
+:root[data-theme='glass'] .btn-go:hover:not(:disabled) {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.05) 60%, rgba(255, 255, 255, 0.2)) padding-box,
+    linear-gradient(rgba(27, 138, 58, 0.95), rgba(27, 138, 58, 0.95)) padding-box,
+    linear-gradient(135deg, rgba(220, 255, 228, 0.9), rgba(143, 240, 164, 0.35) 35%, rgba(143, 240, 164, 0.3) 65%, rgba(220, 255, 228, 0.7)) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(255, 255, 255, 0.12), 0 14px 30px -8px rgba(63, 207, 99, 0.8);
+}
+
+:root[data-theme='glass'] .btn-go:active:not(:disabled) {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme='glass'] .btn-stop {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.08)) padding-box,
+    linear-gradient(rgba(239, 106, 88, 0.16), rgba(239, 106, 88, 0.16)) padding-box,
+    linear-gradient(135deg, rgba(255, 190, 180, 0.6), rgba(239, 106, 88, 0.25) 35%, rgba(239, 106, 88, 0.2) 65%, rgba(255, 190, 180, 0.45)) border-box;
+  color: #ffb8ae;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2), 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme='glass'] .btn-stop:hover:not(:disabled) {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.12)) padding-box,
+    linear-gradient(rgba(239, 106, 88, 0.28), rgba(239, 106, 88, 0.28)) padding-box,
+    linear-gradient(135deg, rgba(255, 190, 180, 0.75), rgba(239, 106, 88, 0.35) 35%, rgba(239, 106, 88, 0.3) 65%, rgba(255, 190, 180, 0.6)) border-box;
+}
+
+:root[data-theme='glass'] .btn-ghost,
+:root[data-theme='glass'] .btn-ghost:hover:not(:disabled) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-theme='glass'] .btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme='glass'] .type-option {
+  border-radius: 18px;
+}
+
+:root[data-theme='glass'] .type-option.on {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01) 60%, rgba(255, 255, 255, 0.08)) padding-box,
+    linear-gradient(rgba(63, 207, 99, 0.16), rgba(63, 207, 99, 0.16)) padding-box,
+    linear-gradient(135deg, rgba(180, 255, 200, 0.85), rgba(63, 207, 99, 0.35) 35%, rgba(63, 207, 99, 0.3) 65%, rgba(180, 255, 200, 0.7)) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px -10px rgba(63, 207, 99, 0.5);
+}
+
+/* ---- Campos ---- */
+
+:where(:root[data-theme='glass']) input,
+:where(:root[data-theme='glass']) select,
+:where(:root[data-theme='glass']) textarea {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--r-control);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:where(:root[data-theme='glass']) input:focus,
+:where(:root[data-theme='glass']) select:focus,
+:where(:root[data-theme='glass']) textarea:focus {
+  border-color: rgba(111, 214, 234, 0.9);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(111, 214, 234, 0.2);
+}
+
+:root[data-theme='glass'] input[type='checkbox'] {
+  border-radius: 5px;
+}
+
+/* ---- Estructura: la barra lateral es una lámina de vidrio sobre el fondo ---- */
+
 :root[data-theme='glass'] .sidebar,
 :root[data-theme='glass'] .mobile-bar {
   background: var(--side);
-  border-color: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
 }
 
 :root[data-theme='glass'] .side-link {
-  border-radius: 10px;
+  border-radius: var(--r-pill);
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
 }
 
 :root[data-theme='glass'] .side-link:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 :root[data-theme='glass'] .side-link.active {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.03) 60%, rgba(255, 255, 255, 0.1)) padding-box,
+    linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)) padding-box,
+    var(--lg-rim) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25), 0 8px 18px -10px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme='glass'] .side-foot {
@@ -3193,47 +3368,54 @@ label.check input {
   text-shadow: none;
 }
 
+:root[data-theme='glass'] .server-icon {
+  border-radius: 12px;
+}
+
 :root[data-theme='glass'] .server-head .server-icon,
 :root[data-theme='glass'] .server-icon.placeholder {
-  border-radius: 12px;
+  border-radius: 16px;
   background-image: none;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 12px 24px -10px rgba(0, 0, 0, 0.8);
 }
 
-:root[data-theme='glass'] .server-icon {
-  border-radius: 10px;
-}
+/* ---- Pestañas: cápsula flotante con la selección como una gota de vidrio ---- */
 
-/* Pestañas: un control segmentado, como en iOS. */
-:root[data-theme='glass'] .tabs {
+:root[data-theme='glass'] .tabs,
+:root[data-theme='glass'] .subtabs,
+:root[data-theme='glass'] .segmented {
   display: inline-flex;
   max-width: 100%;
   gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.25);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: var(--r-pill);
+  --lg-tint: rgba(10, 13, 19, 0.3);
 }
 
 :root[data-theme='glass'] .tab {
-  padding: 0.45rem 0.95rem;
+  padding: 0.45rem 1rem;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--r-pill);
   margin-bottom: 0;
   font-size: var(--step--1);
   font-weight: 600;
+  transition: background-color 0.15s, color 0.15s;
 }
 
-:root[data-theme='glass'] .tab:hover {
-  background: rgba(255, 255, 255, 0.06);
+:root[data-theme='glass'] .tab:hover,
+:root[data-theme='glass'] .subtab:hover {
+  background: rgba(255, 255, 255, 0.07);
 }
 
-:root[data-theme='glass'] .tab.active {
-  background: rgba(255, 255, 255, 0.14);
+:root[data-theme='glass'] .tab.active,
+:root[data-theme='glass'] .subtab.active,
+:root[data-theme='glass'] .segmented button.on {
   border: 0;
   padding-bottom: 0.45rem;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 2px 6px rgba(0, 0, 0, 0.3);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18)),
+    rgba(255, 255, 255, 0.06);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.08), 0 6px 14px -6px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme='glass'] .tabs:has(+ .subtabs) {
@@ -3241,42 +3423,31 @@ label.check input {
   margin-right: 0.75rem;
 }
 
-:root[data-theme='glass'] .subtabs,
-:root[data-theme='glass'] .segmented {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--glass-border);
-  border-radius: 10px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
 :root[data-theme='glass'] .subtab,
 :root[data-theme='glass'] .segmented button {
-  border-radius: 7px;
+  border-radius: var(--r-pill);
 }
 
-:root[data-theme='glass'] .subtab.active,
-:root[data-theme='glass'] .segmented button.on {
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 2px 6px rgba(0, 0, 0, 0.3);
+:root[data-theme='glass'] .subtab.active {
+  padding-bottom: 0.35rem;
 }
 
-:root[data-theme='glass'] .type-option.on {
-  background: rgba(63, 207, 99, 0.12);
-  border-color: rgba(63, 207, 99, 0.55);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 3px rgba(63, 207, 99, 0.15);
-}
+/* ---- La consola: vidrio oscuro ---- */
 
-/* La consola: vidrio oscuro. */
 :root[data-theme='glass'] .terminal,
 :root[data-theme='glass'] .logview,
 :root[data-theme='glass'] .nbt-tree,
 :root[data-theme='glass'] .picker-list,
 :root[data-theme='glass'] .doc pre {
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--glass-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.01) 40%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.03)) padding-box,
+    linear-gradient(rgba(0, 0, 0, 0.46), rgba(0, 0, 0, 0.46)) padding-box,
+    var(--lg-rim) border-box;
+  border-radius: var(--r-panel);
+  box-shadow: var(--lg-edge), var(--lg-shadow);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
 }
 
 :root[data-theme='glass'] .terminal-bar,
@@ -3286,82 +3457,81 @@ label.check input {
 }
 
 :root[data-theme='glass'] .terminal-filters button.on {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.16);
   border-color: transparent;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 :root[data-theme='glass'] .stat {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Estado: la lámpara es un punto redondo con halo. */
+/* ---- Estado: un punto con halo ---- */
+
 :root[data-theme='glass'] .dot {
   border-radius: 50%;
   background: #3a3f4b;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme='glass'] .dot.running {
-  background: var(--lamp);
-  box-shadow: 0 0 0 3px rgba(255, 199, 87, 0.18), 0 0 12px rgba(255, 199, 87, 0.6);
+  background: radial-gradient(circle at 35% 30%, #fff1c9, var(--lamp) 60%);
+  box-shadow: 0 0 0 3px rgba(255, 199, 87, 0.18), 0 0 14px rgba(255, 199, 87, 0.7);
 }
 
 :root[data-theme='glass'] .dot.crashed,
 :root[data-theme='glass'] .dot.error {
-  background: var(--redstone);
-  box-shadow: 0 0 0 3px rgba(239, 106, 88, 0.18), 0 0 12px rgba(239, 106, 88, 0.6);
+  background: radial-gradient(circle at 35% 30%, #ffd0c8, var(--redstone) 60%);
+  box-shadow: 0 0 0 3px rgba(239, 106, 88, 0.18), 0 0 14px rgba(239, 106, 88, 0.7);
 }
 
-/* Progreso: una barra redonda con brillo. */
+/* ---- Progreso: tubo de vidrio con líquido verde ---- */
+
 :root[data-theme='glass'] .progress {
-  height: 8px;
-  border: 0;
-  border-radius: 999px;
+  height: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-pill);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme='glass'] .progress > i {
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, #9bf7b0, #3fcf63 55%, #2bb24f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 14px rgba(63, 207, 99, 0.6);
+}
+
+:root[data-theme='glass'] .meter {
+  border-radius: var(--r-pill);
   background: rgba(0, 0, 0, 0.35);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-:root[data-theme='glass'] .progress > i {
-  border-radius: 999px;
-  background: linear-gradient(180deg, #7cf09a, #3fcf63);
-  box-shadow: 0 0 12px rgba(63, 207, 99, 0.55);
-}
-
-:root[data-theme='glass'] .meter {
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: none;
-}
-
 :root[data-theme='glass'] .meter > i {
-  border-radius: 999px;
-  box-shadow: 0 0 8px rgba(106, 213, 232, 0.5);
+  border-radius: var(--r-pill);
+  background: linear-gradient(180deg, #a9ecf7, var(--prismarine));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 8px rgba(111, 214, 234, 0.5);
 }
 
-/* Diálogos, avisos y menús. */
+/* ---- Diálogos, avisos y menús ---- */
+
 :root[data-theme='glass'] .modal-back {
-  background: rgba(6, 8, 12, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(4, 6, 10, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 :root[data-theme='glass'] .modal {
-  background: rgba(22, 26, 35, 0.78);
-  background-image: none;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 40px 80px -30px rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  --lg-tint: rgba(18, 22, 32, 0.6);
+  border-radius: 26px;
+  box-shadow: var(--lg-edge), 0 50px 100px -30px rgba(0, 0, 0, 0.9);
 }
 
 :root[data-theme='glass'] .toast {
   grid-template-columns: 8px 1fr;
-  background: rgba(22, 26, 35, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 20px 40px -16px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-radius: 18px;
+  padding: 0.7rem 1rem 0.7rem 0.8rem;
+  --lg-tint: rgba(18, 22, 32, 0.55);
 }
 
 :root[data-theme='glass'] .toast::before {
@@ -3376,16 +3546,14 @@ label.check input {
 }
 
 :root[data-theme='glass'] .player-menu {
-  background: rgba(22, 26, 35, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  --lg-tint: rgba(18, 22, 32, 0.6);
   outline: 0;
-  border-radius: 12px;
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-radius: 16px;
+  padding: 0.4rem;
 }
 
 :root[data-theme='glass'] .player-menu button {
-  border-radius: 7px;
+  border-radius: 10px;
 }
 
 :root[data-theme='glass'] .player-menu button:hover:not(:disabled) {
@@ -3400,16 +3568,18 @@ label.check input {
 :root[data-theme='glass'] .health-icon,
 :root[data-theme='glass'] .tl-icon,
 :root[data-theme='glass'] .heads img,
-:root[data-theme='glass'] .heads .head-fallback {
-  border-radius: 6px;
+:root[data-theme='glass'] .heads .head-fallback,
+:root[data-theme='glass'] .mcard-icon {
+  border-radius: 8px;
 }
 
 :root[data-theme='glass'] .heads img,
 :root[data-theme='glass'] .heads .head-fallback {
-  border-color: rgba(12, 15, 21, 0.9);
+  border-color: rgba(10, 13, 19, 0.9);
 }
 
-/* Acceso: el mismo fondo con luz, la tarjeta de cristal en el centro, sin splash. */
+/* ---- Acceso: la misma luz, la tarjeta de vidrio flotando ---- */
+
 :root[data-theme='glass'] .auth {
   background: var(--night);
 }
@@ -3421,19 +3591,17 @@ label.check input {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(45% 40% at 30% 20%, rgba(63, 207, 99, 0.28), transparent 70%),
-    radial-gradient(45% 40% at 75% 75%, rgba(140, 110, 255, 0.22), transparent 70%),
-    radial-gradient(35% 35% at 85% 15%, rgba(106, 213, 232, 0.16), transparent 70%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
+    radial-gradient(45% 40% at 30% 20%, rgba(63, 207, 99, 0.34), transparent 70%),
+    radial-gradient(45% 40% at 75% 75%, rgba(150, 120, 255, 0.3), transparent 70%),
+    radial-gradient(35% 35% at 85% 15%, rgba(111, 214, 234, 0.2), transparent 70%);
 }
 
 :root[data-theme='glass'] .auth-card {
   z-index: 1;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 40px 80px -30px rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  padding: 1.75rem;
+  --lg-tint: rgba(18, 22, 32, 0.42);
+  border-radius: 28px;
+  padding: 1.9rem;
 }
 
 :root[data-theme='glass'] .auth-card h1 {
@@ -3444,9 +3612,9 @@ label.check input {
   display: none;
 }
 
-/* El bloque de pasto, como ícono de app: esquinas suaves y una sombra que lo despega. */
+/* El bloque de pasto, como ícono de app: una sombra que lo despega del vidrio. */
 :root[data-theme='glass'] .block {
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
 }
 
 :root[data-theme='glass'] .block i {
@@ -3454,11 +3622,15 @@ label.check input {
 }
 
 :root[data-theme='glass'] .inv-panel {
-  border-radius: 12px;
+  border-radius: 14px;
+}
+
+:root[data-theme='glass'] .cropper .crop-view {
+  border-radius: 14px;
 }
 
 :root[data-theme='glass'] ::selection {
-  background: rgba(106, 213, 232, 0.35);
+  background: rgba(111, 214, 234, 0.35);
 }
 
 @media (max-width: 860px) {
