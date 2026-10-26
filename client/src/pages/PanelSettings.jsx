@@ -1,31 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
-import { getTheme, setTheme, THEMES } from '../theme.js';
-
-/** Cristal o Bloques: se guarda en este navegador. */
-function Appearance() {
-  const [theme, setThemeState] = useState(getTheme);
-  const choose = (id) => {
-    setTheme(id);
-    setThemeState(id);
-  };
-  return (
-    <section className="panel stack">
-      <h2 style={{ margin: 0 }}>Apariencia</h2>
-      <div className="type-grid" role="radiogroup" aria-label="Apariencia">
-        {THEMES.map((t) => (
-          <button key={t.id} type="button" role="radio" aria-checked={theme === t.id} className={`type-option${theme === t.id ? ' on' : ''}`} onClick={() => choose(t.id)}>
-            <strong>{t.label}</strong>
-            <span>{t.text}</span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -56,13 +34,15 @@ export default function PanelSettings() {
   return (
     <div className="page stack" style={{ gap: '1.75rem', maxWidth: 860 }}>
       <h1>Ajustes del panel</h1>
+      <p className="muted small">
+        El tema, el fondo y el movimiento se eligen en <Link to="/apariencia">Perfil y apariencia</Link>.
+      </p>
 
       <PanelUpdate />
 
       <PlayitSettings />
       <DnsSettings />
       <CurseForgeSettings />
-      <Appearance />
       <AppSettings />
 
       <section className="panel stack">

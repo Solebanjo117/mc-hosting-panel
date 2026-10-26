@@ -13,6 +13,7 @@ const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
 const ImportModpack = lazy(() => import('./pages/ImportModpack.jsx'));
 const Guide = lazy(() => import('./pages/Guide.jsx'));
 const PanelSettings = lazy(() => import('./pages/PanelSettings.jsx'));
+const Appearance = lazy(() => import('./pages/Appearance.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -117,6 +118,9 @@ function Shell({ username, onLogout }) {
           <NavLink to="/ajustes" className="side-link">
             Ajustes del panel
           </NavLink>
+          <NavLink to="/apariencia" className="side-link">
+            Perfil y apariencia
+          </NavLink>
           <button
             className="side-link btn-ghost"
             style={{ justifyContent: 'flex-start', fontWeight: 400 }}
@@ -140,6 +144,7 @@ function Shell({ username, onLogout }) {
             <Route path="/servidor/:id/*" element={<ServerView />} />
             <Route path="/guia" element={<Guide />} />
             <Route path="/ajustes" element={<PanelSettings />} />
+            <Route path="/apariencia" element={<Appearance username={username} />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </Suspense>

@@ -10,12 +10,13 @@ import '@fontsource/pixelify-sans/latin-600.css';
 import '@fontsource/pixelify-sans/latin-700.css';
 import '@fontsource/pixelify-sans/latin-ext-400.css';
 import '@fontsource/pixelify-sans/latin-ext-500.css';
-import '@fontsource/jetbrains-mono/latin-400.css';
 import './styles.css';
 import { registerServiceWorker } from './notify.js';
-import { applyTheme, getTheme } from './theme.js';
+import { applyAnimated, applyBackground, applyTheme, getAnimated, getBackground, getTheme } from './theme.js';
 
 applyTheme(getTheme());
+applyBackground(getBackground());
+applyAnimated(getAnimated());
 registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(

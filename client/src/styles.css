@@ -37,10 +37,10 @@
   --bevel-strong: inset 2px 2px 0 rgba(255, 255, 255, 0.22), inset -2px -2px 0 rgba(0, 0, 0, 0.35);
   --bevel-pressed: inset 2px 2px 0 rgba(0, 0, 0, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.05);
 
-  /* Todo el panel se escribe con la letra pixelada del juego; la consola y el código, en monoespaciada. */
+  /* Todo el panel, consola incluida, se escribe con la letra pixelada del juego. */
   --font-ui: 'Pixelify Sans', 'Segoe UI', system-ui, sans-serif;
   --font-pixel: 'Pixelify Sans', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', Consolas, 'Cascadia Mono', monospace;
+  --font-mono: 'Pixelify Sans', Consolas, 'Cascadia Mono', monospace; /* la consola también en pixel */
 
   /* Escala 1.2 sobre 15 px */
   --step--1: 0.8125rem;
@@ -866,8 +866,8 @@ label.check input {
   overflow-y: auto;
   padding: 0.9rem 1rem;
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
   color: #d3d0c8;
@@ -1676,7 +1676,7 @@ label.check input {
   border-radius: var(--r-panel);
   padding: 0.75rem 0.9rem;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13.5px;
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
@@ -2146,7 +2146,7 @@ label.check input {
 }
 .rack-slot {
   display: grid;
-  grid-template-columns: minmax(240px, 1.6fr) minmax(130px, 0.8fr) minmax(260px, 1.6fr) auto;
+  grid-template-columns: minmax(240px, 1.6fr) minmax(130px, 0.8fr) minmax(300px, 1.6fr) auto;
   gap: 1rem 1.5rem;
   align-items: center;
   padding: 0.9rem 1.1rem;
@@ -2273,6 +2273,7 @@ label.check input {
   gap: 0.3rem;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
 }
 .spark-head .faint {
   overflow: hidden;
@@ -2300,6 +2301,7 @@ label.check input {
   font-size: var(--step--1);
   color: var(--sand-dim);
   text-decoration: none;
+  white-space: nowrap;
 }
 .health-chip i {
   width: 9px;
@@ -3119,25 +3121,329 @@ label.check input {
   --lg-edge: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(255, 255, 255, 0.07);
   --lg-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.25);
   --lg-blur: blur(16px) saturate(170%);
-}
 
-/* El fondo: noche profunda con luz de pasto, prismarina y amatista, y un destello diagonal. */
-:root[data-theme='glass'] body {
-  background: var(--night);
-  background-image: none;
-}
-
-:root[data-theme='glass'] body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
+  /* Fondo "Aurora": luz de pasto, prismarina y amatista con un destello diagonal. */
+  --bg-color: #0a0d13;
+  --bg-image:
     linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
     radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
     radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%),
     radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
+  --bg-size: auto;
+  --bg-filter: none;
+}
+
+/* Fondo "Cueva": deepslate con menas que brillan en la oscuridad (diamante, esmeralda, redstone, oro). */
+:root[data-theme='glass'][data-bg='cueva'],
+.bg-preview[data-bg='cueva'] {
+  --bg-color: #0b0c10;
+  --bg-image:
+    radial-gradient(9% 12% at 12% 22%, rgba(111, 214, 234, 0.55), transparent 70%),
+    radial-gradient(7% 10% at 78% 14%, rgba(63, 207, 99, 0.5), transparent 70%),
+    radial-gradient(8% 11% at 88% 62%, rgba(239, 106, 88, 0.45), transparent 70%),
+    radial-gradient(6% 9% at 30% 78%, rgba(255, 199, 87, 0.45), transparent 70%),
+    radial-gradient(10% 13% at 58% 90%, rgba(111, 214, 234, 0.35), transparent 70%),
+    radial-gradient(7% 9% at 50% 40%, rgba(150, 120, 255, 0.35), transparent 70%),
+    linear-gradient(180deg, #121419, #0b0c10 60%, #08090c);
+}
+
+/* Fondo "Atardecer": el panorama de la pantalla de título al caer la noche, desenfocado. */
+:root[data-theme='glass'][data-bg='atardecer'],
+.bg-preview[data-bg='atardecer'] {
+  --bg-color: #0d1322;
+  --bg-image:
+    radial-gradient(28% 22% at 72% 30%, rgba(255, 226, 170, 0.55), transparent 70%),
+    linear-gradient(180deg, #0c1326 0%, #1b2a55 34%, #6a4a74 50%, #d2783f 60%, #1b2d1d 64%, #0f2214 78%, #0a1a10 100%);
+  --bg-filter: blur(28px) saturate(120%);
+}
+
+/* Fondo "Fin": el cielo del End, con estrellas de píxel y una nebulosa morada. */
+:root[data-theme='glass'][data-bg='fin'],
+.bg-preview[data-bg='fin'] {
+  --bg-color: #07060c;
+  --bg-image:
+    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22240%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M74 10h1v1h-1zM206 98h1v1h-1zM113 67h1v1h-1zM52 171h1v1h-1zM141 198h1v1h-1zM91 20h1v1h-1zM142 133h1v1h-1zM114 56h1v1h-1zM2 46h1v1h-1zM138 171h1v1h-1zM212 125h1v1h-1zM23 146h1v1h-1zM216 4h1v1h-1zM172 193h1v1h-1zM40 191h1v1h-1zM227 175h1v1h-1zM103 61h1v1h-1zM147 5h1v1h-1zM84 209h1v1h-1zM0 159h1v1h-1zM163 122h1v1h-1zM204 104h1v1h-1zM102 194h1v1h-1zM121 54h1v1h-1zM198 26h1v1h-1zM84 132h1v1h-1zM25 90h1v1h-1zM41 137h1v1h-1zM23 235h1v1h-1zM238 185h1v1h-1zM206 155h1v1h-1zM120 73h1v1h-1zM230 136h1v1h-1zM218 35h1v1h-1zM165 69h1v1h-1zM198 87h1v1h-1zM122 55h1v1h-1zM24 191h1v1h-1zM181 81h1v1h-1zM206 104h1v1h-1zM7 133h1v1h-1zM70 193h1v1h-1zM237 118h1v1h-1zM181 41h1v1h-1zM58 63h1v1h-1zM119 149h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.45%22/%3E%3Cpath d=%22M0 107h2v2h-2zM124 112h2v2h-2zM33 91h2v2h-2zM52 176h2v2h-2zM73 191h2v2h-2zM3 92h2v2h-2zM230 76h2v2h-2zM227 68h2v2h-2zM239 192h2v2h-2zM228 199h2v2h-2zM228 131h2v2h-2zM222 239h2v2h-2zM11 12h2v2h-2zM90 113h2v2h-2zM132 221h2v2h-2zM135 88h2v2h-2zM127 61h2v2h-2zM38 230h2v2h-2zM210 115h2v2h-2zM209 62h2v2h-2zM0 4h2v2h-2zM76 153h2v2h-2zM156 118h2v2h-2zM110 72h2v2h-2z%22 fill=%22%23e9e4ff%22 fill-opacity=%22.7%22/%3E%3C/svg%3E"),
+    radial-gradient(50% 45% at 70% 30%, rgba(150, 110, 255, 0.28), transparent 70%),
+    radial-gradient(45% 40% at 20% 80%, rgba(90, 60, 170, 0.3), transparent 70%),
+    radial-gradient(30% 30% at 40% 20%, rgba(255, 255, 255, 0.05), transparent 70%),
+    linear-gradient(180deg, #0b0a16, #07060c);
+  --bg-size: 240px 240px, auto, auto, auto, auto;
+}
+
+/* Fondo "Nether": roca oscura con lava al fondo. */
+:root[data-theme='glass'][data-bg='nether'],
+.bg-preview[data-bg='nether'] {
+  --bg-color: #140a0a;
+  --bg-image:
+    radial-gradient(60% 40% at 50% 115%, rgba(255, 140, 40, 0.55), rgba(220, 60, 30, 0.25) 45%, transparent 70%),
+    radial-gradient(35% 30% at 10% 60%, rgba(255, 90, 40, 0.18), transparent 70%),
+    radial-gradient(35% 30% at 90% 50%, rgba(255, 120, 60, 0.14), transparent 70%),
+    linear-gradient(180deg, #16090b, #1a0c0c 60%, #241010);
+}
+
+/* Fondo "Océano": azul profundo con luz que ondula desde arriba. */
+:root[data-theme='glass'][data-bg='oceano'],
+.bg-preview[data-bg='oceano'] {
+  --bg-color: #061420;
+  --bg-image:
+    radial-gradient(60% 40% at 50% -10%, rgba(120, 220, 255, 0.35), transparent 70%),
+    radial-gradient(40% 35% at 15% 40%, rgba(40, 150, 200, 0.18), transparent 70%),
+    linear-gradient(180deg, #0a2236 0%, #071a2b 50%, #04101c 100%);
+}
+
+/* Fondo "Nevada": noche de invierno. */
+:root[data-theme='glass'][data-bg='nevada'],
+.bg-preview[data-bg='nevada'] {
+  --bg-color: #0c1119;
+  --bg-image:
+    radial-gradient(40% 30% at 75% 15%, rgba(220, 235, 255, 0.16), transparent 70%),
+    linear-gradient(180deg, #0a0f18 0%, #141c2b 55%, #1d2838 85%, #27354a 100%);
+}
+
+/* ---- Vista previa de los fondos ---- */
+.bg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.bg-option {
+  display: grid;
+  gap: 0.25rem;
+  justify-items: start;
+  text-align: left;
+  align-content: start;
+  padding: 0.6rem;
+  min-height: 0;
+  border-radius: var(--r-panel);
+  white-space: normal;
+}
+
+.bg-option strong {
+  font-size: var(--step-0);
+}
+
+.bg-option > span:last-child {
+  color: var(--sand-dim);
+  font-weight: 400;
+  font-size: var(--step--1);
+}
+
+.bg-option.on {
+  border-color: var(--grass);
+  box-shadow: inset 0 0 0 2px var(--grass);
+}
+
+.bg-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: calc(var(--r-panel) - 4px);
+  margin-bottom: 0.3rem;
+  background-color: var(--bg-color, #0a0d13);
+  background-image: var(--bg-image);
+  background-size: var(--bg-size, auto);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  /* Aurora (sin atributo propio): los mismos valores que el tema. */
+  --bg-color: #0a0d13;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
+    radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%),
+    radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
+}
+
+.bg-preview[data-bg='fin'] {
+  background-size: 120px 120px, auto, auto, auto, auto;
+}
+
+.profile-head {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.profile-head h1 {
+  font-size: var(--step-2);
+}
+
+/* El fondo: noche profunda con luz de pasto, prismarina y amatista, y un destello diagonal. */
+:root[data-theme='glass'] body {
+  background: var(--bg-color);
+  background-image: none;
+}
+
+:root[data-theme='glass'] body::before,
+:root[data-theme='glass'] .auth::before {
+  content: '';
+  position: fixed;
+  inset: -40px;
+  pointer-events: none;
+  background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  background-size: var(--bg-size);
+  filter: var(--bg-filter);
+}
+
+:root[data-theme='glass'] body::before {
+  z-index: -1;
+}
+
+:root[data-theme='glass'] body::after,
+:root[data-theme='glass'] .auth::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--anim-image, none);
+  background-size: var(--anim-size, auto);
+  background-repeat: var(--anim-repeat, no-repeat);
+  mix-blend-mode: var(--anim-blend, normal);
+  opacity: var(--anim-opacity, 1);
+  filter: var(--anim-filter, none);
+  animation: var(--anim, none);
+  will-change: transform, opacity;
+}
+
+:root[data-theme='glass'] body::after {
+  z-index: -1;
+}
+
+:root[data-theme='glass'] .auth::after {
+  z-index: 0;
+}
+
+/* Sin movimiento: por elección o porque el sistema lo pide. */
+:root[data-anim='off'] body::after,
+:root[data-anim='off'] .auth::after {
+  animation: none;
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='glass'] body::after,
+  :root[data-theme='glass'] .auth::after {
+    display: none;
+  }
+}
+
+/* Aurora: una banda de luz verde y prismarina que cruza despacio. */
+:root[data-theme='glass'] {
+  --anim-image: linear-gradient(100deg, transparent 35%, rgba(63, 207, 99, 0.09) 46%, rgba(111, 214, 234, 0.09) 54%, transparent 65%);
+  --anim-size: 200% 100%;
+  --anim: bg-sweep 22s ease-in-out infinite alternate;
+}
+
+/* Cueva: las menas laten. */
+:root[data-theme='glass'][data-bg='cueva'] {
+  --anim-image:
+    radial-gradient(11% 14% at 12% 22%, rgba(111, 214, 234, 0.35), transparent 70%),
+    radial-gradient(9% 12% at 78% 14%, rgba(63, 207, 99, 0.35), transparent 70%),
+    radial-gradient(10% 13% at 88% 62%, rgba(239, 106, 88, 0.3), transparent 70%),
+    radial-gradient(8% 11% at 30% 78%, rgba(255, 199, 87, 0.3), transparent 70%);
+  --anim-size: auto;
+  --anim: bg-pulse 5s ease-in-out infinite alternate;
+}
+
+/* Atardecer: nubes desenfocadas que avanzan. */
+:root[data-theme='glass'][data-bg='atardecer'] {
+  --anim-image:
+    radial-gradient(14% 7% at 20% 38%, rgba(255, 220, 200, 0.22), transparent 70%),
+    radial-gradient(18% 6% at 60% 44%, rgba(255, 200, 170, 0.18), transparent 70%),
+    radial-gradient(12% 5% at 85% 36%, rgba(255, 230, 210, 0.16), transparent 70%);
+  --anim-size: 200% 100%;
+  --anim: bg-sweep 60s linear infinite alternate;
+}
+
+/* Fin: una segunda capa de estrellas que titila. */
+:root[data-theme='glass'][data-bg='fin'] {
+  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22260%22 height=%22260%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 6h1v1h-1zM98 142h1v1h-1zM65 9h1v1h-1zM21 159h1v1h-1zM162 129h1v1h-1zM213 246h1v1h-1zM29 206h1v1h-1zM59 47h1v1h-1zM113 46h1v1h-1zM212 139h1v1h-1zM156 206h1v1h-1zM142 104h1v1h-1zM120 31h1v1h-1zM29 10h1v1h-1zM147 33h1v1h-1zM243 137h1v1h-1zM9 23h1v1h-1zM241 142h1v1h-1zM143 103h1v1h-1zM206 104h1v1h-1zM177 155h1v1h-1zM161 85h1v1h-1zM256 174h1v1h-1zM137 90h1v1h-1zM70 9h1v1h-1zM163 256h1v1h-1zM121 83h1v1h-1zM68 215h1v1h-1zM49 167h1v1h-1zM237 102h1v1h-1zM209 157h1v1h-1zM227 87h1v1h-1zM180 93h1v1h-1zM31 22h1v1h-1zM207 181h1v1h-1zM134 217h1v1h-1zM96 4h1v1h-1zM47 177h1v1h-1zM167 39h1v1h-1zM133 185h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%220.8%22/%3E%3Cpath d=%22M10 229h2v2h-2zM94 216h2v2h-2zM252 124h2v2h-2zM242 177h2v2h-2zM256 113h2v2h-2zM94 11h2v2h-2zM19 209h2v2h-2zM154 118h2v2h-2zM124 92h2v2h-2zM50 144h2v2h-2z%22 fill=%22%23d9ccff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E");
+  --anim-size: 260px 260px;
+  --anim-repeat: repeat;
+  --anim: bg-twinkle 3.5s ease-in-out infinite alternate;
+}
+
+/* Nether: brasas que suben. */
+:root[data-theme='glass'][data-bg='nether'] {
+  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22440%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M78 335h2v2h-2zM133 44h2v2h-2zM117 65h2v2h-2zM100 334h2v2h-2zM64 204h2v2h-2zM214 92h2v2h-2zM166 214h2v2h-2zM81 161h2v2h-2zM148 393h2v2h-2zM96 439h2v2h-2zM20 138h2v2h-2zM15 232h2v2h-2zM135 143h2v2h-2zM125 227h2v2h-2zM35 133h2v2h-2zM88 438h2v2h-2zM100 295h2v2h-2zM192 403h2v2h-2zM108 173h2v2h-2zM111 197h2v2h-2zM125 428h2v2h-2zM174 179h2v2h-2zM135 176h2v2h-2zM57 436h2v2h-2zM175 103h2v2h-2zM147 46h2v2h-2z%22 fill=%22%23ffb45a%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M197 261h3v3h-3zM75 208h3v3h-3zM201 430h3v3h-3zM65 207h3v3h-3zM154 421h3v3h-3zM209 296h3v3h-3zM143 324h3v3h-3zM178 117h3v3h-3zM174 192h3v3h-3zM3 162h3v3h-3zM26 321h3v3h-3zM139 177h3v3h-3zM180 47h3v3h-3zM2 207h3v3h-3z%22 fill=%22%23ff7a3c%22 fill-opacity=%220.7%22/%3E%3C/svg%3E");
+  --anim-size: 220px 440px;
+  --anim-repeat: repeat;
+  --anim-opacity: 0.6;
+  --anim: bg-rise 14s linear infinite;
+}
+
+/* Océano: cáusticas de luz que se mecen. */
+:root[data-theme='glass'][data-bg='oceano'] {
+  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%239fe3ff%22 stop-opacity=%22.22%22/%3E%3Cstop offset=%221%22 stop-color=%22%239fe3ff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx=%2270%22 cy=%2290%22 rx=%2270%22 ry=%2240%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22220%22 cy=%2260%22 rx=%2260%22 ry=%2250%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22160%22 cy=%22220%22 rx=%2290%22 ry=%2245%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%2230%22 cy=%22250%22 rx=%2250%22 ry=%2235%22 fill=%22url(%23g)%22/%3E%3C/svg%3E");
+  --anim-size: 640px 640px;
+  --anim-repeat: repeat;
+  --anim-blend: screen;
+  --anim-opacity: 0.7;
+  --anim-filter: blur(18px);
+  --anim: bg-sway 22s ease-in-out infinite alternate;
+}
+
+/* Nevada: nieve que cae. */
+:root[data-theme='glass'][data-bg='nevada'] {
+  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22480%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M9 193h2v2h-2zM145 205h2v2h-2zM237 456h2v2h-2zM151 434h2v2h-2zM180 383h2v2h-2zM201 305h2v2h-2zM194 385h2v2h-2zM92 303h2v2h-2zM211 265h2v2h-2zM25 464h2v2h-2zM203 72h2v2h-2zM169 456h2v2h-2zM139 314h2v2h-2zM86 399h2v2h-2zM90 250h2v2h-2zM63 77h2v2h-2zM29 376h2v2h-2zM238 220h2v2h-2zM99 120h2v2h-2zM14 210h2v2h-2zM90 35h2v2h-2zM157 239h2v2h-2zM98 117h2v2h-2zM85 329h2v2h-2zM141 39h2v2h-2zM219 225h2v2h-2zM122 96h2v2h-2zM85 362h2v2h-2zM229 124h2v2h-2zM62 401h2v2h-2zM65 54h2v2h-2zM180 265h2v2h-2zM95 415h2v2h-2zM235 255h2v2h-2zM120 84h2v2h-2zM3 9h2v2h-2zM188 349h2v2h-2zM81 291h2v2h-2zM167 313h2v2h-2zM173 114h2v2h-2zM73 28h2v2h-2zM41 422h2v2h-2zM137 230h2v2h-2zM220 437h2v2h-2z%22 fill=%22%23fff%22 fill-opacity=%220.75%22/%3E%3Cpath d=%22M207 452h3v3h-3zM215 380h3v3h-3zM231 92h3v3h-3zM220 255h3v3h-3zM208 13h3v3h-3zM171 235h3v3h-3zM110 124h3v3h-3zM98 294h3v3h-3zM147 409h3v3h-3zM33 75h3v3h-3zM197 32h3v3h-3zM12 301h3v3h-3zM173 439h3v3h-3zM89 162h3v3h-3zM11 287h3v3h-3zM1 134h3v3h-3zM3 152h3v3h-3zM95 273h3v3h-3z%22 fill=%22%23eaf4ff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E");
+  --anim-size: 240px 480px;
+  --anim-repeat: repeat;
+  --anim-opacity: 0.85;
+  --anim: bg-fall 18s linear infinite;
+}
+
+@keyframes bg-sweep {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes bg-pulse {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bg-twinkle {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bg-rise {
+  from {
+    background-position: 0 440px;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@keyframes bg-fall {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 480px;
+  }
+}
+
+@keyframes bg-sway {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 150px 80px;
+  }
 }
 
 /* ---- Superficies de vidrio ---- */
@@ -3614,16 +3920,7 @@ label.check input {
 }
 
 :root[data-theme='glass'] .auth::before {
-  content: '';
-  position: fixed;
-  inset: 0;
   z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
-    radial-gradient(45% 40% at 30% 20%, rgba(63, 207, 99, 0.34), transparent 70%),
-    radial-gradient(45% 40% at 75% 75%, rgba(150, 120, 255, 0.3), transparent 70%),
-    radial-gradient(35% 35% at 85% 15%, rgba(111, 214, 234, 0.2), transparent 70%);
 }
 
 :root[data-theme='glass'] .auth-card {
