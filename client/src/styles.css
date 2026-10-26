@@ -3019,7 +3019,11 @@ label.check input {
 }
 
 .electric.st-running {
-  --electric: var(--grass);
+  --electric: #3fcf63;
+}
+
+:root[data-electric='off'] .electric {
+  display: none;
 }
 
 .electric.st-crashed,
@@ -3117,10 +3121,10 @@ label.check input {
   /* El lavado especular y el borde con luz, como capas de fondo (relleno y borde). */
   --lg-wash: linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035) 38%, rgba(255, 255, 255, 0.015) 62%, rgba(255, 255, 255, 0.07));
   --lg-rim: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.1) 32%, rgba(255, 255, 255, 0.06) 68%, rgba(255, 255, 255, 0.42));
-  --lg-tint: rgba(18, 22, 32, 0.38);
+  --lg-tint: rgba(18, 22, 32, var(--glass-opacity, 0.38));
   --lg-edge: inset 1px 1px 0 rgba(255, 255, 255, 0.28), inset -1px -1px 0 rgba(255, 255, 255, 0.07);
   --lg-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.75), 0 2px 6px rgba(0, 0, 0, 0.25);
-  --lg-blur: blur(16px) saturate(170%);
+  --lg-blur: blur(var(--glass-blur-px, 16px)) saturate(170%);
 
   /* Fondo "Aurora": luz de pasto, prismarina y amatista con un destello diagonal. */
   --bg-color: #0a0d13;
@@ -3282,6 +3286,9 @@ label.check input {
   background-color: var(--bg-color);
   background-image: var(--bg-image);
   background-size: var(--bg-size);
+  background-position: var(--bg-position, center);
+  background-repeat: var(--bg-repeat, no-repeat);
+  image-rendering: var(--bg-render, auto);
   filter: var(--bg-filter);
 }
 
@@ -3579,18 +3586,18 @@ label.check input {
 :root[data-theme='glass'] .btn-go {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.14)) padding-box,
-    linear-gradient(rgba(24, 122, 51, 0.92), rgba(24, 122, 51, 0.92)) padding-box,
-    linear-gradient(135deg, rgba(200, 255, 210, 0.8), rgba(143, 240, 164, 0.25) 35%, rgba(143, 240, 164, 0.2) 65%, rgba(200, 255, 210, 0.6)) border-box;
+    linear-gradient(color-mix(in srgb, var(--grass-deep) 92%, transparent), color-mix(in srgb, var(--grass-deep) 92%, transparent)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 85%, #fff) , color-mix(in srgb, var(--grass-light) 25%, transparent) 35%, color-mix(in srgb, var(--grass-light) 20%, transparent) 65%, color-mix(in srgb, var(--grass-light) 70%, #fff)) border-box;
   color: #fff;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px -8px rgba(63, 207, 99, 0.65);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px -8px color-mix(in srgb, var(--grass) 65%, transparent);
 }
 
 :root[data-theme='glass'] .btn-go:hover:not(:disabled) {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.05) 60%, rgba(255, 255, 255, 0.2)) padding-box,
-    linear-gradient(rgba(27, 138, 58, 0.95), rgba(27, 138, 58, 0.95)) padding-box,
-    linear-gradient(135deg, rgba(220, 255, 228, 0.9), rgba(143, 240, 164, 0.35) 35%, rgba(143, 240, 164, 0.3) 65%, rgba(220, 255, 228, 0.7)) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(255, 255, 255, 0.12), 0 14px 30px -8px rgba(63, 207, 99, 0.8);
+    linear-gradient(color-mix(in srgb, var(--grass-deep) 85%, var(--grass)), color-mix(in srgb, var(--grass-deep) 85%, var(--grass))) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 90%, #fff), color-mix(in srgb, var(--grass-light) 35%, transparent) 35%, color-mix(in srgb, var(--grass-light) 30%, transparent) 65%, color-mix(in srgb, var(--grass-light) 75%, #fff)) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(255, 255, 255, 0.12), 0 14px 30px -8px color-mix(in srgb, var(--grass) 80%, transparent);
 }
 
 :root[data-theme='glass'] .btn-go:active:not(:disabled) {
@@ -3633,9 +3640,9 @@ label.check input {
 :root[data-theme='glass'] .type-option.on {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01) 60%, rgba(255, 255, 255, 0.08)) padding-box,
-    linear-gradient(rgba(63, 207, 99, 0.16), rgba(63, 207, 99, 0.16)) padding-box,
-    linear-gradient(135deg, rgba(180, 255, 200, 0.85), rgba(63, 207, 99, 0.35) 35%, rgba(63, 207, 99, 0.3) 65%, rgba(180, 255, 200, 0.7)) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px -10px rgba(63, 207, 99, 0.5);
+    linear-gradient(color-mix(in srgb, var(--grass) 16%, transparent), color-mix(in srgb, var(--grass) 16%, transparent)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 85%, #fff), color-mix(in srgb, var(--grass) 35%, transparent) 35%, color-mix(in srgb, var(--grass) 30%, transparent) 65%, color-mix(in srgb, var(--grass-light) 70%, #fff)) border-box;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px -10px color-mix(in srgb, var(--grass) 50%, transparent);
 }
 
 /* ---- Campos ---- */
@@ -3832,8 +3839,8 @@ label.check input {
 
 :root[data-theme='glass'] .progress > i {
   border-radius: var(--r-pill);
-  background: linear-gradient(180deg, #9bf7b0, #3fcf63 55%, #2bb24f);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 14px rgba(63, 207, 99, 0.6);
+  background: linear-gradient(180deg, var(--grass-light), var(--grass) 55%, color-mix(in srgb, var(--grass) 80%, #000));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 14px color-mix(in srgb, var(--grass) 60%, transparent);
 }
 
 :root[data-theme='glass'] .meter {
@@ -3963,4 +3970,202 @@ label.check input {
   :root[data-theme='glass'] .sidebar.open {
     box-shadow: 8px 0 40px rgba(0, 0, 0, 0.6);
   }
+}
+
+
+/* ======================================================================================
+   Personalización: color de acento, letra, tamaño y la foto de fondo. Van después de los
+   temas para ganarles.
+   ====================================================================================== */
+
+/* El acento mueve el verde pasto de los dos temas; el texto del botón principal cambia con él. */
+:root[data-accent='esmeralda'] { --grass: #39d353; --grass-light: #93f0a4; --grass-deep: #176b2a; }
+:root[data-accent='prismarina'] { --grass: #6fd6ea; --grass-light: #b6ecf5; --grass-deep: #1c6b7a; }
+:root[data-accent='diamante'] { --grass: #5fd6ff; --grass-light: #b3ecff; --grass-deep: #0f6b8a; }
+:root[data-accent='amatista'] { --grass: #b48cff; --grass-light: #d9c6ff; --grass-deep: #5c3aa8; }
+:root[data-accent='oro'] { --grass: #ffc757; --grass-light: #ffe3a3; --grass-deep: #8a5a00; }
+:root[data-accent='cobre'] { --grass: #e8954e; --grass-light: #f5c79b; --grass-deep: #8a4a14; }
+:root[data-accent='redstone'] { --grass: #ef6a58; --grass-light: #f8b4aa; --grass-deep: #8f2a1e; }
+
+:root[data-accent='prismarina'] .btn-go,
+:root[data-accent='diamante'] .btn-go,
+:root[data-accent='oro'] .btn-go,
+:root[data-accent='amatista'] .btn-go,
+:root[data-accent='cobre'] .btn-go,
+:root[data-accent='redstone'] .btn-go,
+:root[data-accent='esmeralda'] .btn-go {
+  color: #0b1210;
+}
+
+:root[data-theme='glass'][data-accent] .btn-go {
+  color: #fff;
+}
+
+:root[data-theme='glass'] .toast::before {
+  background: var(--grass);
+}
+
+:root[data-theme='glass'] .toast.error::before {
+  background: var(--redstone);
+}
+
+/* Letra clásica: la del sistema. */
+:root[data-font='clasica'] {
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: Consolas, 'Cascadia Mono', 'JetBrains Mono', monospace;
+}
+
+:root[data-font='clasica'] .terminal-out,
+:root[data-font='clasica'] .logview {
+  font-size: 12.5px;
+}
+
+/* Tamaño de letra: la escala entera se mueve. */
+:root[data-size='pequena'] {
+  --step--1: 0.75rem;
+  --step-0: 0.875rem;
+  --step-1: 1rem;
+  --step-2: 1.25rem;
+  --step-3: 1.625rem;
+}
+
+:root[data-size='grande'] {
+  --step--1: 0.9375rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5rem;
+  --step-3: 2.125rem;
+}
+
+/* ---- La foto de fondo: funciona con los dos temas ---- */
+:root[data-bg='custom'],
+.bg-preview[data-bg='custom'] {
+  --bg-color: #0a0d13;
+  --bg-image: linear-gradient(rgba(0, 0, 0, var(--custom-dim, 0.35)), rgba(0, 0, 0, var(--custom-dim, 0.35))), var(--custom-bg, none);
+  --bg-size: auto, var(--custom-fit, cover);
+  --bg-position: center, var(--custom-pos, center);
+  --bg-repeat: no-repeat, var(--custom-repeat, no-repeat);
+  --bg-render: var(--custom-render, auto);
+  --bg-filter: blur(var(--custom-blur, 0px));
+  --anim: none;
+  --anim-image: none;
+}
+
+/* En Bloques no existe la capa del fondo: se crea aquí, igual que en Cristal. */
+:root[data-theme='blocks'][data-bg='custom'] body {
+  background-image: none;
+}
+
+:root[data-theme='blocks'][data-bg='custom'] body::before,
+:root[data-theme='blocks'][data-bg='custom'] .auth::before {
+  content: '';
+  position: fixed;
+  inset: -40px;
+  pointer-events: none;
+  background-color: var(--bg-color);
+  background-image: var(--bg-image);
+  background-size: var(--bg-size);
+  background-position: var(--bg-position);
+  background-repeat: var(--bg-repeat);
+  image-rendering: var(--bg-render);
+  filter: var(--bg-filter);
+}
+
+:root[data-theme='blocks'][data-bg='custom'] body::before {
+  z-index: -1;
+}
+
+:root[data-theme='blocks'][data-bg='custom'] .auth {
+  background: transparent;
+}
+
+:root[data-theme='blocks'][data-bg='custom'] .auth::before {
+  z-index: 0;
+}
+
+:root[data-theme='blocks'][data-bg='custom'] .auth-card {
+  z-index: 1;
+}
+
+.bg-preview[data-bg='custom'] {
+  background-position: var(--bg-position);
+  background-repeat: var(--bg-repeat);
+  image-rendering: var(--bg-render);
+  filter: var(--bg-filter);
+}
+
+/* La tarjeta "Tu foto" y la zona para soltar. */
+.bg-custom {
+  cursor: default;
+}
+
+.bg-custom.dragging {
+  outline: 2px dashed var(--grass);
+  outline-offset: 2px;
+}
+
+.bg-preview-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: calc(var(--r-panel) - 4px);
+}
+
+.bg-preview-btn .bg-preview {
+  margin-bottom: 0;
+}
+
+.bg-preview-btn + strong {
+  margin-top: 0.3rem;
+}
+
+button.bg-drop {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  border: 2px dashed var(--line);
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+  color: var(--sand-dim);
+  font-weight: 500;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+button.bg-drop:hover:not(:disabled) {
+  border-color: var(--grass);
+  color: var(--sand);
+}
+
+/* Muestras del color de acento. */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.swatch {
+  gap: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.swatch i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme='blocks'] .swatch i {
+  border-radius: 2px;
+}
+
+.swatch.on {
+  outline: 2px solid var(--swatch);
+  outline-offset: 2px;
 }

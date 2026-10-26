@@ -15,6 +15,7 @@ import { contentRouter } from './routes/content.js';
 import { systemRouter } from './routes/system.js';
 import { manageRouter } from './routes/manage.js';
 import { integrationsRouter } from './routes/integrations.js';
+import { appearancePublic } from './routes/appearance.js';
 import * as playit from './services/playit.js';
 import './services/metrics.js';
 import './services/scheduler.js';
@@ -38,6 +39,7 @@ app.use(cookieParser());
 
 app.use('/api', sameOrigin);
 app.use('/api/auth', authRouter);
+app.use('/api/appearance', appearancePublic);
 app.use('/api', requireAuth);
 app.use('/api/system', systemRouter);
 app.use('/api/servers', serversRouter);

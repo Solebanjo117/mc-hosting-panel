@@ -12,11 +12,11 @@ import '@fontsource/pixelify-sans/latin-ext-400.css';
 import '@fontsource/pixelify-sans/latin-ext-500.css';
 import './styles.css';
 import { registerServiceWorker } from './notify.js';
-import { applyAnimated, applyBackground, applyTheme, getAnimated, getBackground, getTheme } from './theme.js';
+import { applyAppearance, getAppearance, loadAppearance } from './appearance.js';
 
-applyTheme(getTheme());
-applyBackground(getBackground());
-applyAnimated(getAnimated());
+// La copia local se aplica al instante; después se trae la guardada en el panel (también antes de entrar).
+applyAppearance(getAppearance());
+loadAppearance();
 registerServiceWorker();
 
 createRoot(document.getElementById('root')).render(

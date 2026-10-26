@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx';
 import ServerView from './pages/ServerView.jsx';
 import { Electric, ELECTRIC_STATES, GrassBlock, PageLoading } from './ui.jsx';
 import { STATUS_LABEL } from './api.js';
+import { useAppearance } from './appearance.js';
 
 // Las páginas que no se abren al entrar se descargan la primera vez que se visitan.
 const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
@@ -49,6 +50,7 @@ export default function App() {
 
 function Shell({ username, onLogout }) {
   const { servers, runtime, connected } = useLive();
+  const { electric } = useAppearance();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
@@ -97,8 +99,14 @@ function Shell({ username, onLogout }) {
               // El estado se ve en el borde eléctrico (color según el estado); apagado no lleva nada.
               return (
               <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
-                {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
-                <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
+                {electric ? (
+                  <>
+                    {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
+                    <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
+                  </>
+                ) : (
+                  <i className={`dot ${st}`} aria-hidden="true" title={STATUS_LABEL[st] || st} />
+                )}
                 <span className="name">{s.name}</span>
                 {runtime[s.id]?.players?.length ? (
                   <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>

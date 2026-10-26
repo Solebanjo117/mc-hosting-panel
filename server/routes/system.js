@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import multer from 'multer';
 import { DOCS_DIR, VERSION } from '../config.js';
 import { db } from '../db.js';
 import { HttpError } from '../lib/util.js';
@@ -13,8 +14,18 @@ import { getMetrics } from '../services/metrics.js';
 import { checkUpdate, startUpdate, updateStatus } from '../services/appUpdate.js';
 import { startupStatus, setStartup } from '../services/startup.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
+import { getAppearance, setAppearance, saveImage, removeImage, MAX_IMAGE_BYTES } from '../services/appearance.js';
 
 export const systemRouter = express.Router();
+
+// --- Apariencia: tema, fondo, acento, letra y la foto de fondo -------------------------
+
+const imageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } });
+
+systemRouter.get('/appearance', (_req, res) => res.json(getAppearance()));
+systemRouter.put('/appearance', (req, res) => res.json(setAppearance(req.body)));
+systemRouter.put('/appearance/background', imageUpload.single('image'), (req, res) => res.json(saveImage(req.file?.buffer)));
+systemRouter.delete('/appearance/background', (_req, res) => res.json(removeImage()));
 
 // --- Tablero de inicio: salud y mini gráficas de cada servidor --------------------------
 
