@@ -12,6 +12,15 @@ export function GrassBlock({ className = '', size }) {
   );
 }
 
+/** Lo que se ve el instante en que una página o pestaña se descarga por primera vez. */
+export function PageLoading({ inline = false }) {
+  return (
+    <div className={inline ? 'page-loading' : 'page page-loading'} aria-busy="true">
+      <span className="faint small">Cargando…</span>
+    </div>
+  );
+}
+
 /** Pone el título de la pestaña del navegador: «Página – MC Hosting Panel». */
 export function usePageTitle(title) {
   useEffect(() => {

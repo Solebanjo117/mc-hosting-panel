@@ -1,24 +1,26 @@
-import { useEffect, useRef } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
 import { ServerIcon } from './Home.jsx';
-import { Progress, Status, useAction, usePageTitle } from '../ui.jsx';
+import { PageLoading, Progress, Status, useAction, usePageTitle } from '../ui.jsx';
 import ConsoleTab from './server/ConsoleTab.jsx';
-import SettingsTab from './server/SettingsTab.jsx';
-import FilesTab from './server/FilesTab.jsx';
-import PlayersTab from './server/PlayersTab.jsx';
-import ContentTab from './server/ContentTab.jsx';
-import BackupsTab from './server/BackupsTab.jsx';
-import NetworkTab from './server/NetworkTab.jsx';
-import BedrockTab from './server/BedrockTab.jsx';
-import MetricsTab from './server/MetricsTab.jsx';
-import WorldsTab from './server/WorldsTab.jsx';
-import SchedulesTab from './server/SchedulesTab.jsx';
-import LogsTab from './server/LogsTab.jsx';
-import SecurityTab from './server/SecurityTab.jsx';
-import MapTab from './server/MapTab.jsx';
-import ActivityTab from './server/ActivityTab.jsx';
+
+// Cada pestaña se descarga la primera vez que se abre; la consola viene con el panel.
+const SettingsTab = lazy(() => import('./server/SettingsTab.jsx'));
+const FilesTab = lazy(() => import('./server/FilesTab.jsx'));
+const PlayersTab = lazy(() => import('./server/PlayersTab.jsx'));
+const ContentTab = lazy(() => import('./server/ContentTab.jsx'));
+const BackupsTab = lazy(() => import('./server/BackupsTab.jsx'));
+const NetworkTab = lazy(() => import('./server/NetworkTab.jsx'));
+const BedrockTab = lazy(() => import('./server/BedrockTab.jsx'));
+const MetricsTab = lazy(() => import('./server/MetricsTab.jsx'));
+const WorldsTab = lazy(() => import('./server/WorldsTab.jsx'));
+const SchedulesTab = lazy(() => import('./server/SchedulesTab.jsx'));
+const LogsTab = lazy(() => import('./server/LogsTab.jsx'));
+const SecurityTab = lazy(() => import('./server/SecurityTab.jsx'));
+const MapTab = lazy(() => import('./server/MapTab.jsx'));
+const ActivityTab = lazy(() => import('./server/ActivityTab.jsx'));
 
 const CONTENT_LABEL = { paper: 'Plugins', vanilla: 'Datapacks' };
 
@@ -173,6 +175,7 @@ export default function ServerView() {
 
       <ServerNav base={base} groups={sections(contentLabel)} pathname={location.pathname} />
 
+      <Suspense fallback={<PageLoading inline />}>
       <Routes>
         <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
         <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
@@ -191,6 +194,7 @@ export default function ServerView() {
         <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
         <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
       </Routes>
+      </Suspense>
     </div>
   );
 }

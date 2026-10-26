@@ -15,7 +15,7 @@ export function LiveProvider({ children }) {
   const [installs, setInstalls] = useState({});
   const [connected, setConnected] = useState(false);
   const [playit, setPlayit] = useState(null);
-  const consoles = useRef(new Map()); // id -> { lines, listeners:Set }
+  const consoles = useRef(new Map()); // id -> { lines:[{n,text}], pending, listeners:Set, seq, timer }
   const wsRef = useRef(null);
   const subs = useRef(new Map()); // id -> contador de vistas suscritas
   const runtimeRef = useRef({});
@@ -42,8 +42,23 @@ export function LiveProvider({ children }) {
   }, []);
 
   const consoleOf = (id) => {
-    if (!consoles.current.has(id)) consoles.current.set(id, { lines: [], listeners: new Set() });
+    if (!consoles.current.has(id)) consoles.current.set(id, { lines: [], pending: [], listeners: new Set(), seq: 0, timer: null });
     return consoles.current.get(id);
+  };
+
+  /*
+   * Un servidor arrancando escribe cientos de líneas por segundo. En vez de redibujar la consola
+   * por cada una, se juntan y se entregan como mucho 20 veces por segundo. Cada línea lleva un
+   * número fijo para que React reutilice lo ya dibujado.
+   */
+  const flushConsole = (c) => {
+    c.timer = null;
+    if (c.pending.length) {
+      c.lines = c.lines.concat(c.pending);
+      c.pending = [];
+      if (c.lines.length > 1500) c.lines = c.lines.slice(-1500);
+    }
+    for (const fn of c.listeners) fn(c.lines);
   };
 
   useEffect(() => {
@@ -85,14 +100,16 @@ export function LiveProvider({ children }) {
           setPlayit(rest);
         } else if (msg.type === 'install') {
           setInstalls((prev) => ({ ...prev, [msg.id]: msg }));
-        } else if (msg.type === 'console-history' || msg.type === 'console') {
+        } else if (msg.type === 'console-history') {
           const c = consoleOf(msg.id);
-          if (msg.type === 'console-history') c.lines = msg.lines;
-          else {
-            c.lines = [...c.lines, msg.line];
-            if (c.lines.length > 1500) c.lines = c.lines.slice(-1500);
-          }
-          for (const fn of c.listeners) fn(c.lines);
+          c.lines = msg.lines.map((text) => ({ n: c.seq++, text }));
+          c.pending = [];
+          clearTimeout(c.timer);
+          flushConsole(c);
+        } else if (msg.type === 'console') {
+          const c = consoleOf(msg.id);
+          c.pending.push({ n: c.seq++, text: msg.line });
+          if (c.timer == null) c.timer = setTimeout(() => flushConsole(c), 50);
         }
       };
     };

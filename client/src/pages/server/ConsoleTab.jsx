@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
@@ -91,7 +91,7 @@ export default function ConsoleTab({ server, runtime, state }) {
   const known = useMemo(() => {
     const set = new Set(runtime?.players || []);
     for (const l of lines.slice(-600)) {
-      const m = plain(l).match(/: ([A-Za-z0-9_.]{2,17}) (joined|left) the game/);
+      const m = plain(l.text).match(/: ([A-Za-z0-9_.]{2,17}) (joined|left) the game/);
       if (m) set.add(m[1]);
     }
     return [...set].sort((a, b) => b.length - a.length);
@@ -101,7 +101,7 @@ export default function ConsoleTab({ server, runtime, state }) {
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
     return lines.filter((l) => {
-      const p = plain(l);
+      const p = plain(l.text);
       if (filter === 'chat' && !isChat(p)) return false;
       if (filter === 'problems' && !isProblem(p)) return false;
       if (filter === 'cmd' && !p.startsWith('> ')) return false;
@@ -109,27 +109,7 @@ export default function ConsoleTab({ server, runtime, state }) {
     });
   }, [lines, filter, search]);
 
-  const renderText = (text, key) => {
-    if (!nameRe) return text;
-    const parts = text.split(nameRe);
-    return parts.map((part, i) =>
-      i % 2 === 1 ? (
-        <button
-          key={`${key}-${i}`}
-          type="button"
-          className="player-link"
-          onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setMenu({ name: part, x: r.left, y: r.bottom + 4 });
-          }}
-        >
-          {part}
-        </button>
-      ) : (
-        <Fragment key={`${key}-${i}`}>{part}</Fragment>
-      )
-    );
-  };
+  const onName = useCallback((name, r) => setMenu({ name, x: r.left, y: r.bottom + 4 }), []);
 
   async function openGive(name) {
     setMenu(null);
@@ -192,14 +172,8 @@ export default function ConsoleTab({ server, runtime, state }) {
             </span>
           )}
           {lines.length > 0 && shown.length === 0 && <span className="faint">Ninguna línea coincide con el filtro.</span>}
-          {shown.map((l, i) => (
-            <div key={i} className={lineClass(plain(l))}>
-              {parseConsole(l).map((seg, j) => (
-                <span key={j} style={segStyle(seg)}>
-                  {renderText(seg.text, `${i}-${j}`)}
-                </span>
-              ))}
-            </div>
+          {shown.map((l) => (
+            <ConsoleLine key={l.n} text={l.text} nameRe={nameRe} onName={onName} />
           ))}
         </div>
         <form
@@ -318,6 +292,34 @@ export default function ConsoleTab({ server, runtime, state }) {
     </div>
   );
 }
+
+/**
+ * Una línea de la consola. Está memorizada: solo se vuelve a dibujar si cambia su texto o la lista
+ * de nombres que se pueden tocar, no cada vez que llega una línea nueva.
+ */
+const ConsoleLine = memo(function ConsoleLine({ text, nameRe, onName }) {
+  const renderText = (t, key) => {
+    if (!nameRe) return t;
+    return t.split(nameRe).map((part, i) =>
+      i % 2 === 1 ? (
+        <button key={`${key}-${i}`} type="button" className="player-link" onClick={(e) => onName(part, e.currentTarget.getBoundingClientRect())}>
+          {part}
+        </button>
+      ) : (
+        <Fragment key={`${key}-${i}`}>{part}</Fragment>
+      )
+    );
+  };
+  return (
+    <div className={lineClass(plain(text))}>
+      {parseConsole(text).map((seg, j) => (
+        <span key={j} style={segStyle(seg)}>
+          {renderText(seg.text, j)}
+        </span>
+      ))}
+    </div>
+  );
+});
 
 const GAMEMODE_LABEL = { survival: 'Supervivencia', creative: 'Creativo', spectator: 'Espectador' };
 

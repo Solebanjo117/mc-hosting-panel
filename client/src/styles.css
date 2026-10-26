@@ -1339,6 +1339,12 @@ label.check input {
   }
 }
 
+.page-loading {
+  min-height: 8rem;
+  display: grid;
+  place-items: center;
+}
+
 /* Pantalla de carga mientras el panel comprueba la sesión. */
 .loading {
   min-height: 100%;

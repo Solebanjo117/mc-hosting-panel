@@ -11,7 +11,7 @@ export const TMP_DIR = path.join(DATA_DIR, 'tmp');
 export const DIST_DIR = path.join(ROOT, 'dist');
 export const DOCS_DIR = path.join(ROOT, 'docs');
 
-export const VERSION = '0.13.0';
+export const VERSION = '0.13.1';
 // Modrinth, PaperMC y mcsrvstat piden un User-Agent que identifique el proyecto y un contacto.
 export const USER_AGENT = `Solebanjo117/mc-hosting-panel/${VERSION} (https://github.com/Solebanjo117/mc-hosting-panel)`;
 

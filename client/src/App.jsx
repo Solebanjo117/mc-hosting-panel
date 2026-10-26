@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { api } from './api.js';
 import { LiveProvider, useLive, serverState } from './live.jsx';
 import Login from './pages/Login.jsx';
 import Home from './pages/Home.jsx';
-import CreateServer from './pages/CreateServer.jsx';
-import ImportModpack from './pages/ImportModpack.jsx';
 import ServerView from './pages/ServerView.jsx';
-import Guide from './pages/Guide.jsx';
-import PanelSettings from './pages/PanelSettings.jsx';
-import { GrassBlock } from './ui.jsx';
+import { GrassBlock, PageLoading } from './ui.jsx';
+
+// Las páginas que no se abren al entrar se descargan la primera vez que se visitan.
+const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
+const ImportModpack = lazy(() => import('./pages/ImportModpack.jsx'));
+const Guide = lazy(() => import('./pages/Guide.jsx'));
+const PanelSettings = lazy(() => import('./pages/PanelSettings.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -124,15 +126,17 @@ function Shell({ username, onLogout }) {
       </aside>
 
       <main className="main" id="contenido" tabIndex={-1}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/nuevo" element={<CreateServer />} />
-          <Route path="/nuevo/modpack" element={<ImportModpack />} />
-          <Route path="/servidor/:id/*" element={<ServerView />} />
-          <Route path="/guia" element={<Guide />} />
-          <Route path="/ajustes" element={<PanelSettings />} />
-          <Route path="*" element={<Home />} />
-        </Routes>
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/nuevo" element={<CreateServer />} />
+            <Route path="/nuevo/modpack" element={<ImportModpack />} />
+            <Route path="/servidor/:id/*" element={<ServerView />} />
+            <Route path="/guia" element={<Guide />} />
+            <Route path="/ajustes" element={<PanelSettings />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );
