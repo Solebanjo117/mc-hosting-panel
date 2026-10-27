@@ -113,8 +113,10 @@ export async function healthCheck(id) {
     if (fw) {
       if (fw.tcp.has(Number(server.port))) add('ok', 'firewall', `Firewall de Windows permite el puerto ${server.port}`);
       else add('warn', 'firewall', `El Firewall de Windows no tiene regla para el puerto ${server.port}`, 'Ejecuta scripts\\abrir-firewall.bat o usa el comando de la pestaña Conexión.', 'conexion');
-      if (server.bedrock?.enabled && !fw.udp.has(Number(server.bedrock.port))) {
-        add('warn', 'firewall-udp', `Falta la regla UDP ${server.bedrock.port} para Bedrock`, 'Ejecuta scripts\\abrir-firewall.bat y elige la opción 2.', 'conexion');
+      if (server.bedrock?.enabled) {
+        const bp = Number(server.bedrock.port);
+        const missing = [!fw.tcp.has(bp) && 'TCP', !fw.udp.has(bp) && 'UDP'].filter(Boolean);
+        if (missing.length) add('warn', 'firewall-udp', `Falta la regla ${missing.join(' y ')} del puerto ${bp} para Bedrock`, 'Bedrock necesita su puerto en TCP y UDP. Ejecuta scripts\\abrir-firewall.bat y elige la opción 2.', 'conexion');
       }
     }
     add('info', 'internet', 'Sin túnel: tus amigos de fuera necesitan el puerto abierto en tu router', 'Si tu internet tiene CGNAT, crea un túnel de playit.gg.', 'conexion');

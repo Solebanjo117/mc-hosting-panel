@@ -15,7 +15,7 @@ echo  Este script permite conexiones entrantes a un servidor de Minecraft.
 echo  No abras el puerto del panel (8080).
 echo.
 echo    1. Java    (TCP, normalmente 25565)
-echo    2. Bedrock (UDP, normalmente 19132, si activaste Geyser)
+echo    2. Bedrock (TCP y UDP, normalmente 19132, si activaste Geyser)
 echo.
 choice /c 12 /n /m "  Elige 1 o 2: "
 if errorlevel 2 goto :bedrock

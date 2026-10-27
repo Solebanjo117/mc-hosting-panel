@@ -7,7 +7,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Consola en vivo** con los colores reales de Minecraft, filtros (chat, avisos y errores, comandos), búsqueda, nombres de jugador que se tocan para darles objetos, cambiar su modo, curarlos, hacerlos operador o expulsarlos, historial de comandos, jugadores conectados, CPU, RAM y tiempo encendido, y **comandos rápidos configurables**: agrega, quita y ordena botones; con huecos como `{jugador}` u `{objeto}` el panel te pregunta el dato con la lista de jugadores conectados o un buscador de objetos, efectos, encantamientos y criaturas con su nombre en español.
 - **Marketplace** de mods, plugins y datapacks desde **Modrinth**, **Hangar** (PaperMC) y **CurseForge** (con tu clave gratis) en tarjetas con imagen, descargas y fecha, y una ficha con galería y descripción completa; filtrado por la versión del servidor, con dependencias automáticas, activar/desactivar y búsqueda de actualizaciones.
 - Gestión completa: `server.properties` con formulario, jugadores (lista blanca, operadores, baneos, expulsar), **gestor de archivos** (selección múltiple, copiar, mover, comprimir, descargar varios en .zip, búsqueda por nombre, subir archivos y carpetas completas con barra de progreso, editor de texto, extraer .zip, y protección del mundo mientras el servidor está encendido), **editor NBT** para `level.dat`, datos de jugadores (inventario, posición, vida, experiencia) y estructuras, con copia `.panel-bak` antes de guardar, **respaldos** manuales y automáticos con restauración, cambio de versión, reinicio automático si el servidor se cae.
-- **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto UDP de cada servidor. Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
+- **Crossplay con Bedrock** (celular, Windows, consolas) con un clic: instala Geyser, Floodgate (sin cuenta de Java) y ViaVersion cuando hace falta, y configura el puerto de cada servidor (en TCP y UDP, como pide NetherNet). Funciona en Paper (casi cualquier versión), y en Fabric/NeoForge en la versión más reciente.
 - **Túneles de playit.gg integrados** para cuando tu internet tiene CGNAT: vinculas tu cuenta una vez y cada servidor obtiene su dirección pública (Java y Bedrock) con un clic. También puedes vincular túneles que creaste tú en playit.gg y **usar un agente que ya tienes** (el del programa oficial, que el panel detecta solo, o pegando su clave) en vez de crear uno nuevo.
 - **Dominio para cada servidor** con **deSEC**, **DuckDNS** o **Cloudflare**: apunta a la IP de tu casa o al túnel de playit, y el panel crea y actualiza los registros (A y SRV). Con deSEC o Cloudflare tus amigos de Java entran solo con el nombre, sin puerto, aunque uses playit.
 - **Datapacks en cualquier servidor** (Vanilla, Paper, Fabric, Forge, NeoForge): búscalos en Modrinth o CurseForge, aplícalos sin reiniciar (`minecraft:reload`), el panel avisa cuáles cambian la generación del mundo y al crear un mundo nuevo puedes copiarle los datapacks.
@@ -91,7 +91,7 @@ npm start
 
 - Para que arranque solo y se reabra tras actualizarse, usa el servicio de systemd que trae el proyecto: `scripts/mc-hosting-panel.service`.
 - **No abras el puerto del panel (8080) a internet**: el panel rechaza esas conexiones por seguridad. Entra con un túnel SSH (`ssh -L 8080:localhost:8080 usuario@IP` y abre `http://localhost:8080`) o con Tailscale.
-- Abre los puertos de **Minecraft** (25565/TCP, 19132/UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
+- Abre los puertos de **Minecraft** (25565/TCP, y 19132 en TCP y UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
 
 ### Scripts incluidos
 
@@ -100,7 +100,7 @@ npm start
 | `iniciar.bat` | Prepara (la primera vez) y abre el panel; lo vuelve a abrir tras actualizar desde Ajustes |
 | `actualizar.bat` | Baja la última versión con `git pull` y recompila; no toca tus servidores |
 | `restablecer-contrasena.bat` | Si olvidaste la contraseña: muestra tu usuario y pone una nueva (solo en la PC del panel) |
-| `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
+| `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java; TCP y UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
 | `scripts/mc-hosting-panel.service` | En Linux: servicio de systemd para que el panel arranque solo y se reabra al actualizarse |
 | `scripts/restablecer-contrasena.mjs` | En Linux: `node scripts/restablecer-contrasena.mjs` para poner una contraseña nueva |
@@ -166,7 +166,7 @@ server/
     players.js          whitelist, ops y baneos (por comando o editando los JSON)
     properties.js       lectura/escritura de server.properties sin perder comentarios
     network.js          IP local/pública y prueba externa con mcsrvstat.us
-    bedrock.js          crossplay: instala Geyser/Floodgate/ViaVersion y reserva puertos UDP
+    bedrock.js          crossplay: instala Geyser/Floodgate/ViaVersion y reserva puertos Bedrock
     geyserConfig.js     ajusta el puerto y la autenticación en el config.yml de Geyser
     playit.js           agente de playit.gg: vinculación, túneles por servidor (API de playit)
     dns.js              dominio por servidor (DuckDNS, deSEC, Cloudflare) hacia tu IP o el túnel de playit

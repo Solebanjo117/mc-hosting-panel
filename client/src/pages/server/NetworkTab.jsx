@@ -22,17 +22,16 @@ const fwRule = (port, proto) =>
 
 /** El comando del firewall según el sistema donde corre el panel. */
 function firewallCommand(kind, port, bedrock) {
-  const tcp = `${port}/tcp`;
-  const udp = bedrock ? `${bedrock}/udp` : null;
+  // Bedrock (Geyser con NetherNet) necesita su puerto en TCP (para encontrar el servidor) y en UDP (para jugar).
   switch (kind) {
     case 'firewalld':
-      return `sudo firewall-cmd --permanent --add-port=${tcp}${udp ? ` --add-port=${udp}` : ''} && sudo firewall-cmd --reload`;
+      return `sudo firewall-cmd --permanent --add-port=${port}/tcp${bedrock ? ` --add-port=${bedrock}/tcp --add-port=${bedrock}/udp` : ''} && sudo firewall-cmd --reload`;
     case 'ufw':
-      return `sudo ufw allow ${tcp}${udp ? ` && sudo ufw allow ${udp}` : ''}`;
+      return `sudo ufw allow ${port}/tcp${bedrock ? ` && sudo ufw allow ${bedrock}/tcp && sudo ufw allow ${bedrock}/udp` : ''}`;
     case 'iptables':
-      return `sudo iptables -I INPUT 6 -p tcp --dport ${port} -m state --state NEW -j ACCEPT${udp ? ` && sudo iptables -I INPUT 6 -p udp --dport ${bedrock} -j ACCEPT` : ''} && sudo netfilter-persistent save`;
+      return `sudo iptables -I INPUT 6 -p tcp --dport ${port} -m state --state NEW -j ACCEPT${bedrock ? ` && sudo iptables -I INPUT 6 -p tcp --dport ${bedrock} -m state --state NEW -j ACCEPT && sudo iptables -I INPUT 6 -p udp --dport ${bedrock} -j ACCEPT` : ''} && sudo netfilter-persistent save`;
     default:
-      return [fwRule(port, 'TCP'), bedrock && fwRule(bedrock, 'UDP')].filter(Boolean).join(' & ');
+      return [fwRule(port, 'TCP'), bedrock && fwRule(bedrock, 'TCP'), bedrock && fwRule(bedrock, 'UDP')].filter(Boolean).join(' & ');
   }
 }
 
@@ -109,7 +108,7 @@ export default function NetworkTab({ server, state }) {
         <div className="panel">
           <h2>Jugadores por internet</h2>
           <p className="muted small">
-            Necesitas abrir el puerto {server.port} TCP{bedrock ? ` y el ${bedrock} UDP` : ''} en el firewall y en tu router.
+            Necesitas abrir el puerto {server.port} TCP{bedrock ? ` y el ${bedrock} en TCP y UDP (Bedrock)` : ''} en el firewall y en tu router.
           </p>
           {net?.publicIp ? (
             <>
@@ -259,7 +258,7 @@ export default function NetworkTab({ server, state }) {
               ) : (
                 <>
                   Ejecuta <span className="mono">scripts\abrir-firewall.bat</span> de la carpeta del panel
-                  {bedrock ? ' una vez para TCP y otra para UDP' : ''}, o pega esto en una terminal abierta como administrador:
+                  {bedrock ? ' (la opción 2 abre el puerto Bedrock en TCP y UDP)' : ''}, o pega esto en una terminal abierta como administrador:
                 </>
               )}
             </p>
@@ -275,7 +274,7 @@ export default function NetworkTab({ server, state }) {
               {bedrock && (
                 <>
                   {' '}
-                  Y otra regla: puerto {bedrock}, protocolo <strong>UDP</strong> → la misma IP, puerto {bedrock}.
+                  Y otra regla: puerto {bedrock}, protocolo <strong>TCP y UDP</strong> (o "ambos") → la misma IP, puerto {bedrock}.
                 </>
               )}
             </p>
@@ -330,7 +329,7 @@ export default function NetworkTab({ server, state }) {
           ) : (
             <div className="error-box">
               No se pudo conectar a {check.host}:{check.port} {check.edition === 'bedrock' ? 'por UDP (Bedrock)' : ''} desde internet. Revisa el firewall
-              y el reenvío de puertos{check.edition === 'bedrock' ? ' (que la regla sea UDP)' : ''}. Si la IP WAN que muestra tu router es distinta a{' '}
+              y el reenvío de puertos{check.edition === 'bedrock' ? ' (el puerto Bedrock va en TCP y en UDP)' : ''}. Si la IP WAN que muestra tu router es distinta a{' '}
               {net?.publicIp || 'tu IP pública'}, probablemente tu proveedor usa CGNAT; la guía explica qué hacer.
               <br />
               <span className="faint">El resultado puede tardar unos minutos en actualizarse porque el servicio guarda caché.</span>

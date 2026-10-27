@@ -59,7 +59,7 @@ export default function BedrockTab({ server, state }) {
   const intro = (
     <p className="muted" style={{ maxWidth: '70ch' }}>
       Con Geyser, los jugadores de Minecraft Bedrock (celular, tablet, Windows 10/11, Xbox, PlayStation y Switch) entran a este mismo servidor junto
-      con los de Java. Bedrock usa su propio puerto, por <strong>UDP</strong>.
+      con los de Java. Bedrock usa su propio puerto, que debe estar abierto en <strong>TCP y UDP</strong>: por TCP el juego encuentra el servidor (NetherNet) y por UDP se juega.
     </p>
   );
 
@@ -86,12 +86,12 @@ export default function BedrockTab({ server, state }) {
           <h2 className="grow" style={{ margin: 0 }}>
             {enabled ? 'Bedrock está activado' : 'Activar Bedrock'}
           </h2>
-          {enabled && <span className="chip">UDP {info.port}</span>}
+          {enabled && <span className="chip">TCP y UDP {info.port}</span>}
         </div>
 
         <div className="grid-2">
           <label className="field">
-            <span>Puerto Bedrock (UDP)</span>
+            <span>Puerto Bedrock (TCP y UDP)</span>
             <input type="number" min={1024} max={65535} value={port} onChange={(e) => setPort(e.target.value)} />
             <span>El que escriben los jugadores de Bedrock. El normal es 19132.</span>
           </label>
@@ -183,7 +183,7 @@ export default function BedrockTab({ server, state }) {
             <h2 style={{ margin: 0 }}>Cómo entran los jugadores de Bedrock</h2>
             <p className="muted small">
               En Minecraft Bedrock: Jugar, pestaña Servidores, Agregar servidor. Escriben la dirección y el puerto {info.port}. Para jugar fuera de tu
-              casa abre el puerto <strong>{info.port} UDP</strong> en el firewall y en el router; las direcciones y la prueba están en{' '}
+              casa abre el puerto <strong>{info.port} en TCP y en UDP</strong> en el firewall y en el router; las direcciones y la prueba están en{' '}
               <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
             </p>
             <p className="muted small">

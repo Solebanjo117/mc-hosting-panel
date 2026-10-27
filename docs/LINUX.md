@@ -279,7 +279,7 @@ Los puertos de **Minecraft** sí deben estar abiertos al público. En la nube ha
 | Puerto | Protocolo | Para qué |
 |---|---|---|
 | 25565 (y 25566, 25567… uno por servidor) | TCP | Minecraft Java |
-| 19132 (y siguientes) | UDP | Bedrock (celular y consolas), solo si activas el crossplay |
+| 19132 (y siguientes) | **TCP y UDP** | Bedrock (celular y consolas), solo si activas el crossplay. Geyser usa NetherNet: TCP para encontrar el servidor y UDP para jugar |
 
 El puerto de cada servidor sale en su encabezado y en la pestaña **Conexión**.
 
@@ -289,7 +289,7 @@ El puerto de cada servidor sale en su encabezado y en la pestaña **Conexión**.
 2. **Subnets →** la subred de tu instancia **→ Security Lists →** *Default Security List*.
 3. **Add Ingress Rules**, una por puerto:
    - *Source CIDR*: `0.0.0.0/0`
-   - *IP Protocol*: TCP (o UDP para Bedrock)
+   - *IP Protocol*: TCP (para Bedrock, una regla TCP y otra UDP con el mismo puerto)
    - *Destination Port Range*: `25565`
 4. Guarda.
 
@@ -305,6 +305,7 @@ En otras nubes es lo mismo con otro nombre: *Security Group* en AWS, *Firewall r
 sudo iptables -L INPUT --line-numbers     # mira el número de la línea "REJECT all"
 # Si REJECT está en la línea 6, inserta en la 6 (queda antes):
 sudo iptables -I INPUT 6 -p tcp --dport 25565 -m state --state NEW -j ACCEPT
+sudo iptables -I INPUT 6 -p tcp --dport 19132 -m state --state NEW -j ACCEPT
 sudo iptables -I INPUT 6 -p udp --dport 19132 -j ACCEPT
 sudo netfilter-persistent save            # para que sobreviva al reinicio
 ```
@@ -314,6 +315,7 @@ sudo netfilter-persistent save            # para que sobreviva al reinicio
 ```bash
 sudo ufw allow OpenSSH
 sudo ufw allow 25565/tcp
+sudo ufw allow 19132/tcp
 sudo ufw allow 19132/udp
 sudo ufw enable
 ```
@@ -321,7 +323,7 @@ sudo ufw enable
 **Oracle Linux, Rocky o Fedora** (firewalld):
 
 ```bash
-sudo firewall-cmd --permanent --add-port=25565/tcp --add-port=19132/udp
+sudo firewall-cmd --permanent --add-port=25565/tcp --add-port=19132/tcp --add-port=19132/udp
 sudo firewall-cmd --reload
 ```
 
@@ -359,6 +361,8 @@ Te muestra tu usuario y te pide una contraseña nueva. Se aplica al momento si e
 ## 8. Problemas comunes
 
 **"Acceso bloqueado" al abrir el panel.** Estás entrando por la IP pública. Usa el túnel SSH o Tailscale ([paso 4](#4-entrar-al-panel-desde-tu-pc)).
+
+**Java entra pero Bedrock no.** Al puerto Bedrock le falta TCP: Geyser usa NetherNet, que encuentra el servidor por TCP y juega por UDP. Abre 19132 en los dos protocolos, en la nube y en el sistema.
 
 **Mis amigos no pueden entrar.** Casi siempre falta uno de los dos firewalls: revisa la regla en la consola de la nube **y** la del sistema ([paso 5](#5-abrir-los-puertos-de-minecraft)). En Oracle con Ubuntu, la regla de iptables tiene que quedar antes del `REJECT`.
 
