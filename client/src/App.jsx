@@ -142,7 +142,7 @@ function Shell({ username, onLogout }) {
 
         <div className="side-foot">
           <NavLink to="/guia" className="side-link">
-            Guía para abrir puertos
+            Guías (puertos, Linux)
           </NavLink>
           <NavLink to="/ajustes" className="side-link">
             Ajustes del panel
@@ -175,6 +175,7 @@ function Shell({ username, onLogout }) {
             <Route path="/nuevo/modpack" element={<ImportModpack />} />
             <Route path="/servidor/:id/*" element={<ServerView />} />
             <Route path="/guia" element={<Guide />} />
+            <Route path="/guia/:doc" element={<Guide />} />
             <Route path="/ajustes" element={<PanelSettings />} />
             <Route path="/apariencia" element={<Appearance username={username} />} />
             <Route path="*" element={<Home />} />

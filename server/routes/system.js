@@ -119,7 +119,7 @@ systemRouter.put('/startup', async (req, res) => {
   res.json(await setStartup(req.body.enabled));
 });
 
-const DOCS = { puertos: 'ABRIR-PUERTOS.md' };
+const DOCS = { puertos: 'ABRIR-PUERTOS.md', linux: 'LINUX.md' };
 systemRouter.get('/docs/:name', (req, res) => {
   const file = DOCS[req.params.name];
   if (!file) throw new HttpError(404, 'Documento no encontrado');

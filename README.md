@@ -52,7 +52,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 
 ## Requisitos
 
-- Windows 10 u 11 (también funciona en Linux para desarrollo).
+- Windows 10 u 11, o **Linux** (Ubuntu, Debian, Oracle Linux…, también en ARM): mira [Linux y la nube](#linux-y-la-nube).
 - Con el instalador no necesitas nada más. Con git: [Node.js 20 o más reciente](https://nodejs.org/es) (versión LTS).
 - Internet para descargar servidores, Java y mods.
 - RAM: unos 2–4 GB por servidor sin mods, 6 GB o más con modpacks.
@@ -78,6 +78,21 @@ La ventana negra es el panel: si la cierras, se apagan los servidores (de forma 
 
 Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pull`, instala dependencias y recompila solo si hace falta, y se reinicia) o `actualizar.bat`.
 
+### Linux y la nube
+
+El panel funciona igual en un servidor Linux: una VPS, Oracle Cloud (también la instancia gratuita ARM), una PC con Ubuntu o una Raspberry Pi 5. La guía completa está en [`docs/LINUX.md`](docs/LINUX.md) y dentro del panel (**Guía → Linux y la nube**). En resumen:
+
+```bash
+git clone https://github.com/Solebanjo117/mc-hosting-panel.git
+cd mc-hosting-panel
+npm ci && npm run build
+npm start
+```
+
+- Para que arranque solo y se reabra tras actualizarse, usa el servicio de systemd que trae el proyecto: `scripts/mc-hosting-panel.service`.
+- **No abras el puerto del panel (8080) a internet**: el panel rechaza esas conexiones por seguridad. Entra con un túnel SSH (`ssh -L 8080:localhost:8080 usuario@IP` y abre `http://localhost:8080`) o con Tailscale.
+- Abre los puertos de **Minecraft** (25565/TCP, 19132/UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
+
 ### Scripts incluidos
 
 | Archivo | Para qué sirve |
@@ -87,6 +102,8 @@ Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pul
 | `restablecer-contrasena.bat` | Si olvidaste la contraseña: muestra tu usuario y pone una nueva (solo en la PC del panel) |
 | `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
+| `scripts/mc-hosting-panel.service` | En Linux: servicio de systemd para que el panel arranque solo y se reabra al actualizarse |
+| `scripts/restablecer-contrasena.mjs` | En Linux: `node scripts/restablecer-contrasena.mjs` para poner una contraseña nueva |
 
 ## Dónde se guardan las cosas
 
