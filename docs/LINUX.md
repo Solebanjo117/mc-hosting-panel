@@ -48,9 +48,20 @@ Oracle Linux, Rocky o Fedora:
 
 ```bash
 sudo dnf install -y git
-sudo dnf module install -y nodejs:22   # o: curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash - && sudo dnf install -y nodejs
-node --version
+sudo dnf module reset -y nodejs          # Oracle Linux trae Node 16 fijado; esto lo libera
+sudo dnf module install -y nodejs:22
+node --version                           # debe decir v22
 ```
+
+Si `dnf` no encuentra `nodejs:22`, usa el repositorio de NodeSource:
+
+```bash
+sudo dnf remove -y nodejs
+curl -fsSL https://rpm.nodesource.com/setup_22.x | sudo bash -
+sudo dnf install -y nodejs
+```
+
+No actualices npm por separado (`npm install -g npm@…`): viene con Node, y si ves `EBADENGINE` o `Unsupported engine` es que tu Node es viejo, no npm.
 
 ## 2. Instalar el panel
 
@@ -239,5 +250,7 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 **`npm ci` falla en una máquina pequeña.** Con menos de 1 GB de RAM la compilación se puede quedar sin memoria: crea el swap de arriba y repite.
 
 **El puerto 8080 ya está en uso.** Cambia el puerto en **Ajustes del panel → Puerto del panel**, o arráncalo con otro: agrega `Environment=PORT=8090` al servicio y usa ese número en el túnel SSH.
+
+**`EBADENGINE` o `Unsupported engine` al instalar.** Tu Node es anterior a la 20 (Oracle Linux trae la 16). Instala Node 22 como en el [paso 1](#1-requisitos), borra `node_modules` y repite `npm ci`.
 
 **Ver qué pasó.** `journalctl -u mc-hosting-panel -n 200` muestra lo último que escribió el panel; la consola de cada servidor está en su pestaña Consola y los logs completos en **Estado → Logs**.
