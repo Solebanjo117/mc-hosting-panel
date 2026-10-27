@@ -34,6 +34,10 @@ import { bus } from './lib/bus.js';
 
 const app = express();
 app.disable('x-powered-by');
+// Detrás de un proxy en esta misma máquina (Caddy, Nginx) la IP real llega en X-Forwarded-For:
+// así el límite de intentos de inicio de sesión y el historial ven a cada visitante por separado.
+// Solo se confía en esa cabecera si la conexión viene de esta PC.
+app.set('trust proxy', 'loopback');
 app.use(guardHttp);
 app.use(securityHeaders);
 // Respuestas comprimidas (gzip/brotli): la interfaz y las respuestas JSON grandes pesan una tercera parte.
