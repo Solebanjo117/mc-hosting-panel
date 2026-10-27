@@ -20,6 +20,22 @@ function Address({ label, text }) {
 const fwRule = (port, proto) =>
   `netsh advfirewall firewall add rule name="Minecraft ${proto === 'UDP' ? 'Bedrock ' : ''}${port}" dir=in action=allow protocol=${proto} localport=${port}`;
 
+/** El comando del firewall según el sistema donde corre el panel. */
+function firewallCommand(kind, port, bedrock) {
+  const tcp = `${port}/tcp`;
+  const udp = bedrock ? `${bedrock}/udp` : null;
+  switch (kind) {
+    case 'firewalld':
+      return `sudo firewall-cmd --permanent --add-port=${tcp}${udp ? ` --add-port=${udp}` : ''} && sudo firewall-cmd --reload`;
+    case 'ufw':
+      return `sudo ufw allow ${tcp}${udp ? ` && sudo ufw allow ${udp}` : ''}`;
+    case 'iptables':
+      return `sudo iptables -I INPUT 6 -p tcp --dport ${port} -m state --state NEW -j ACCEPT${udp ? ` && sudo iptables -I INPUT 6 -p udp --dport ${bedrock} -j ACCEPT` : ''} && sudo netfilter-persistent save`;
+    default:
+      return [fwRule(port, 'TCP'), bedrock && fwRule(bedrock, 'UDP')].filter(Boolean).join(' & ');
+  }
+}
+
 export default function NetworkTab({ server, state }) {
   const [net, setNet] = useState(null);
   const [host, setHost] = useState('');
@@ -57,7 +73,8 @@ export default function NetworkTab({ server, state }) {
   const linkedOnly = server.playit?.enabled && server.playit.owned && !Object.entries(server.playit.owned).some(([k, v]) => v && server.playit[`${k}TunnelId`]);
 
   const lan = net?.localIps.find((i) => !i.virtual) || net?.localIps[0];
-  const firewallCmd = [fwRule(server.port, 'TCP'), bedrock && fwRule(bedrock, 'UDP')].filter(Boolean).join(' & ');
+  const linux = net?.platform && net.platform !== 'win32';
+  const firewallCmd = firewallCommand(linux ? net.firewall : 'windows', server.port, bedrock);
 
   async function test() {
     setChecking(true);
@@ -232,10 +249,19 @@ export default function NetworkTab({ server, state }) {
             </p>
           </li>
           <li>
-            <strong>Permite {bedrock ? 'los puertos' : 'el puerto'} en el Firewall de Windows</strong>
+            <strong>Permite {bedrock ? 'los puertos' : 'el puerto'} en el firewall {linux ? 'del servidor' : 'de Windows'}</strong>
             <p className="muted small">
-              Ejecuta <span className="mono">scripts\abrir-firewall.bat</span> de la carpeta del panel
-              {bedrock ? ' una vez para TCP y otra para UDP' : ''}, o pega esto en una terminal abierta como administrador:
+              {linux ? (
+                <>
+                  Pega esto en la terminal del servidor{net.firewall === 'iptables' ? ' (la regla debe quedar antes del REJECT; mira su línea con sudo iptables -L INPUT --line-numbers)' : ''}. Si el servidor
+                  está en una nube (Oracle, AWS…), abre también {bedrock ? 'los puertos' : 'el puerto'} en su firewall de red (en Oracle, la <em>Security List</em>):
+                </>
+              ) : (
+                <>
+                  Ejecuta <span className="mono">scripts\abrir-firewall.bat</span> de la carpeta del panel
+                  {bedrock ? ' una vez para TCP y otra para UDP' : ''}, o pega esto en una terminal abierta como administrador:
+                </>
+              )}
             </p>
             <div className="address">
               <span style={{ overflowWrap: 'anywhere' }}>{firewallCmd}</span>

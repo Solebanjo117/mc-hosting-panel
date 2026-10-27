@@ -7,7 +7,7 @@ import { db } from '../db.js';
 import { HttpError } from '../lib/util.js';
 import { listVersions, SERVER_TYPES } from '../services/versions.js';
 import { installedJavas, ensureJava } from '../services/java.js';
-import { localIps, publicIp } from '../services/network.js';
+import { localIps, publicIp, firewallKind } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
 import { healthCheck } from '../services/health.js';
 import { getMetrics } from '../services/metrics.js';
@@ -72,7 +72,7 @@ systemRouter.get('/versions/:type', async (req, res) => {
 });
 
 systemRouter.get('/network', async (_req, res) => {
-  res.json({ localIps: localIps(), publicIp: await publicIp(), panelPort: db.data.settings.panelPort, remoteAccess: db.data.settings.remoteAccess || 'lan' });
+  res.json({ localIps: localIps(), publicIp: await publicIp(), panelPort: db.data.settings.panelPort, remoteAccess: db.data.settings.remoteAccess || 'lan', platform: process.platform, firewall: firewallKind() });
 });
 
 systemRouter.get('/java', (_req, res) => {

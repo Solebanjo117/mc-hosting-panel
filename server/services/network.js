@@ -1,6 +1,19 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import os from 'node:os';
 import net from 'node:net';
 import { getJson } from '../lib/http.js';
+
+/** Qué firewall hay en esta máquina: para enseñar el comando correcto en Conexión. */
+export function firewallKind() {
+  if (process.platform === 'win32') return 'windows';
+  const dirs = (process.env.PATH || '').split(':');
+  const has = (bin) => dirs.some((d) => fs.existsSync(path.join(d, bin)));
+  if (has('firewall-cmd')) return 'firewalld';
+  if (has('ufw')) return 'ufw';
+  if (has('iptables')) return 'iptables';
+  return null;
+}
 
 export function localIps() {
   const out = [];
