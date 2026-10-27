@@ -133,17 +133,71 @@ Con esa ventana abierta, entra en tu navegador a **http://localhost:8080**. Para
 
 En Windows con PuTTY: *Connection → SSH → Tunnels*, Source port `8080`, Destination `localhost:8080`, **Add**, y conéctate normalmente.
 
-### Opción B: Tailscale (cómodo, también desde el celular)
+### Opción B: Tailscale (sin túnel, también desde el celular)
 
-Tailscale crea una red privada entre tus dispositivos. En el servidor:
+Tailscale une tu servidor, tu PC y tu celular en una red privada. El panel se abre con una dirección de esa red (`100.x.y.z` o un nombre `.ts.net`), **no con la IP pública**: nadie de internet la puede alcanzar y no hay que abrir ningún puerto en la nube. El panel ya acepta esas conexiones sin cambiar nada. La cuenta gratuita alcanza de sobra.
+
+**1. En el servidor**, instala Tailscale y conéctalo a tu cuenta:
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up            # abre el enlace que muestra e inicia sesión
-tailscale ip -4              # te da una IP 100.x.y.z
+sudo systemctl enable --now tailscaled
+sudo tailscale up
 ```
 
-Instala Tailscale en tu PC o celular con la misma cuenta y entra a **http://100.x.y.z:8080**. No hace falta abrir ningún puerto para esto. Con Tailscale también funcionan las notificaciones del navegador si usas `sudo tailscale serve --bg 8080` (te da una dirección `https://`).
+`tailscale up` muestra un enlace `https://login.tailscale.com/a/…`. Ábrelo **en tu PC o celular** (el servidor no necesita navegador), inicia sesión con Google, Microsoft, GitHub o Apple y aprueba el equipo.
+
+**2. Deja pasar a Tailscale por el firewall del servidor.** Solo tus dispositivos usan esa interfaz:
+
+```bash
+# Oracle Linux, Rocky, Fedora (firewalld):
+sudo firewall-cmd --permanent --zone=trusted --add-interface=tailscale0
+sudo firewall-cmd --reload
+
+# Ubuntu en Oracle Cloud (iptables): inserta antes del REJECT (mira el número con: sudo iptables -L INPUT --line-numbers)
+sudo iptables -I INPUT 6 -i tailscale0 -j ACCEPT
+sudo netfilter-persistent save
+
+# Ubuntu con ufw:
+sudo ufw allow in on tailscale0
+```
+
+**3. Anota la dirección del servidor:**
+
+```bash
+tailscale ip -4        # por ejemplo 100.101.102.103
+tailscale status       # la primera línea es este equipo, con su nombre
+```
+
+**4. En tu PC y en tu celular**, instala Tailscale desde [tailscale.com/download](https://tailscale.com/download) (Windows, macOS, Linux, Android, iPhone) e inicia sesión **con la misma cuenta**. Déjalo conectado.
+
+**5. Abre el panel** en el navegador:
+
+```
+http://100.101.102.103:8080
+```
+
+Con *MagicDNS* (viene activado en cuentas nuevas) también sirve el nombre del servidor: `http://nombre-del-servidor:8080`.
+
+#### Opcional: dirección con HTTPS
+
+Con HTTPS el panel se puede **instalar como app** en el celular y mandar **notificaciones** (los navegadores solo las permiten en páginas seguras). En el servidor:
+
+```bash
+sudo tailscale serve --bg 8080
+tailscale serve status        # muestra la dirección https://nombre-del-servidor.tu-red.ts.net
+```
+
+La primera vez puede pedirte activar *HTTPS certificates* en la consola de Tailscale (**DNS → HTTPS Certificates → Enable**). La dirección `https://….ts.net` sigue siendo privada: solo la abren tus dispositivos. Para quitarla: `sudo tailscale serve --https=443 off`.
+
+No uses `tailscale funnel`: eso sí publica el panel en internet.
+
+#### Si no abre
+
+- **Tarda y no carga:** el paso 2 (firewall) falta, o Tailscale no está conectado en tu PC o celular. En el servidor, `tailscale status` debe listar tu PC; en tu PC, la app debe decir *Connected*.
+- **"Acceso bloqueado":** estás entrando con la IP pública. Usa la `100.x.y.z`.
+- **El panel no responde ni en el servidor:** revisa que esté encendido con `systemctl status mc-hosting-panel` y prueba `curl -I http://localhost:8080` en el servidor.
+- **Tailscale se desconecta al reiniciar:** `sudo systemctl enable --now tailscaled` lo deja arrancando solo. Para que la sesión del servidor no caduque, en la consola de Tailscale abre el equipo y elige **Disable key expiry**.
 
 ### Si de verdad quieres el panel abierto en internet
 
