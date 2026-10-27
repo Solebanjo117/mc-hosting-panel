@@ -9,6 +9,8 @@ Guía para instalar el panel en un servidor Linux: una VPS, una instancia de Ora
 - [2. Instalar el panel](#2-instalar-el-panel)
 - [3. Que arranque solo (systemd)](#3-que-arranque-solo-systemd)
 - [4. Entrar al panel desde tu PC](#4-entrar-al-panel-desde-tu-pc)
+- [4.1 Entrar con un dominio y HTTPS (sin túnel)](#41-entrar-con-un-dominio-y-https-sin-túnel)
+- [4.2 Entrar con la IP pública (rápido, sin cifrar)](#42-entrar-con-la-ip-pública-rápido-sin-cifrar)
 - [5. Abrir los puertos de Minecraft](#5-abrir-los-puertos-de-minecraft)
 - [6. Actualizar](#6-actualizar)
 - [7. Si olvidaste la contraseña](#7-si-olvidaste-la-contraseña)
@@ -119,7 +121,7 @@ Para que cada servidor de Minecraft se encienda al arrancar, marca **Encender au
 
 ## 4. Entrar al panel desde tu PC
 
-Por seguridad, el panel **rechaza las conexiones que llegan de internet**: solo acepta la propia máquina, redes privadas y Tailscale. Si abres el puerto 8080 en la nube y entras con la IP pública, verás "Acceso bloqueado". Además el panel usa HTTP sin cifrar, así que **no abras el 8080 al público**. Usa una de estas dos opciones.
+Por seguridad, el panel **rechaza las conexiones que llegan de internet**: solo acepta la propia máquina, redes privadas y Tailscale. Si abres el puerto 8080 en la nube y entras con la IP pública, verás "Acceso bloqueado". Además el panel usa HTTP sin cifrar, así que **no abras el 8080 al público**. Usa el túnel SSH (A), Tailscale (B) o, si quieres entrar sin nada instalado en tu PC, un [dominio con HTTPS](#41-entrar-con-un-dominio-y-https-sin-túnel).
 
 ### Opción A: túnel SSH (sin instalar nada)
 
@@ -133,21 +135,142 @@ Con esa ventana abierta, entra en tu navegador a **http://localhost:8080**. Para
 
 En Windows con PuTTY: *Connection → SSH → Tunnels*, Source port `8080`, Destination `localhost:8080`, **Add**, y conéctate normalmente.
 
-### Opción B: Tailscale (cómodo, también desde el celular)
+### Opción B: Tailscale (sin túnel, también desde el celular)
 
-Tailscale crea una red privada entre tus dispositivos. En el servidor:
+Tailscale une tu servidor, tu PC y tu celular en una red privada. El panel se abre con una dirección de esa red (`100.x.y.z` o un nombre `.ts.net`), **no con la IP pública**: nadie de internet la puede alcanzar y no hay que abrir ningún puerto en la nube. El panel ya acepta esas conexiones sin cambiar nada. La cuenta gratuita alcanza de sobra.
+
+**1. En el servidor**, instala Tailscale y conéctalo a tu cuenta:
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up            # abre el enlace que muestra e inicia sesión
-tailscale ip -4              # te da una IP 100.x.y.z
+sudo systemctl enable --now tailscaled
+sudo tailscale up
 ```
 
-Instala Tailscale en tu PC o celular con la misma cuenta y entra a **http://100.x.y.z:8080**. No hace falta abrir ningún puerto para esto. Con Tailscale también funcionan las notificaciones del navegador si usas `sudo tailscale serve --bg 8080` (te da una dirección `https://`).
+`tailscale up` muestra un enlace `https://login.tailscale.com/a/…`. Ábrelo **en tu PC o celular** (el servidor no necesita navegador), inicia sesión con Google, Microsoft, GitHub o Apple y aprueba el equipo.
 
-### Si de verdad quieres el panel abierto en internet
+**2. Deja pasar a Tailscale por el firewall del servidor.** Solo tus dispositivos usan esa interfaz:
 
-En **Ajustes del panel → Quién puede abrir el panel** puedes elegir *Cualquiera en internet* y abrir el 8080/TCP como en el paso 5. Hazlo solo detrás de algo que ponga **HTTPS** (Caddy, Nginx con Let's Encrypt o Cloudflare Tunnel) y con una contraseña larga.
+```bash
+# Oracle Linux, Rocky, Fedora (firewalld):
+sudo firewall-cmd --permanent --zone=trusted --add-interface=tailscale0
+sudo firewall-cmd --reload
+
+# Ubuntu en Oracle Cloud (iptables): inserta antes del REJECT (mira el número con: sudo iptables -L INPUT --line-numbers)
+sudo iptables -I INPUT 6 -i tailscale0 -j ACCEPT
+sudo netfilter-persistent save
+
+# Ubuntu con ufw:
+sudo ufw allow in on tailscale0
+```
+
+**3. Anota la dirección del servidor:**
+
+```bash
+tailscale ip -4        # por ejemplo 100.101.102.103
+tailscale status       # la primera línea es este equipo, con su nombre
+```
+
+**4. En tu PC y en tu celular**, instala Tailscale desde [tailscale.com/download](https://tailscale.com/download) (Windows, macOS, Linux, Android, iPhone) e inicia sesión **con la misma cuenta**. Déjalo conectado.
+
+**5. Abre el panel** en el navegador:
+
+```
+http://100.101.102.103:8080
+```
+
+Con *MagicDNS* (viene activado en cuentas nuevas) también sirve el nombre del servidor: `http://nombre-del-servidor:8080`.
+
+#### Opcional: dirección con HTTPS
+
+Con HTTPS el panel se puede **instalar como app** en el celular y mandar **notificaciones** (los navegadores solo las permiten en páginas seguras). En el servidor:
+
+```bash
+sudo tailscale serve --bg 8080
+tailscale serve status        # muestra la dirección https://nombre-del-servidor.tu-red.ts.net
+```
+
+La primera vez puede pedirte activar *HTTPS certificates* en la consola de Tailscale (**DNS → HTTPS Certificates → Enable**). La dirección `https://….ts.net` sigue siendo privada: solo la abren tus dispositivos. Para quitarla: `sudo tailscale serve --https=443 off`.
+
+No uses `tailscale funnel`: eso sí publica el panel en internet.
+
+#### Si no abre
+
+- **Tarda y no carga:** el paso 2 (firewall) falta, o Tailscale no está conectado en tu PC o celular. En el servidor, `tailscale status` debe listar tu PC; en tu PC, la app debe decir *Connected*.
+- **"Acceso bloqueado":** estás entrando con la IP pública. Usa la `100.x.y.z`.
+- **El panel no responde ni en el servidor:** revisa que esté encendido con `systemctl status mc-hosting-panel` y prueba `curl -I http://localhost:8080` en el servidor.
+- **Tailscale se desconecta al reiniciar:** `sudo systemctl enable --now tailscaled` lo deja arrancando solo. Para que la sesión del servidor no caduque, en la consola de Tailscale abre el equipo y elige **Disable key expiry**.
+
+## 4.1 Entrar con un dominio y HTTPS (sin túnel)
+
+Si quieres abrir el panel desde cualquier lugar sin túnel ni programas extra, ponle un **nombre gratis** y **HTTPS** con Caddy. Tu contraseña viaja cifrada y el puerto 8080 sigue cerrado: Caddy recibe las visitas en el 443 y se las pasa al panel dentro del servidor.
+
+**1. Un nombre gratis que apunte a tu IP pública.** Entra a [duckdns.org](https://www.duckdns.org), inicia sesión y crea un subdominio (por ejemplo `misrv` → `misrv.duckdns.org`). En *current ip* pon la **IP pública** de tu instancia y pulsa *update ip*. (Si ya tienes un dominio propio, crea un registro **A** con esa IP.)
+
+**2. Abre los puertos 80 y 443** (TCP) en la Security List de Oracle, igual que en el [paso 5.1](#51-oracle-cloud-security-list), y en el servidor:
+
+```bash
+# Oracle Linux (firewalld)
+sudo firewall-cmd --permanent --add-service=http --add-service=https
+sudo firewall-cmd --reload
+# Ubuntu en Oracle (iptables): antes del REJECT
+sudo iptables -I INPUT 6 -p tcp -m multiport --dports 80,443 -m state --state NEW -j ACCEPT
+sudo netfilter-persistent save
+```
+
+**3. Instala Caddy:**
+
+```bash
+# Oracle Linux, Rocky, Fedora
+sudo dnf install -y dnf-plugins-core
+sudo dnf copr enable -y @caddy/caddy
+sudo dnf install -y caddy
+
+# Ubuntu o Debian
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo apt update && sudo apt install -y caddy
+```
+
+**4. Dile a Caddy que sirva el panel.** Cambia `misrv.duckdns.org` por tu nombre:
+
+```bash
+sudo tee /etc/caddy/Caddyfile >/dev/null <<'CADDY'
+misrv.duckdns.org {
+    reverse_proxy localhost:8080
+}
+CADDY
+sudo systemctl enable --now caddy
+sudo systemctl reload caddy
+```
+
+Caddy pide el certificado HTTPS solo (tarda unos segundos la primera vez) y lo renueva solo.
+
+**5. Abre `https://misrv.duckdns.org`** desde cualquier navegador. No cambies nada en *Quién puede abrir el panel*: para el panel, las visitas llegan desde el propio servidor (a través de Caddy), y el límite de intentos de inicio de sesión ve la IP real de cada visitante.
+
+**Si no abre:** `sudo journalctl -u caddy -n 50` dice qué falla. Lo más común es que el nombre todavía no apunta a tu IP (revisa en duckdns.org) o que falta abrir 80/443 en la Security List o en el firewall. Si Caddy dice *permission denied* al conectar con el panel (SELinux en Oracle Linux): `sudo setsebool -P httpd_can_network_connect 1`.
+
+## 4.2 Entrar con la IP pública (rápido, sin cifrar)
+
+Funciona en dos minutos, pero **la contraseña viaja sin cifrar** y cualquiera que encuentre la dirección puede intentar adivinarla. Úsalo para probar; para quedarte, usa el [dominio con HTTPS](#41-entrar-con-un-dominio-y-https-sin-túnel).
+
+**1. Permite conexiones de internet** en el panel. Si ya puedes entrar (por túnel), está en **Ajustes del panel → Quién puede abrir el panel → Cualquiera en internet**. Si no, desde el servidor:
+
+```bash
+cd ~/mc-hosting-panel
+sudo systemctl stop mc-hosting-panel     # o Ctrl+C si lo abriste con npm start
+node -e "const f='data/db.json',fs=require('fs'),d=JSON.parse(fs.readFileSync(f));d.settings.remoteAccess='any';fs.writeFileSync(f,JSON.stringify(d,null,2))"
+sudo systemctl start mc-hosting-panel
+```
+
+**2. Abre el puerto 8080** (TCP) en la Security List de Oracle ([paso 5.1](#51-oracle-cloud-security-list)) y en el servidor:
+
+```bash
+sudo firewall-cmd --permanent --add-port=8080/tcp && sudo firewall-cmd --reload   # Oracle Linux
+```
+
+**3. Abre `http://IP_PUBLICA:8080`.** Usa una contraseña larga (al menos 16 caracteres). Para volver a cerrarlo: elige *Esta PC, tu red y Tailscale* en Ajustes y quita la regla del 8080.
 
 ## 5. Abrir los puertos de Minecraft
 

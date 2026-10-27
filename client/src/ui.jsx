@@ -15,7 +15,32 @@ export function GrassBlock({ className = '', size }) {
 /** Borde eléctrico: chispas del color de la lámpara alrededor de algo encendido. */
 export const ELECTRIC_STATES = new Set(['running', 'starting', 'stopping', 'crashed', 'error', 'installing']);
 
+/*
+ * Las chispas: cada 90 ms cambia la semilla del ruido de los filtros SVG (un solo temporizador para
+ * todos los bordes). Se detiene cuando no hay bordes, cuando la pestaña no se ve o si el sistema
+ * pide reducir el movimiento.
+ */
+let electricUsers = 0;
+let electricTimer = null;
+let electricSeed = 1;
+function electricTick() {
+  if (document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  electricSeed = (electricSeed % 97) + 1;
+  for (const t of document.querySelectorAll('#electric feTurbulence, #electric-sm feTurbulence')) t.setAttribute('seed', String(electricSeed));
+}
+
 export function Electric({ state = 'running', small = false }) {
+  useEffect(() => {
+    electricUsers += 1;
+    if (!electricTimer) electricTimer = setInterval(electricTick, 90);
+    return () => {
+      electricUsers -= 1;
+      if (electricUsers <= 0 && electricTimer) {
+        clearInterval(electricTimer);
+        electricTimer = null;
+      }
+    };
+  }, []);
   return (
     <span className={`electric st-${state}${small ? ' small' : ''}`} aria-hidden="true">
       <i className="e-main" />

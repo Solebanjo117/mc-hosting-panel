@@ -60,6 +60,20 @@ describe('Cuenta y sesión', () => {
     assert.match(r.body.error, /Demasiados intentos/);
   });
 
+  it('detrás de un proxy en la misma máquina (Caddy) cuenta los intentos de cada visitante por separado', async () => {
+    // El bloqueo de la prueba anterior es de esta máquina; un visitante que llega por el proxy no hereda ese bloqueo.
+    const via = (ip) => ({ headers: { 'x-forwarded-for': ip } });
+    const otro = new Client(panel.base);
+    const ok = await otro.post('/api/auth/login', ADMIN, via('203.0.113.9'));
+    assert.equal(ok.status, 200, ok.text);
+    const atacante = new Client(panel.base);
+    for (let i = 0; i < 8; i++) await atacante.post('/api/auth/login', { username: 'admin', password: `x-${i}-xxxx` }, via('198.51.100.7'));
+    assert.equal((await atacante.post('/api/auth/login', ADMIN, via('198.51.100.7'))).status, 429, 'el atacante queda bloqueado');
+    assert.equal((await new Client(panel.base).post('/api/auth/login', ADMIN, via('203.0.113.10'))).status, 200, 'los demás siguen entrando');
+    const log = await otro.ok('GET', '/api/auth/log');
+    assert.ok(log.some((e) => e.ip === '198.51.100.7'), 'el historial muestra la IP real');
+  });
+
   it('cambiar la contraseña cierra las demás sesiones', async () => {
     const a = panel.client;
     const b = new Client(panel.base);
