@@ -3,6 +3,8 @@ import { api, formatDate } from '../../api.js';
 import { PlayerHead, useAction } from '../../ui.jsx';
 import { ItemIcon, useGameList } from './gameData.jsx';
 import InventoryEditor from './InventoryEditor.jsx';
+import Achievements from './Achievements.jsx';
+import { downloadPlayerCard } from '../../playerCard.js';
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -33,11 +35,16 @@ const EVENT = {
   crash: { label: (e) => `El servidor se cayó${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-crash', icon: '✕' },
   backup: { label: (e) => `Respaldo${e.detail ? ` ${e.detail}` : ''}`, cls: 'ev-backup', icon: '⤓' },
   update: { label: (e) => `Actualizado${e.detail ? `: ${e.detail}` : ''}`, cls: 'ev-server', icon: '↑' },
+  maintenance: { label: (e) => `Mantenimiento: ${e.detail || ''}`, cls: 'ev-server', icon: '🔧' },
+  drill: { label: () => 'Simulacro de caída', cls: 'ev-server', icon: '⚡' },
+  zone: { label: (e) => `${e.player} entró a ${e.detail}`, cls: 'ev-join', icon: '📍' },
+  achievement: { label: (e) => `Logro: ${e.detail}`, cls: 'ev-backup', icon: '★' },
 };
 
 export default function ActivityTab({ server, state }) {
   return (
     <div className="stack" style={{ gap: '1.5rem', maxWidth: 1000 }}>
+      <Achievements server={server} />
       <Ranking server={server} running={['running', 'starting', 'stopping'].includes(state)} />
       <ActivityHistory server={server} />
     </div>
@@ -133,6 +140,9 @@ function PlayerCard({ server, player, onInventory }) {
             {player.sessions ? ` · ${player.sessions} ${player.sessions === 1 ? 'sesión' : 'sesiones'}` : ''}
           </div>
         </div>
+        <button className="btn-sm" onClick={() => downloadPlayerCard({ server, player, accent: getComputedStyle(document.documentElement).getPropertyValue('--grass').trim() || '#3fcf63' })} title="Descarga una imagen con su cara y sus estadísticas para compartir">
+          Descargar tarjeta
+        </button>
         {player.playerdata && (
           <button className="btn-go" onClick={onInventory}>
             Ver inventario

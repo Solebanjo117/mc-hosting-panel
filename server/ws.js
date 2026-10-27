@@ -99,6 +99,9 @@ export function attachWebSocket(httpServer) {
   bus.on('install', (id, payload) => send(() => true, { type: 'install', id, ...payload }));
   bus.on('app-update', (state) => send(() => true, { type: 'app-update', ...state }));
   bus.on('console', (id, line) => send((ws) => ws.subscriptions.has(id), { type: 'console', id, line }));
+  bus.on('achievement', (id, item) => send(() => true, { type: 'achievement', id, ...item }));
+  bus.on('backup-done', (id, file) => send(() => true, { type: 'backup', id, file }));
+  bus.on('zone', (id, payload) => send(() => true, { type: 'zone', id, ...payload }));
 
   // Cierra conexiones muertas (laptop suspendida, Wi-Fi caído…).
   setInterval(() => {

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import express from 'express';
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { DIST_DIR, VERSION } from './config.js';
 import { db } from './db.js';
@@ -14,11 +15,16 @@ import { contentRouter } from './routes/content.js';
 import { systemRouter } from './routes/system.js';
 import { manageRouter } from './routes/manage.js';
 import { integrationsRouter } from './routes/integrations.js';
+import { appearancePublic, publicRouter } from './routes/appearance.js';
 import * as playit from './services/playit.js';
 import './services/metrics.js';
 import './services/scheduler.js';
 import './services/dns.js';
 import './services/activity.js';
+import './services/power.js';
+import './services/achievements.js';
+import './services/positions.js';
+import './services/worldGrowth.js';
 import { attachWebSocket } from './ws.js';
 import { guardHttp, securityHeaders, sameOrigin } from './lib/netguard.js';
 import { autoStartServers, stopAll, rememberRunning } from './services/processManager.js';
@@ -30,11 +36,15 @@ const app = express();
 app.disable('x-powered-by');
 app.use(guardHttp);
 app.use(securityHeaders);
+// Respuestas comprimidas (gzip/brotli): la interfaz y las respuestas JSON grandes pesan una tercera parte.
+app.use(compression());
 app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
 app.use('/api', sameOrigin);
 app.use('/api/auth', authRouter);
+app.use('/api/appearance', appearancePublic);
+app.use('/api/public', publicRouter);
 app.use('/api', requireAuth);
 app.use('/api/system', systemRouter);
 app.use('/api/servers', serversRouter);
@@ -46,8 +56,11 @@ app.use('/api/integrations', integrationsRouter);
 app.use('/api', (_req, _res, next) => next(Object.assign(new Error('Ruta no encontrada'), { status: 404 })));
 
 if (fs.existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR, { index: false, maxAge: '1h' }));
-  app.get('/{*splat}', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html')));
+  // Los archivos de /assets llevan un hash en el nombre: se pueden guardar un año sin volver a pedirlos.
+  app.use('/assets', express.static(path.join(DIST_DIR, 'assets'), { index: false, immutable: true, maxAge: '1y', fallthrough: false }));
+  // El resto (índice, service worker, manifest) se revalida siempre para que las actualizaciones lleguen al momento.
+  app.use(express.static(DIST_DIR, { index: false, cacheControl: false, setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
+  app.get('/{*splat}', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html'), { cacheControl: false, headers: { 'Cache-Control': 'no-cache' } }));
 } else {
   app.get('/', (_req, res) =>
     res.type('text').send('Falta compilar la interfaz. Ejecuta "npm run build" o usa iniciar.bat.')

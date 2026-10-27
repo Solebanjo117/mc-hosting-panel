@@ -30,15 +30,29 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Logs y diagnóstico:** búsqueda en todos los logs (también los antiguos .gz), lectura de crash reports y explicación en español de las causas comunes (falta de memoria, mods que faltan o chocan, Java incorrecto, puerto ocupado…).
 - **Seguridad:** revisión por servidor con arreglos de un clic, protección contra oleadas de bots (bloqueo temporal de IP y lista blanca de emergencia), panel limitado a tu red, historial de inicios de sesión, y una guía sobre DDoS (qué se puede y qué no se puede hacer desde casa).
 - **Clonar servidores** para probar mods o versiones sin arriesgar el original.
+- **Página pública e invitación** (`/estado/<servidor>`): un enlace sin sesión con el estado, el MOTD como en el juego, quién juega, la dirección correcta y cómo entrar en Java y Bedrock. Se activa por servidor en Conexión y eliges qué mostrar.
+- **Horario de energía**: pinta en una cuadrícula semanal las horas en que el servidor debe estar encendido; se enciende y se apaga solo (esperando a que salga el último jugador si quieres).
+- **Modo mantenimiento**: MOTD con el aviso, lista blanca temporal con quienes ayudan y expulsión de los demás; al terminar, todo vuelve como estaba.
+- **Simulacro de caída**: cierra el proceso a propósito y comprueba en vivo que el reinicio automático y las notificaciones funcionan.
+- **Copia de respaldos en la nube**: cada respaldo se copia a la carpeta de OneDrive, Google Drive, Dropbox o iCloud (el panel las detecta), y la Revisión avisa si la copia se queda atrás.
+- **Logros del servidor** ("Cien horas", "Fiesta", "Roca sólida"…) con avance, cartel de logro al conseguirlos y registro en la actividad.
+- **Chat en el panel**: lo que dicen los jugadores, entradas, salidas y muertes; escribe como Servidor y menciona con @nombre.
+- **Tarjeta de jugador** descargable como imagen, con su cara y sus estadísticas.
+- **Qué cambió**: el changelog de cada versión de un plugin o mod (Modrinth y Hangar) y los cambios de cada build de Paper, con las frases de riesgo resaltadas, antes de actualizar.
+- **Zonas con alerta**: rectángulos del mundo con nombre; cuando alguien entra, el panel avisa y lo registra. La lista de jugadores muestra dónde está cada uno.
+- **Cómo creció el mundo**: tamaño en disco y regiones por día.
+- **Widget flotante**: una ventana pequeña siempre encima (Chrome y Edge) con la lámpara, los jugadores y el botón de encender.
+- **Fondos vivos**: el mapa de BlueMap de tu mundo o la skin de un jugador girando en 3D, además de paletas por bioma (jungla, desierto, taiga, cerezo, pantano, champiñón) y sonidos del juego sintetizados (ding al entrar, cofre al respaldar, fanfarria de logro).
 - **El panel se actualiza solo** desde Ajustes (con git o con el instalador) y puede **abrirse al iniciar Windows**.
-- **Diseño "Deepslate y redstone":** superficies de pizarra, el nombre de cada servidor como en la lista del juego y su estado como una lámpara de redstone que se enciende, parpadea al arrancar y se pone roja si se cae.
+- **Perfil y apariencia**, a tu gusto y guardado en el panel (se ve igual desde cualquier equipo): tu **propia foto de fondo** (súbela o arrástrala; ajuste, posición, oscurecer, desenfoque y pixelado), **color de acento** (pasto, esmeralda, prismarina, diamante, amatista, oro, cobre o redstone), letra pixelada o clásica en tres tamaños, opacidad y desenfoque del cristal, y el borde eléctrico o la lámpara de redstone.
+- **Dos apariencias**: **Cristal**, un vidrio líquido al estilo de las apps de Apple que dobla la luz en los bordes (lente SVG en Chrome y Edge), con brillos especulares, cápsulas y un fondo con luz de pasto, prismarina y amatista; y **Bloques**, la interfaz del juego con acabado premium. Todo el panel, consola incluida, se escribe con la **letra pixelada del juego** (Pixelify Sans). En **Perfil y apariencia** (menú lateral) eliges el tema y, con Cristal, el **fondo** con vista previa: Aurora, Cueva (menas que laten), Atardecer (nubes sobre el panorama de la portada), Fin (estrellas que titilan), Nether (brasas que suben), Océano (luz que ondula) o Nevada (nieve cayendo); cada uno tiene una capa animada ligera que puedes apagar y que se detiene sola si tu sistema pide reducir el movimiento. En el tablero y en la barra lateral, cada servidor lleva un **borde eléctrico** animado cuyo color dice su estado: verde encendido, ámbar arrancando o apagando, rojo caído, azul instalando. Un bloque de pasto isométrico dibujado en CSS como marca, botones y losas con el bisel duro de las pantallas de Minecraft, grano de píxel sin archivos externos, barra de progreso como barra de experiencia, pestañas como las del inventario, avisos como el cartel de un logro, el menú de jugador como el tooltip de un objeto y una pantalla de acceso que recuerda a la pantalla de título. El nombre de cada servidor se escribe como en la lista del juego y su estado es una lámpara de redstone que se enciende, parpadea al arrancar y se pone roja si se cae.
 - **Accesible:** se revisa con axe (WCAG 2.1 AA) en cada cambio; se usa con teclado y lector de pantalla.
 - Pestaña **Conexión** con tus IP, el comando del firewall y una prueba real desde internet (Java y Bedrock).
 - **Manual completo para abrir puertos**: firewall, router (con secciones para Totalplay, Telmex e Izzi), CGNAT, dominio gratis (DuckDNS / No-IP / SRV) y alternativas como playit.gg. Está en [`docs/ABRIR-PUERTOS.md`](docs/ABRIR-PUERTOS.md) y dentro del panel.
 
 ## Requisitos
 
-- Windows 10 u 11 (también funciona en Linux para desarrollo).
+- Windows 10 u 11, o **Linux** (Ubuntu, Debian, Oracle Linux…, también en ARM): mira [Linux y la nube](#linux-y-la-nube).
 - Con el instalador no necesitas nada más. Con git: [Node.js 20 o más reciente](https://nodejs.org/es) (versión LTS).
 - Internet para descargar servidores, Java y mods.
 - RAM: unos 2–4 GB por servidor sin mods, 6 GB o más con modpacks.
@@ -64,6 +78,21 @@ La ventana negra es el panel: si la cierras, se apagan los servidores (de forma 
 
 Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pull`, instala dependencias y recompila solo si hace falta, y se reinicia) o `actualizar.bat`.
 
+### Linux y la nube
+
+El panel funciona igual en un servidor Linux: una VPS, Oracle Cloud (también la instancia gratuita ARM), una PC con Ubuntu o una Raspberry Pi 5. La guía completa está en [`docs/LINUX.md`](docs/LINUX.md) y dentro del panel (**Guía → Linux y la nube**). En resumen:
+
+```bash
+git clone https://github.com/Solebanjo117/mc-hosting-panel.git
+cd mc-hosting-panel
+npm ci && npm run build
+npm start
+```
+
+- Para que arranque solo y se reabra tras actualizarse, usa el servicio de systemd que trae el proyecto: `scripts/mc-hosting-panel.service`.
+- **No abras el puerto del panel (8080) a internet**: el panel rechaza esas conexiones por seguridad. Entra con un túnel SSH (`ssh -L 8080:localhost:8080 usuario@IP` y abre `http://localhost:8080`) o con Tailscale.
+- Abre los puertos de **Minecraft** (25565/TCP, 19132/UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
+
 ### Scripts incluidos
 
 | Archivo | Para qué sirve |
@@ -73,6 +102,8 @@ Para actualizar usa **Ajustes del panel → Actualizar el panel** (hace `git pul
 | `restablecer-contrasena.bat` | Si olvidaste la contraseña: muestra tu usuario y pone una nueva (solo en la PC del panel) |
 | `scripts\abrir-firewall.bat` | Crea la regla del Firewall de Windows para el puerto de un servidor (TCP para Java, UDP para Bedrock) |
 | `scripts\inicio-automatico.bat` | Activa o quita el arranque del panel con Windows |
+| `scripts/mc-hosting-panel.service` | En Linux: servicio de systemd para que el panel arranque solo y se reabra al actualizarse |
+| `scripts/restablecer-contrasena.mjs` | En Linux: `node scripts/restablecer-contrasena.mjs` para poner una contraseña nueva |
 
 ## Dónde se guardan las cosas
 

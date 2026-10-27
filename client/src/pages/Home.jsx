@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
-import { PlayerHead, Status, useAction } from '../ui.jsx';
+import { useAppearance } from '../appearance.js';
+import { Electric, ELECTRIC_STATES, PlayerHead, Status, useAction, usePageTitle } from '../ui.jsx';
 
 const HEALTH = {
   ok: { label: 'Todo bien', cls: 'ok' },
@@ -15,6 +16,7 @@ export default function Home() {
   const { servers, runtime, loaded } = useLive();
   const [info, setInfo] = useState(null);
   const [dash, setDash] = useState({});
+  usePageTitle('Tus servidores');
 
   useEffect(() => {
     api('/system/info').then(setInfo).catch(() => {});
@@ -136,10 +138,12 @@ function ServerCard({ server, rt, dash }) {
   const h = dash?.health && HEALTH[dash.health.level];
   const issues = dash?.health ? dash.health.counts.bad + dash.health.counts.warn : 0;
   const base = `/servidor/${server.id}`;
+  const { electric } = useAppearance();
   const memPct = dash?.spark?.mem?.map((v) => (v == null || !dash.spark.memoryLimitMb ? null : Math.round((v / dash.spark.memoryLimitMb) * 100)));
 
   return (
     <li className={`rack-slot${on ? ' is-on' : ''}`}>
+      {electric && ELECTRIC_STATES.has(state) && <Electric state={state} />}
       <div className="rack-id">
         <ServerIcon server={server} size={48} />
         <div style={{ minWidth: 0 }}>
@@ -147,7 +151,7 @@ function ServerCard({ server, rt, dash }) {
             {server.name}
           </Link>
           <div className="rack-meta">
-            <Status state={state} />
+            {electric && state === 'running' ? <span className="sr-only">Encendido</span> : <Status state={state} />}
             <span className="muted small">
               {TYPE_LABEL[server.type]} {server.mcVersion}, puerto {server.port}
             </span>

@@ -4,6 +4,7 @@ import { Confirm, Modal, PlayerHead, useAction, useToast } from '../../ui.jsx';
 import NbtEditor from './NbtEditor.jsx';
 import InventoryEditor from './InventoryEditor.jsx';
 import Pregen from './Pregen.jsx';
+import WorldGrowth from './WorldGrowth.jsx';
 
 export default function WorldsTab({ server, state }) {
   const [data, setData] = useState(null);
@@ -119,6 +120,8 @@ export default function WorldsTab({ server, state }) {
         Para regenerar el mundo con otra semilla sin perder el actual, crea un mundo nuevo: el anterior se conserva y puedes volver a él cuando quieras.
         Haz un respaldo antes de borrar.
       </p>
+
+      <WorldGrowth server={server} />
 
       <Pregen server={server} state={state} />
 

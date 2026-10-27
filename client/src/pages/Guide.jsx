@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { marked } from 'marked';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
+import { usePageTitle } from '../ui.jsx';
 
 // Mismo formato de anclas que GitHub, para que funcionen los enlaces del índice del manual.
 const slug = (text) =>
@@ -10,15 +12,25 @@ const slug = (text) =>
     .replace(/[^\p{L}\p{N}\s-]/gu, '')
     .replace(/\s/g, '-');
 
+const DOCS = [
+  { id: 'puertos', label: 'Abrir puertos en casa', title: 'Guía para abrir puertos' },
+  { id: 'linux', label: 'Linux y la nube', title: 'Linux y la nube' },
+];
+
 export default function Guide() {
+  const { doc: docParam } = useParams();
+  const current = DOCS.find((d) => d.id === docParam) || DOCS[0];
   const [md, setMd] = useState('');
   const [error, setError] = useState('');
+  usePageTitle(current.title);
 
   useEffect(() => {
-    api('/system/docs/puertos')
+    setMd('');
+    setError('');
+    api(`/system/docs/${current.id}`)
       .then(setMd)
       .catch((err) => setError(err.message));
-  }, []);
+  }, [current.id]);
 
   const { html, toc } = useMemo(() => {
     if (!md) return { html: '', toc: [] };
@@ -44,6 +56,13 @@ export default function Guide() {
 
   return (
     <div className="page">
+      <nav className="subtabs" aria-label="Guías">
+        {DOCS.map((d) => (
+          <Link key={d.id} to={d.id === 'puertos' ? '/guia' : `/guia/${d.id}`} className={`subtab${d.id === current.id ? ' active' : ''}`} aria-current={d.id === current.id ? 'page' : undefined}>
+            {d.label}
+          </Link>
+        ))}
+      </nav>
       {error && <div className="error-box">No se pudo cargar la guía: {error}</div>}
       <div className="doc-layout">
         <article className="doc" dangerouslySetInnerHTML={{ __html: html }} />

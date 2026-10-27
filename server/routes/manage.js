@@ -18,6 +18,11 @@ import { audit, applyFix, defaultProtection } from '../services/security.js';
 import { protectionStatus, endLockdown } from '../services/floodGuard.js';
 import { instance } from '../services/processManager.js';
 import { db } from '../db.js';
+import { getPower, setPower } from '../services/power.js';
+import * as maintenance from '../services/maintenance.js';
+import { record } from '../services/activity.js';
+import { listZones, saveZones, wantPositions } from '../services/positions.js';
+import { growth } from '../services/worldGrowth.js';
 
 /** Mundos, logs, tareas programadas y rendimiento de un servidor. */
 export const manageRouter = express.Router({ mergeParams: true });
@@ -142,6 +147,41 @@ manageRouter.post('/schedules/:taskId/run', async (req, res) => {
   });
   res.json({ ok: true });
 });
+
+// --- Horario de energía, mantenimiento y simulacro ------------------------------------
+
+manageRouter.get('/power', (req, res) => res.json(getPower(req.params.id)));
+manageRouter.put('/power', (req, res) => res.json(setPower(req.params.id, req.body || {})));
+
+manageRouter.get('/maintenance', (req, res) => res.json(maintenance.status(req.params.id)));
+manageRouter.post('/maintenance', async (req, res) => {
+  const r = await maintenance.enter(req.params.id, req.body || {});
+  bus.emit('servers');
+  res.json(r);
+});
+manageRouter.delete('/maintenance', async (req, res) => {
+  const r = await maintenance.exit(req.params.id, req.body || {});
+  bus.emit('servers');
+  res.json(r);
+});
+
+manageRouter.post('/drill', (req, res) => {
+  const server = getServer(req.params.id);
+  const drill = instance(server.id).drillCrash();
+  record(server.id, 'drill', { detail: 'simulacro de caída' });
+  res.json({ ...drill, autoRestart: Boolean(server.autoRestart) });
+});
+
+// --- Zonas con alerta, posiciones y crecimiento del mundo ----------------------------------
+
+manageRouter.get('/zones', (req, res) => res.json({ zones: listZones(req.params.id), positions: instance(req.params.id).positions }));
+manageRouter.put('/zones', (req, res) => res.json({ zones: saveZones(req.params.id, req.body?.zones), positions: instance(req.params.id).positions }));
+/** La lista de jugadores avisa que quiere posiciones (se preguntan solo mientras alguien mira). */
+manageRouter.post('/positions/watch', (req, res) => {
+  wantPositions(req.params.id, Boolean(req.body?.on));
+  res.json({ ok: true });
+});
+manageRouter.get('/world-growth', async (req, res) => res.json(await growth(req.params.id)));
 
 // --- Rendimiento ---------------------------------------------------------------
 

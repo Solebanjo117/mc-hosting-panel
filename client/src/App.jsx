@@ -1,17 +1,29 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { api } from './api.js';
 import { LiveProvider, useLive, serverState } from './live.jsx';
 import Login from './pages/Login.jsx';
+import PublicStatus from './pages/PublicStatus.jsx';
 import Home from './pages/Home.jsx';
-import CreateServer from './pages/CreateServer.jsx';
-import ImportModpack from './pages/ImportModpack.jsx';
 import ServerView from './pages/ServerView.jsx';
-import Guide from './pages/Guide.jsx';
-import PanelSettings from './pages/PanelSettings.jsx';
+import { Electric, ELECTRIC_STATES, GrassBlock, PageLoading } from './ui.jsx';
+import { STATUS_LABEL } from './api.js';
+import { useAppearance } from './appearance.js';
+import Backdrops from './Backdrops.jsx';
+import Widget, { openWidget } from './pages/Widget.jsx';
+
+// Las páginas que no se abren al entrar se descargan la primera vez que se visitan.
+const CreateServer = lazy(() => import('./pages/CreateServer.jsx'));
+const ImportModpack = lazy(() => import('./pages/ImportModpack.jsx'));
+const Guide = lazy(() => import('./pages/Guide.jsx'));
+const PanelSettings = lazy(() => import('./pages/PanelSettings.jsx'));
+const Appearance = lazy(() => import('./pages/Appearance.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
+  const location = useLocation();
+  const isPublic = /^\/estado\//.test(location.pathname);
+  const isWidget = location.pathname === '/widget';
 
   const check = () =>
     api('/auth/status')
@@ -25,9 +37,30 @@ export default function App() {
     return () => window.removeEventListener('auth-lost', lost);
   }, []);
 
-  if (!auth) return null;
+  if (isPublic) {
+    return (
+      <Routes>
+        <Route path="/estado/:id" element={<PublicStatus />} />
+      </Routes>
+    );
+  }
+  if (!auth) {
+    return (
+      <div className="loading" aria-busy="true">
+        <GrassBlock />
+        <p className="small">Abriendo el panel…</p>
+      </div>
+    );
+  }
   if (!auth.authenticated) return <Login setup={auth.setupRequired} onDone={check} />;
 
+  if (isWidget) {
+    return (
+      <LiveProvider>
+        <Widget />
+      </LiveProvider>
+    );
+  }
   return (
     <LiveProvider>
       <Shell username={auth.username} onLogout={check} />
@@ -37,36 +70,39 @@ export default function App() {
 
 function Shell({ username, onLogout }) {
   const { servers, runtime, connected } = useLive();
+  const { electric } = useAppearance();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
+  // En el celular, Esc cierra el menú.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   return (
     <div className="shell">
+      <Backdrops servers={servers} />
       <a className="skip-link" href="#contenido">
         Saltar al contenido
       </a>
       <header className="mobile-bar">
-        <button className="btn-ghost" onClick={() => setOpen(true)} aria-label="Abrir menú">
+        <button className="btn-ghost" onClick={() => setOpen(true)} aria-label="Abrir menú" aria-expanded={open}>
           ☰
         </button>
         <span className="brand" style={{ padding: 0 }}>
-          <span className="brand-mark" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </span>
+          <GrassBlock />
           MC Hosting Panel
         </span>
       </header>
 
+      {open && <button type="button" className="side-backdrop" onClick={() => setOpen(false)} aria-label="Cerrar menú" />}
+
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <NavLink to="/" className="brand" end>
-          <span className="brand-mark" aria-hidden="true">
-            {Array.from({ length: 9 }, (_, i) => (
-              <i key={i} />
-            ))}
-          </span>
+          <GrassBlock />
           MC Hosting Panel
         </NavLink>
 
@@ -79,23 +115,44 @@ function Shell({ username, onLogout }) {
               </NavLink>
             </div>
             {servers.length === 0 && <p className="faint small" style={{ padding: '0 0.5rem' }}>Todavía no hay servidores.</p>}
-            {servers.map((s) => (
+            {servers.map((s) => {
+              const st = serverState(s, runtime[s.id]);
+              // El estado se ve en el borde eléctrico (color según el estado); apagado no lleva nada.
+              return (
               <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
-                <i className={`dot ${serverState(s, runtime[s.id])}`} aria-hidden="true" />
+                {electric ? (
+                  <>
+                    {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
+                    <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
+                  </>
+                ) : (
+                  <i className={`dot ${st}`} aria-hidden="true" title={STATUS_LABEL[st] || st} />
+                )}
                 <span className="name">{s.name}</span>
-                <span className="faint">{runtime[s.id]?.players?.length || ''}</span>
+                {runtime[s.id]?.players?.length ? (
+                  <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>
+                    {runtime[s.id].players.length}
+                  </span>
+                ) : null}
               </NavLink>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="side-foot">
           <NavLink to="/guia" className="side-link">
-            Guía para abrir puertos
+            Guías (puertos, Linux)
           </NavLink>
           <NavLink to="/ajustes" className="side-link">
             Ajustes del panel
           </NavLink>
+          <NavLink to="/apariencia" className="side-link">
+            Perfil y apariencia
+          </NavLink>
+          <button className="side-link btn-ghost" style={{ justifyContent: 'flex-start', fontWeight: 400 }} onClick={() => openWidget()} title="Una ventana pequeña siempre encima con tus servidores">
+            Abrir widget flotante
+          </button>
           <button
             className="side-link btn-ghost"
             style={{ justifyContent: 'flex-start', fontWeight: 400 }}
@@ -111,15 +168,19 @@ function Shell({ username, onLogout }) {
       </aside>
 
       <main className="main" id="contenido" tabIndex={-1}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/nuevo" element={<CreateServer />} />
-          <Route path="/nuevo/modpack" element={<ImportModpack />} />
-          <Route path="/servidor/:id/*" element={<ServerView />} />
-          <Route path="/guia" element={<Guide />} />
-          <Route path="/ajustes" element={<PanelSettings />} />
-          <Route path="*" element={<Home />} />
-        </Routes>
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/nuevo" element={<CreateServer />} />
+            <Route path="/nuevo/modpack" element={<ImportModpack />} />
+            <Route path="/servidor/:id/*" element={<ServerView />} />
+            <Route path="/guia" element={<Guide />} />
+            <Route path="/guia/:doc" element={<Guide />} />
+            <Route path="/ajustes" element={<PanelSettings />} />
+            <Route path="/apariencia" element={<Appearance username={username} />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   );

@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
-import { Confirm, useAction, useToast } from '../ui.jsx';
+import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
+import BackupMirror from './BackupMirror.jsx';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -19,6 +21,7 @@ export default function PanelSettings() {
   const [downloading, setDownloading] = useState(null);
   const [run, busy] = useAction();
   const toast = useToast();
+  usePageTitle('Ajustes del panel');
 
   const loadJava = () => api('/system/java').then(setJava);
   useEffect(() => {
@@ -32,9 +35,13 @@ export default function PanelSettings() {
   return (
     <div className="page stack" style={{ gap: '1.75rem', maxWidth: 860 }}>
       <h1>Ajustes del panel</h1>
+      <p className="muted small">
+        El tema, el fondo y el movimiento se eligen en <Link to="/apariencia">Perfil y apariencia</Link>.
+      </p>
 
       <PanelUpdate />
 
+      <BackupMirror />
       <PlayitSettings />
       <DnsSettings />
       <CurseForgeSettings />

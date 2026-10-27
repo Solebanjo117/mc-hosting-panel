@@ -71,6 +71,13 @@ export async function softwareStatus(id) {
       const newer = latest && (!current || (type === 'paper' ? Number(latest) > Number(current) : compareVersions(latest, current) > 0));
       // Un modpack fija su versión de Fabric/Forge: actualizarla podría romperlo.
       out.loader = { latest, latestLabel: latest && label(type, latest), available: Boolean(newer) && !server.modpack };
+      if (type === 'paper' && newer) {
+        try {
+          out.loader.changes = (await paperBuild(mcVersion)).changes || [];
+        } catch {
+          out.loader.changes = [];
+        }
+      }
     } catch (err) {
       errors.push(err.message);
     }

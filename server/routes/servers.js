@@ -22,6 +22,8 @@ import * as optimize from '../services/optimize.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
+import { publicSettings, setPublicSettings, publicAddress } from '../services/publicPage.js';
+import * as achievements from '../services/achievements.js';
 
 export const serversRouter = express.Router();
 
@@ -280,6 +282,18 @@ serversRouter.get('/:id/stats', (req, res) => res.json(playerStats(load(req).id)
 // --- Revisión general, ícono del servidor -----------------------------------------------
 
 serversRouter.get('/:id/health', async (req, res) => res.json(await healthCheck(load(req).id)));
+
+serversRouter.get('/:id/achievements', (req, res) => res.json(achievements.list(load(req).id)));
+
+// --- Página pública e invitación --------------------------------------------------------
+serversRouter.get('/:id/public', async (req, res) => {
+  const server = load(req);
+  res.json({ ...publicSettings(server), address: await publicAddress(server) });
+});
+serversRouter.put('/:id/public', async (req, res) => {
+  const server = load(req);
+  res.json({ ...setPublicSettings(server.id, req.body || {}), address: await publicAddress(server) });
+});
 
 serversRouter.get('/:id/icon', (req, res) => {
   const file = path.join(serverDir(load(req).id), 'server-icon.png');

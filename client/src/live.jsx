@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
 import { notify } from './notify.js';
+import { useToast } from './ui.jsx';
+import { playSound } from './sounds.js';
 
 /**
  * Estado en vivo del panel: lista de servidores, estado de cada proceso,
@@ -9,13 +11,14 @@ import { notify } from './notify.js';
 const LiveContext = createContext(null);
 
 export function LiveProvider({ children }) {
+  const toast = useToast();
   const [servers, setServers] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [runtime, setRuntime] = useState({});
   const [installs, setInstalls] = useState({});
   const [connected, setConnected] = useState(false);
   const [playit, setPlayit] = useState(null);
-  const consoles = useRef(new Map()); // id -> { lines, listeners:Set }
+  const consoles = useRef(new Map()); // id -> { lines:[{n,text}], pending, listeners:Set, seq, timer }
   const wsRef = useRef(null);
   const subs = useRef(new Map()); // id -> contador de vistas suscritas
   const runtimeRef = useRef({});
@@ -42,8 +45,23 @@ export function LiveProvider({ children }) {
   }, []);
 
   const consoleOf = (id) => {
-    if (!consoles.current.has(id)) consoles.current.set(id, { lines: [], listeners: new Set() });
+    if (!consoles.current.has(id)) consoles.current.set(id, { lines: [], pending: [], listeners: new Set(), seq: 0, timer: null });
     return consoles.current.get(id);
+  };
+
+  /*
+   * Un servidor arrancando escribe cientos de líneas por segundo. En vez de redibujar la consola
+   * por cada una, se juntan y se entregan como mucho 20 veces por segundo. Cada línea lleva un
+   * número fijo para que React reutilice lo ya dibujado.
+   */
+  const flushConsole = (c) => {
+    c.timer = null;
+    if (c.pending.length) {
+      c.lines = c.lines.concat(c.pending);
+      c.pending = [];
+      if (c.lines.length > 1500) c.lines = c.lines.slice(-1500);
+    }
+    for (const fn of c.listeners) fn(c.lines);
   };
 
   useEffect(() => {
@@ -71,7 +89,11 @@ export function LiveProvider({ children }) {
           const name = serversRef.current.find((s) => s.id === id)?.name || 'el servidor';
           if (prev) {
             const before = new Set(prev.players || []);
-            for (const p of snap.players || []) if (!before.has(p)) notify('joins', `${p} entró`, `Se conectó a ${name}.`, `/servidor/${id}`);
+            for (const p of snap.players || []) {
+              if (before.has(p)) continue;
+              notify('joins', `${p} entró`, `Se conectó a ${name}.`, `/servidor/${id}`);
+              playSound('join');
+            }
             if (snap.status === 'crashed' && prev.status !== 'crashed') {
               notify('crash', `${name} se cayó`, snap.lastCrash?.findings?.[0]?.title || 'Abre el panel para ver la causa.', `/servidor/${id}`);
             }
@@ -80,19 +102,31 @@ export function LiveProvider({ children }) {
           setRuntime((p) => ({ ...p, [id]: snap }));
         } else if (msg.type === 'servers') {
           refresh();
+        } else if (msg.type === 'achievement') {
+          const name = serversRef.current.find((s) => s.id === msg.id)?.name || 'el servidor';
+          toast(`★ ¡Logro de ${name}! ${msg.title}: ${msg.desc}`, 'achievement');
+          playSound('achievement');
+        } else if (msg.type === 'backup') {
+          playSound('backup');
+        } else if (msg.type === 'zone') {
+          const name = serversRef.current.find((s) => s.id === msg.id)?.name || 'el servidor';
+          notify('zones', `${msg.player} entró a ${msg.zone}`, `En ${name}.`, `/servidor/${msg.id}/jugadores`);
+          toast(`📍 ${msg.player} entró a ${msg.zone} (${name})`);
         } else if (msg.type === 'playit') {
           const { type: _t, ...rest } = msg;
           setPlayit(rest);
         } else if (msg.type === 'install') {
           setInstalls((prev) => ({ ...prev, [msg.id]: msg }));
-        } else if (msg.type === 'console-history' || msg.type === 'console') {
+        } else if (msg.type === 'console-history') {
           const c = consoleOf(msg.id);
-          if (msg.type === 'console-history') c.lines = msg.lines;
-          else {
-            c.lines = [...c.lines, msg.line];
-            if (c.lines.length > 1500) c.lines = c.lines.slice(-1500);
-          }
-          for (const fn of c.listeners) fn(c.lines);
+          c.lines = msg.lines.map((text) => ({ n: c.seq++, text }));
+          c.pending = [];
+          clearTimeout(c.timer);
+          flushConsole(c);
+        } else if (msg.type === 'console') {
+          const c = consoleOf(msg.id);
+          c.pending.push({ n: c.seq++, text: msg.line });
+          if (c.timer == null) c.timer = setTimeout(() => flushConsole(c), 50);
         }
       };
     };

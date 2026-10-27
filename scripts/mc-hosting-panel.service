@@ -1,0 +1,30 @@
+# Servicio de systemd para MC Hosting Panel en Linux. Guía completa: docs/LINUX.md
+#
+# 1. Cambia User, Group y WorkingDirectory si tu usuario no es "ubuntu"
+#    (en Oracle Linux suele ser "opc") o si clonaste el panel en otra carpeta.
+# 2. Revisa la ruta de node con: which node
+# 3. sudo cp scripts/mc-hosting-panel.service /etc/systemd/system/
+#    sudo systemctl daemon-reload && sudo systemctl enable --now mc-hosting-panel
+
+[Unit]
+Description=MC Hosting Panel (servidores de Minecraft)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/mc-hosting-panel
+ExecStart=/usr/bin/node server/index.js
+# El panel se cierra solo después de actualizarse; systemd lo vuelve a abrir.
+Environment=MCP_SUPERVISED=1
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=3
+# Al detenerlo, el panel apaga los servidores con "stop" y guarda los mundos antes de salir.
+KillMode=mixed
+TimeoutStopSec=90
+
+[Install]
+WantedBy=multi-user.target

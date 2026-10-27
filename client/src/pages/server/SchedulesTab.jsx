@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, formatDate } from '../../api.js';
 import { Modal, useAction } from '../../ui.jsx';
+import PowerSchedule from './PowerSchedule.jsx';
 
 const ACTIONS = {
   restart: 'Reiniciar',
@@ -48,6 +49,7 @@ export default function SchedulesTab({ server }) {
 
   return (
     <div className="stack" style={{ gap: '1.5rem', maxWidth: 960 }}>
+      <PowerSchedule server={server} />
       <div className="row">
         <button className="btn-go" onClick={() => setEditing({})}>
           Nueva tarea

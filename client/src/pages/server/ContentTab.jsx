@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
+import Changelog from '../../changelog.jsx';
 import { Link } from 'react-router-dom';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
@@ -349,6 +350,7 @@ function Explore({ server, label, kind, onInstalled }) {
 function VersionPicker({ server, item, kind, onClose, onPick }) {
   const [versions, setVersions] = useState(null);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(null);
   useEffect(() => {
     api(curl(server, kind, 'versions', { source: item.source, projectId: item.id }))
       .then(setVersions)
@@ -374,8 +376,16 @@ function VersionPicker({ server, item, kind, onClose, onPick }) {
             </thead>
             <tbody>
               {versions.map((v) => (
-                <tr key={v.id}>
-                  <td>{v.number}</td>
+                <Fragment key={v.id}>
+                <tr>
+                  <td>
+                    {v.number}
+                    {v.changelog ? (
+                      <button type="button" className="btn-sm btn-ghost" style={{ marginLeft: '0.3rem' }} onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
+                        {open === v.id ? 'Ocultar cambios' : 'Qué cambió'}
+                      </button>
+                    ) : null}
+                  </td>
                   <td className="muted">{v.type}</td>
                   <td className="muted">{formatDate(v.date)}</td>
                   <td className="muted">{v.file ? `${v.file.name} ${v.file.size ? `(${formatBytes(v.file.size)})` : ''}` : 'Descarga externa'}</td>
@@ -393,6 +403,14 @@ function VersionPicker({ server, item, kind, onClose, onPick }) {
                     )}
                   </td>
                 </tr>
+                {open === v.id && (
+                  <tr>
+                    <td colSpan={5}>
+                      <Changelog text={v.changelog} compact />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>

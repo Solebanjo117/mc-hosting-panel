@@ -1,6 +1,6 @@
 {
   "name": "mc-hosting-panel",
-  "version": "0.12.1",
+  "version": "0.20.1",
   "description": "Panel propio de hosting de Minecraft Java: crea, administra y comparte servidores desde tu PC con Windows.",
   "private": true,
   "type": "module",
@@ -21,6 +21,7 @@
     "adm-zip": "^0.5.16",
     "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
+    "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -28,8 +29,6 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@fontsource/atkinson-hyperlegible-next": "^5.3.0",
-    "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/pixelify-sans": "^5.3.0",
     "@vitejs/plugin-react": "^5.0.0",
     "dompurify": "^3.4.17",
