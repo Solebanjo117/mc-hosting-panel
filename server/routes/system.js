@@ -11,6 +11,7 @@ import { localIps, publicIp } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
 import { healthCheck } from '../services/health.js';
 import { getMetrics } from '../services/metrics.js';
+import { overview } from '../services/overview.js';
 import { checkUpdate, startUpdate, updateStatus } from '../services/appUpdate.js';
 import { startupStatus, setStartup } from '../services/startup.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
@@ -47,6 +48,9 @@ systemRouter.get('/dashboard', async (_req, res) => {
   );
   res.json({ servers: out });
 });
+
+// Rendimiento general: la PC y todos los servidores sobre la misma línea de tiempo.
+systemRouter.get('/metrics', async (req, res) => res.json(await overview(String(req.query.range || '6h'))));
 
 // --- Copia de respaldos en una carpeta sincronizada (OneDrive, Google Drive, Dropbox…) -----
 

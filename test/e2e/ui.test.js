@@ -140,7 +140,7 @@ describe('Panel en el navegador', { skip }, () => {
       await page.waitForLoadState('networkidle');
       assert.equal(await page.locator('.error-box').count(), 0, `error visible en ${sub}`);
     }
-    for (const p of ['/', '/ajustes', '/apariencia', '/guia', '/guia/linux', '/nuevo/modpack']) {
+    for (const p of ['/', '/rendimiento', '/ajustes', '/apariencia', '/guia', '/guia/linux', '/nuevo/modpack']) {
       await page.goto(`${panel.base}${p}`);
       await page.waitForLoadState('networkidle');
     }
@@ -194,7 +194,7 @@ describe('Panel en el navegador', { skip }, () => {
     await tab.goto(panel.base);
     const list = await tab.evaluate(() => fetch('/api/servers').then((r) => r.json()));
     const sv = `/servidor/${list[0].id}`;
-    const pages = ['/', '/nuevo', '/nuevo/modpack', '/ajustes', '/apariencia', '/guia', '/guia/linux'];
+    const pages = ['/', '/rendimiento', '/nuevo', '/nuevo/modpack', '/ajustes', '/apariencia', '/guia', '/guia/linux'];
     for (const sub of [
       '',
       '/jugadores',

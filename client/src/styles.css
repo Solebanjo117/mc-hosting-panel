@@ -26,6 +26,15 @@
   --lamp: #ffc757; /* lámpara de redstone encendida */
   --lamp-off: #4a362a; /* lámpara apagada */
   --xp: #7ef33c; /* barra de experiencia */
+  /* Series de las gráficas (una por servidor, en orden de creación). Más oscuras que los colores de la
+     interfaz a propósito: validadas para daltonismo y contraste sobre las superficies del panel. */
+  --series-1: #2b9c8e;
+  --series-2: #d4692a;
+  --series-3: #6b8ae6;
+  --series-4: #ad8412;
+  --series-5: #9770dd;
+  --series-6: #5aa233;
+  --series-7: #c9608f;
 
   /* Grano de píxel: una textura de 16×16 dibujada en SVG, sin archivos ni internet.
      La suave va en fondos y losas; la marcada, en la tierra de la portada y el bloque de pasto. */
@@ -1668,6 +1677,52 @@ label.check input {
 
 .chart-empty {
   padding: 2.5rem 0;
+}
+
+.chart-legend {
+  list-style: none;
+  margin: 0.5rem 0 0.2rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  font-size: var(--step--1);
+}
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.chart-legend-name {
+  color: var(--sand-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 20ch;
+}
+.swatch-line {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 2px solid currentColor;
+  flex: none;
+}
+.swatch-line.dashed {
+  border-top-style: dashed;
+}
+
+/* ---------- Rendimiento general ---------- */
+
+.overview-table td.name {
+  min-width: 10rem;
+}
+.summary .trend,
+.overview-table .trend {
+  color: var(--redstone);
+}
+.overview-note {
+  max-width: 75ch;
 }
 
 .tabular {

@@ -153,6 +153,23 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
     assert.ok(Array.isArray(mine.spark.players));
   });
 
+  it('el rendimiento general junta la PC y todos los servidores en la misma línea de tiempo', async () => {
+    const d = await c.ok('GET', '/api/system/metrics?range=1h');
+    assert.equal(d.range, '1h');
+    assert.ok(d.host.points.length > 0 && d.host.totalMemMb > 0 && d.host.cores > 0);
+    const mine = d.servers.find((x) => x.id === s.id);
+    assert.equal(mine.points.length, d.host.points.length, 'misma cuadrícula de tiempo');
+    assert.equal(d.totals.length, d.host.points.length);
+    assert.ok('players' in d.totals[0] && 'tpsMin' in d.totals[0]);
+    const now = d.now.servers.find((x) => x.id === s.id);
+    assert.ok(['running', 'stopped', 'starting', 'stopping', 'crashed'].includes(now.status), now.status);
+    assert.equal(typeof now.crashes24h, 'number');
+    assert.ok('lastBackupAt' in now && 'worldBytes' in now);
+    assert.equal(d.now.totals.servers, d.servers.length);
+    assert.ok(d.now.host.totalMemMb > 0 && d.now.host.memUsedMb > 0);
+    assert.equal((await c.get('/api/system/metrics?range=99x')).body.range, '6h', 'un periodo desconocido usa el de siempre');
+  });
+
   it('apagado, administra jugadores editando los archivos (con UUID real u offline)', async () => {
     const r = await c.ok('POST', `/api/servers/${s.id}/players`, { action: 'whitelist-add', name: 'Notch' });
     assert.deepEqual(r.whitelist, [{ uuid: '069a79f4-44e9-4726-a5be-fca90e38aaf5', name: 'Notch' }]);

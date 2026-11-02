@@ -18,6 +18,7 @@ const ImportModpack = lazy(() => import('./pages/ImportModpack.jsx'));
 const Guide = lazy(() => import('./pages/Guide.jsx'));
 const PanelSettings = lazy(() => import('./pages/PanelSettings.jsx'));
 const Appearance = lazy(() => import('./pages/Appearance.jsx'));
+const Dashboard = lazy(() => import('./pages/Dashboard.jsx'));
 
 export default function App() {
   const [auth, setAuth] = useState(null);
@@ -145,6 +146,9 @@ function Shell({ username, onLogout }) {
         </div>
 
         <div className="side-foot">
+          <NavLink to="/rendimiento" className="side-link">
+            Rendimiento general
+          </NavLink>
           <NavLink to="/guia" className="side-link">
             Guías (puertos, Linux)
           </NavLink>
@@ -179,6 +183,7 @@ function Shell({ username, onLogout }) {
         <Suspense fallback={<PageLoading />}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/rendimiento" element={<Dashboard />} />
             <Route path="/nuevo" element={<CreateServer />} />
             <Route path="/nuevo/modpack" element={<ImportModpack />} />
             <Route path="/servidor/:id/*" element={<ServerView />} />

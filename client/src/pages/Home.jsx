@@ -42,6 +42,11 @@ export default function Home() {
           <h1>Tus servidores</h1>
         </div>
         <div className="row">
+          {servers.length > 0 && (
+            <Link to="/rendimiento" className="btn">
+              Rendimiento
+            </Link>
+          )}
           <Link to="/nuevo/modpack" className="btn">
             Desde un modpack
           </Link>
