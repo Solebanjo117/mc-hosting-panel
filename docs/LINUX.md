@@ -7,6 +7,7 @@ Guía para instalar el panel en un servidor Linux: una VPS, una instancia de Ora
 - [Qué cambia respecto a Windows](#qué-cambia-respecto-a-windows)
 - [1. Requisitos](#1-requisitos)
 - [2. Instalar el panel](#2-instalar-el-panel)
+- [2b. Con Docker](#2b-con-docker)
 - [3. Que arranque solo (systemd)](#3-que-arranque-solo-systemd)
 - [4. Entrar al panel desde tu PC](#4-entrar-al-panel-desde-tu-pc)
 - [4.1 Entrar con un dominio y HTTPS (sin túnel)](#41-entrar-con-un-dominio-y-https-sin-túnel)
@@ -22,7 +23,7 @@ Todo lo del panel funciona igual: crear servidores, Java automático, mods, mapa
 
 | En Windows | En Linux |
 |---|---|
-| Instalador `.exe` o `iniciar.bat` | `npm ci`, `npm run build` y `npm start` |
+| Instalador `.exe` o `iniciar.bat` | `npm ci`, `npm run build` y `npm start`, o **Docker** ([paso 2b](#2b-con-docker)) |
 | "Iniciar con Windows" en Ajustes | Un servicio de **systemd** (paso 3) |
 | `actualizar.bat` | **Ajustes del panel → Actualizar el panel** (funciona igual) o `git pull` |
 | `restablecer-contrasena.bat` | `node scripts/restablecer-contrasena.mjs` |
@@ -88,6 +89,30 @@ Debe aparecer:
 Déjalo así un momento y sigue al [paso 4](#4-entrar-al-panel-desde-tu-pc) para abrirlo desde tu PC y crear tu cuenta. Cuando funcione, ciérralo con **Ctrl+C** (apaga los servidores con cuidado) y configúralo como servicio en el paso 3.
 
 Tus servidores, mundos y ajustes quedan en `~/mc-hosting-panel/data`. Para mover el panel a otra máquina copia esa carpeta.
+
+## 2b. Con Docker
+
+Si ya usas Docker (o prefieres no instalar Node en la máquina), el proyecto trae un `Dockerfile` y un `compose.yaml`. No hace falta Java: el panel lo descarga dentro del volumen, igual que en Windows. Sustituye a los pasos 2 y 3 (Docker lo mantiene encendido y lo reabre si la máquina se reinicia).
+
+```bash
+cd ~
+git clone https://github.com/Solebanjo117/mc-hosting-panel.git
+cd mc-hosting-panel
+docker compose up -d        # la primera vez construye la imagen (2-4 minutos)
+docker compose logs -f      # Ctrl+C para dejar de mirar; el panel sigue
+```
+
+Luego entra como en el [paso 4](#4-entrar-al-panel-desde-tu-pc) (túnel SSH o Tailscale) y crea tu cuenta.
+
+Lo que conviene saber:
+
+- **Datos.** Todo (servidores, mundos, respaldos, Java, ajustes, la clave de los tokens) queda en el volumen `mc-data`. Para tenerlo en una carpeta tuya cambia la línea de `volumes:` en `compose.yaml` por `./data:/data` y dale permisos al usuario del contenedor: `sudo chown -R 1000:1000 ./data`.
+- **Puertos.** El compose publica el panel (8080), Java (25565/tcp) y Bedrock (19132/udp). Cada servidor nuevo toma otro puerto (25566, 25567…): añádelo a `ports:` y repite `docker compose up -d`. Con varios servidores es más cómodo quitar `ports:` y poner `network_mode: host` (solo Linux): el contenedor usa la red del equipo y no hay que publicar nada. Los firewalls del [paso 5](#5-abrir-los-puertos-de-minecraft) aplican igual.
+- **Parar.** `docker compose down` (o `stop`) manda `stop` a cada servidor y espera hasta 90 s a que guarden los mundos antes de cerrar.
+- **Actualizar.** Desde el panel solo se avisa de que hay versión nueva; se cambia la imagen desde la máquina: `docker compose pull && docker compose up -d` si usas la imagen publicada (`ghcr.io/solebanjo117/mc-hosting-panel`), o `git pull && docker compose build --pull && docker compose up -d` si la construyes tú. El volumen no se toca.
+- **Zona horaria.** Los horarios de energía y las tareas programadas usan la hora del contenedor: cambia `TZ` en `compose.yaml`.
+- **Salud.** `http://localhost:8080/api/health` responde `{"ok":true,...}` sin sesión; Docker lo usa como *healthcheck* (`docker compose ps` muestra `healthy`) y sirve para Uptime Kuma o similares. Solo contesta desde las redes que el panel permite (local o LAN, como el resto).
+- **Contraseña olvidada.** `docker compose exec panel node scripts/restablecer-contrasena.mjs`.
 
 ## 3. Que arranque solo (systemd)
 
@@ -344,6 +369,8 @@ npm ci
 npm run build
 sudo systemctl restart mc-hosting-panel
 ```
+
+Con Docker, mira el [paso 2b](#2b-con-docker): se cambia la imagen (`docker compose pull && docker compose up -d`).
 
 ## 7. Si olvidaste la contraseña
 

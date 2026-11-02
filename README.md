@@ -93,6 +93,12 @@ npm start
 - **No abras el puerto del panel (8080) a internet**: el panel rechaza esas conexiones por seguridad. Entra con un túnel SSH (`ssh -L 8080:localhost:8080 usuario@IP` y abre `http://localhost:8080`) o con Tailscale.
 - Abre los puertos de **Minecraft** (25565/TCP, 19132/UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
 
+### Con Docker
+
+En Linux (o donde tengas Docker) basta con `docker compose up -d` en la carpeta del proyecto: construye la imagen, guarda todo en el volumen `mc-data` y mantiene el panel encendido. La imagen también se publica en `ghcr.io/solebanjo117/mc-hosting-panel`. Puertos, actualización y detalles en [`docs/LINUX.md`](docs/LINUX.md#2b-con-docker).
+
+`GET /api/health` responde `{"ok":true,"version":"…","uptime":…}` sin sesión, para Docker, systemd o un monitor como Uptime Kuma.
+
 ### Scripts incluidos
 
 | Archivo | Para qué sirve |

@@ -179,6 +179,29 @@ describe('Actualizar el panel', () => {
     });
   });
 
+  it('en Docker avisa de la versión nueva pero no se actualiza solo', async () => {
+    const panel = await startPanel({ mocks, env: { MCP_UPDATE_MODE: 'docker' } });
+    try {
+      mocks.state.release = { tag_name: 'v0.0.1', body: '', assets: [] };
+      let r = await panel.client.ok('POST', '/api/system/update/check');
+      assert.equal(r.mode, 'docker');
+      assert.equal(r.lastCheck.available, false);
+      assert.equal(r.lastCheck.message, undefined, 'con una versión vieja no hay nada que avisar');
+
+      mocks.state.release = { tag_name: 'v99.0.0', body: 'Novedades', assets: [] };
+      r = await panel.client.ok('POST', '/api/system/update/check');
+      assert.equal(r.lastCheck.available, false, 'no puede instalarla él mismo');
+      assert.equal(r.lastCheck.latest, '99.0.0');
+      assert.match(r.lastCheck.message, /docker compose pull/);
+      const u = await panel.client.post('/api/system/update');
+      assert.equal(u.status, 409);
+      assert.match(u.body.error, /docker compose/);
+    } finally {
+      mocks.state.release = null;
+      await panel.close();
+    }
+  });
+
   it('una copia sin git ni instalador explica cómo actualizar a mano', async () => {
     const panel = await startPanel({ mocks, env: { MCP_UPDATE_MODE: 'manual' } });
     try {

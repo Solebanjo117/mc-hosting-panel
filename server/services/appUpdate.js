@@ -96,7 +96,7 @@ export async function checkUpdate() {
     lastCheck = { ...base, available: behind > 0, latest, behind, changes, dirty: dirty.length > 0 };
     return lastCheck;
   }
-  if (mode === 'installer') {
+  if (mode === 'installer' || mode === 'docker') {
     let rel;
     try {
       rel = await getJson(RELEASES_URL, { headers: { Accept: 'application/vnd.github+json' } });
@@ -105,9 +105,24 @@ export async function checkUpdate() {
     }
     const latest = String(rel.tag_name || '').replace(/^v/, '');
     const asset = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));
+    const newer = Boolean(latest && compareVersions(latest, VERSION) > 0);
+    if (mode === 'docker') {
+      // En Docker la imagen se cambia desde fuera: el panel solo avisa.
+      lastCheck = {
+        ...base,
+        available: false,
+        latest: latest || VERSION,
+        notes: newer ? String(rel.body || '').slice(0, 4000) : '',
+        changes: [],
+        message: newer
+          ? `Hay una versión nueva (${latest}). En el equipo: docker compose pull && docker compose up -d (o docker compose build --pull && docker compose up -d si construyes la imagen tú).`
+          : undefined,
+      };
+      return lastCheck;
+    }
     lastCheck = {
       ...base,
-      available: Boolean(latest && asset && compareVersions(latest, VERSION) > 0),
+      available: Boolean(newer && asset),
       latest,
       notes: String(rel.body || '').slice(0, 4000),
       changes: [],
@@ -181,6 +196,7 @@ export function startUpdate() {
   if (state.running) throw new HttpError(409, 'Ya se está actualizando');
   const mode = updateMode();
   if (mode === 'manual') throw new HttpError(409, 'Esta copia no se puede actualizar sola; descarga la versión nueva y reemplaza los archivos (conserva data).');
+  if (mode === 'docker') throw new HttpError(409, 'En Docker el panel se actualiza cambiando la imagen: docker compose pull && docker compose up -d.');
   Object.assign(state, { running: true, step: null, log: [], error: null, done: false });
   (async () => {
     try {

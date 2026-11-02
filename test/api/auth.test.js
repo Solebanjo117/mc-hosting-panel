@@ -35,6 +35,12 @@ describe('Cuenta y sesión', () => {
       assert.equal((await anon.get(url)).status, 401, url);
     }
     assert.equal((await anon.post('/api/servers', { name: 'x' })).status, 401);
+    // Salvo la comprobación de salud (Docker, systemd, monitores), que no revela nada privado.
+    const h = await anon.get('/api/health');
+    assert.equal(h.status, 200);
+    assert.equal(h.body.ok, true);
+    assert.match(h.body.version, /^\d+\.\d+\.\d+/);
+    assert.deepEqual(Object.keys(h.body).sort(), ['ok', 'uptime', 'version']);
   });
 
   it('inicia y cierra sesión, y registra cada intento', async () => {

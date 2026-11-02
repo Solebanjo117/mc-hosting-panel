@@ -232,6 +232,8 @@ const MODE_HINT = {
   installer: 'Se descarga el instalador nuevo y se instala encima. Tus servidores, mundos y ajustes (carpeta data) no se tocan.',
   manual: '',
 };
+/** Modos en los que el panel puede instalarse la versión nueva él mismo. */
+const SELF_UPDATE = ['git', 'installer'];
 
 function PanelUpdate() {
   const [st, setSt] = useState(null);
@@ -295,7 +297,12 @@ function PanelUpdate() {
         </h2>
         <span className="muted small">Versión instalada: {st.current}</span>
       </div>
-      {st.mode === 'manual' ? (
+      {st.mode === 'docker' ? (
+        <p className="muted small">
+          El panel corre en Docker: se actualiza cambiando la imagen desde el equipo, con <span className="mono">docker compose pull && docker compose up -d</span> (o{' '}
+          <span className="mono">docker compose build --pull && docker compose up -d</span> si la construyes tú). El volumen <span className="mono">/data</span> no se toca.
+        </p>
+      ) : st.mode === 'manual' ? (
         <p className="muted small">
           Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos conservando la carpeta{' '}
           <span className="mono">data</span>.
@@ -340,7 +347,7 @@ function PanelUpdate() {
           <button onClick={check} disabled={checking || updating}>
             {checking ? 'Buscando…' : 'Buscar actualizaciones'}
           </button>
-          {c?.available && (
+          {c?.available && SELF_UPDATE.includes(st.mode) && (
             <button className="btn-go" disabled={updating} onClick={() => setConfirm(true)}>
               {updating ? 'Actualizando…' : `Actualizar a ${c.latest}`}
             </button>

@@ -46,6 +46,8 @@ app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
 app.use('/api', sameOrigin);
+// Para Docker, systemd o un monitor (Uptime Kuma): ¿el panel responde? Sin sesión y sin datos privados.
+app.get('/api/health', (_req, res) => res.json({ ok: true, version: VERSION, uptime: Math.round(process.uptime()) }));
 app.use('/api/auth', authRouter);
 app.use('/api/appearance', appearancePublic);
 app.use('/api/public', publicRouter);

@@ -28,7 +28,8 @@ function isLan(ip) {
 }
 
 export function accessMode() {
-  return db.data.settings.remoteAccess || 'lan';
+  // MCP_REMOTE_ACCESS (Docker, systemd) vale mientras no se elija otra cosa en Ajustes.
+  return db.data.settings.remoteAccess || process.env.MCP_REMOTE_ACCESS || 'lan';
 }
 
 export function isAllowed(socketAddress) {
