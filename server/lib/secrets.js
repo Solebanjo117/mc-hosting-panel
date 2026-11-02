@@ -1,3 +1,4 @@
+// @ts-check
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -42,7 +43,10 @@ export function seal(text, key = loadKey()) {
 /** Descifra lo que produjo seal(). Lanza si la clave no es la misma o el texto se alteró. */
 export function unseal(value, key = loadKey()) {
   if (!isSealed(value)) throw new Error('No es un valor cifrado');
-  const [iv, tag, data] = value.slice(PREFIX.length).split(':').map((p) => Buffer.from(p, 'base64url'));
+  const [iv, tag, data] = value
+    .slice(PREFIX.length)
+    .split(':')
+    .map((p) => Buffer.from(p, 'base64url'));
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(data), decipher.final()]).toString('utf8');

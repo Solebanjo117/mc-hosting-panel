@@ -143,7 +143,14 @@ const RULES = [
 ];
 
 function prettyMod(id) {
-  const known = { 'fabric-api': 'Fabric API', fabric: 'Fabric API', 'fabric-language-kotlin': 'Fabric Language Kotlin', cloth_config: 'Cloth Config', architectury: 'Architectury API', geckolib: 'GeckoLib' };
+  const known = {
+    'fabric-api': 'Fabric API',
+    fabric: 'Fabric API',
+    'fabric-language-kotlin': 'Fabric Language Kotlin',
+    cloth_config: 'Cloth Config',
+    architectury: 'Architectury API',
+    geckolib: 'GeckoLib',
+  };
   return known[id] || id;
 }
 

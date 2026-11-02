@@ -1,0 +1,12 @@
+# Lo que no escribimos a mano o no es código
+node_modules/
+dist/
+data/
+build/
+package-lock.json
+test/fixtures/
+client/public/icons/
+installer/
+*.md
+*.bat
+*.iss

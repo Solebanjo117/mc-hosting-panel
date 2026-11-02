@@ -134,7 +134,10 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       const req = mocks.state.requests.findLast((x) => x.path === '/curseforge/mods/search');
       assert.equal(new URLSearchParams(req.query).get('classId'), '4471');
       const versions = await c.ok('GET', '/api/integrations/modpacks/2001/versions?source=curseforge');
-      assert.deepEqual(versions.map((v) => [v.id, v.loaders]), [['6001', ['fabric']]]);
+      assert.deepEqual(
+        versions.map((v) => [v.id, v.loaders]),
+        [['6001', ['fabric']]]
+      );
     });
 
     it('si el autor no deja descargarlo desde otras apps, explica cómo subirlo a mano', async () => {
@@ -190,7 +193,10 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       assert.deepEqual(st.updates, []);
       mocks.state.modrinthUpdates.algo = { project: 'cool-pack' };
       st = await c.ok('GET', `/api/servers/${mrServer.id}/modpack`);
-      assert.deepEqual(st.updates.map((u) => [u.id, u.number, u.compatible]), [['v-cool-pack-2', '2.0.0', true]]);
+      assert.deepEqual(
+        st.updates.map((u) => [u.id, u.number, u.compatible]),
+        [['v-cool-pack-2', '2.0.0', true]]
+      );
     });
 
     it('actualiza: respalda antes, cambia los mods del pack y conserva el mundo y tus mods', async () => {
@@ -261,7 +267,13 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       assert.ok(!entries.some((e) => e.startsWith('server-overrides/')));
       const dat = parseNbt(new AdmZip(buf).getEntry('overrides/servers.dat').getData());
       const entry = dat.root.value[0].value[0].value;
-      assert.deepEqual(entry.map((t) => [t.name, t.value]), [['name', mrServer.name], ['ip', `203.0.113.7:${mrServer.port}`]]);
+      assert.deepEqual(
+        entry.map((t) => [t.name, t.value]),
+        [
+          ['name', mrServer.name],
+          ['ip', `203.0.113.7:${mrServer.port}`],
+        ]
+      );
     });
 
     it('CurseForge: el manifest original + tus mods de CurseForge por referencia', async () => {
@@ -271,7 +283,10 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       const buf = Buffer.from(await res.arrayBuffer());
       const manifest = zipJson(buf, 'manifest.json');
       assert.ok(manifest.files.some((f) => f.projectID === 1001 && f.fileID === 5001));
-      assert.ok(manifest.files.some((f) => f.projectID === 3002), 'el minimapa sí va para los jugadores');
+      assert.ok(
+        manifest.files.some((f) => f.projectID === 3002),
+        'el minimapa sí va para los jugadores'
+      );
       const entries = zipEntries(buf);
       assert.ok(entries.includes('overrides/servers.dat'));
       assert.ok(entries.includes('overrides/mods/cliente-embebido.jar'));
@@ -285,11 +300,17 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       assert.deepEqual(summary.removed, ['del-pack.jar']);
       let index = zipJson(Buffer.from(await res.arrayBuffer()), 'modrinth.index.json');
       assert.ok(!index.files.some((f) => f.path === 'mods/del-pack.jar'));
-      assert.ok(index.files.some((f) => f.path === 'mods/shaders.jar'), 'los mods solo del juego se conservan');
+      assert.ok(
+        index.files.some((f) => f.path === 'mods/shaders.jar'),
+        'los mods solo del juego se conservan'
+      );
       await c.ok('POST', `/api/servers/${mrServer.id}/content/toggle`, { filename: 'del-pack.jar', enabled: true });
       res = await c.request('GET', `/api/servers/${mrServer.id}/modpack/players`, { raw: true });
       index = zipJson(Buffer.from(await res.arrayBuffer()), 'modrinth.index.json');
-      assert.ok(index.files.some((f) => f.path === 'mods/del-pack.jar'), 'al reactivarlo vuelve');
+      assert.ok(
+        index.files.some((f) => f.path === 'mods/del-pack.jar'),
+        'al reactivarlo vuelve'
+      );
 
       // CurseForge: quitar un mod por referencia y uno que venía dentro del pack.
       await c.ok('POST', `/api/servers/${cfServer.id}/content/uninstall`, { filename: 'mod-comun-1.jar' });
@@ -300,8 +321,14 @@ describe('Modpacks: CurseForge, actualizar y archivo para los jugadores', { skip
       const buf = Buffer.from(await res.arrayBuffer());
       const manifest = zipJson(buf, 'manifest.json');
       assert.ok(!manifest.files.some((f) => f.projectID === 3001), 'sin el mod quitado');
-      assert.ok(manifest.files.some((f) => f.projectID === 3002), 'el minimapa (solo del juego) sigue');
-      assert.ok(manifest.files.some((f) => f.projectID === 3004), 'el que hubo que bajar a mano sigue');
+      assert.ok(
+        manifest.files.some((f) => f.projectID === 3002),
+        'el minimapa (solo del juego) sigue'
+      );
+      assert.ok(
+        manifest.files.some((f) => f.projectID === 3004),
+        'el que hubo que bajar a mano sigue'
+      );
       const entries = zipEntries(buf);
       assert.ok(!entries.includes('overrides/mods/embebido.jar'));
       assert.ok(entries.includes('overrides/mods/cliente-embebido.jar'));

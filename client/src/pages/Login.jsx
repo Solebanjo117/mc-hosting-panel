@@ -34,11 +34,7 @@ export default function Login({ setup, onDone }) {
         </span>
         <div className="stack" style={{ gap: '0.4rem' }}>
           <h1>{setup ? 'Bienvenido' : 'MC Hosting Panel'}</h1>
-          <p className="muted">
-            {setup
-              ? 'Crea la cuenta de administrador. Solo tú podrás entrar al panel con ella.'
-              : 'Entra para administrar tus servidores.'}
-          </p>
+          <p className="muted">{setup ? 'Crea la cuenta de administrador. Solo tú podrás entrar al panel con ella.' : 'Entra para administrar tus servidores.'}</p>
         </div>
         <label className="field">
           <span>Usuario</span>
@@ -46,14 +42,7 @@ export default function Login({ setup, onDone }) {
         </label>
         <label className="field">
           <span>Contraseña</span>
-          <input
-            type="password"
-            autoComplete={setup ? 'new-password' : 'current-password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={setup ? 8 : undefined}
-          />
+          <input type="password" autoComplete={setup ? 'new-password' : 'current-password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={setup ? 8 : undefined} />
           {setup && <span>Mínimo 8 caracteres.</span>}
         </label>
         {setup && (
@@ -70,9 +59,8 @@ export default function Login({ setup, onDone }) {
           <details className="forgot small">
             <summary>¿Olvidaste tu contraseña?</summary>
             <p className="muted">
-              En la PC donde corre el panel abre <strong>Restablecer contraseña</strong>: está en el menú Inicio («MC Hosting Panel - Restablecer
-              contraseña») o, si lo instalaste con git, es <span className="mono">restablecer-contrasena.bat</span> en la carpeta del panel. Ahí ves tu
-              usuario y eliges una contraseña nueva; no se puede hacer desde otro dispositivo.
+              En la PC donde corre el panel abre <strong>Restablecer contraseña</strong>: está en el menú Inicio («MC Hosting Panel - Restablecer contraseña») o, si lo instalaste con git, es{' '}
+              <span className="mono">restablecer-contrasena.bat</span> en la carpeta del panel. Ahí ves tu usuario y eliges una contraseña nueva; no se puede hacer desde otro dispositivo.
             </p>
           </details>
         )}

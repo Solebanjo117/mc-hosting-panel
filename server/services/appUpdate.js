@@ -33,7 +33,11 @@ function run(cmd, args, { timeout = 10 * 60_000 } = {}) {
     const shell = IS_WINDOWS && cmd === 'npm';
     execFile(cmd, args, { cwd: APP_ROOT, timeout, windowsHide: true, shell, maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) {
-        const detail = String(stderr || stdout || err.message).trim().split(/\r?\n/).slice(-6).join('\n');
+        const detail = String(stderr || stdout || err.message)
+          .trim()
+          .split(/\r?\n/)
+          .slice(-6)
+          .join('\n');
         reject(Object.assign(new Error(`${cmd} ${args[0]} falló: ${detail}`), { code: err.code }));
       } else resolve(String(stdout).trim());
     });
@@ -97,12 +101,7 @@ export async function checkUpdate() {
     try {
       rel = await getJson(RELEASES_URL, { headers: { Accept: 'application/vnd.github+json' } });
     } catch (err) {
-      throw new HttpError(
-        502,
-        err.status === 404
-          ? 'No hay versiones publicadas en GitHub Releases (o el repositorio es privado).'
-          : `No se pudo consultar las versiones publicadas: ${err.message}`
-      );
+      throw new HttpError(502, err.status === 404 ? 'No hay versiones publicadas en GitHub Releases (o el repositorio es privado).' : `No se pudo consultar las versiones publicadas: ${err.message}`);
     }
     const latest = String(rel.tag_name || '').replace(/^v/, '');
     const asset = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));

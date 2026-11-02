@@ -66,12 +66,9 @@ if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR, { index: false, cacheControl: false, setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
   app.get('/{*splat}', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html'), { cacheControl: false, headers: { 'Cache-Control': 'no-cache' } }));
 } else {
-  app.get('/', (_req, res) =>
-    res.type('text').send('Falta compilar la interfaz. Ejecuta "npm run build" o usa iniciar.bat.')
-  );
+  app.get('/', (_req, res) => res.type('text').send('Falta compilar la interfaz. Ejecuta "npm run build" o usa iniciar.bat.'));
 }
 
-// eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   const status = err.status || err.statusCode || 500;
   if (status >= 500) console.error(err);

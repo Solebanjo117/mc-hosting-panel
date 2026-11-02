@@ -5,7 +5,9 @@ import { api, formatBytes } from '../../api.js';
 export default function WorldGrowth({ server }) {
   const [data, setData] = useState(null);
   useEffect(() => {
-    api(`/servers/${server.id}/world-growth`).then(setData).catch(() => {});
+    api(`/servers/${server.id}/world-growth`)
+      .then(setData)
+      .catch(() => {});
   }, [server.id]);
   if (!data?.summary) return null;
   const pts = data.points;
@@ -21,7 +23,9 @@ export default function WorldGrowth({ server }) {
       <h2 style={{ margin: 0 }}>Cómo creció el mundo</h2>
       <p className="muted small">
         {formatBytes(s.bytes)} y {s.regions} regiones hoy
-        {pts.length > 1 ? `; creció ${formatBytes(Math.max(0, s.grewBytes))} y ${Math.max(0, s.grewRegions)} regiones en ${s.days} ${s.days === 1 ? 'día' : 'días'}.` : '. El panel toma una muestra al día: la gráfica aparece conforme pasen los días.'}
+        {pts.length > 1
+          ? `; creció ${formatBytes(Math.max(0, s.grewBytes))} y ${Math.max(0, s.grewRegions)} regiones en ${s.days} ${s.days === 1 ? 'día' : 'días'}.`
+          : '. El panel toma una muestra al día: la gráfica aparece conforme pasen los días.'}
       </p>
       {pts.length > 1 && (
         <figure className="chart" style={{ margin: 0 }}>

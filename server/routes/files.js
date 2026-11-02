@@ -37,7 +37,10 @@ function worldRoots(server) {
  */
 function assertWritable(server, rel, action) {
   if (!isRunning(server.id)) return;
-  const parts = String(rel || '').replace(/\\/g, '/').split('/').filter(Boolean);
+  const parts = String(rel || '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean);
   if (!parts.length) return;
   if (worldRoots(server).includes(parts[0]) && parts[1] !== 'datapacks') {
     throw new HttpError(409, `No se puede ${action} dentro del mundo mientras el servidor está encendido; podría dañarse. Apágalo primero.`);
@@ -104,7 +107,9 @@ filesRouter.get('/', async (req, res) => {
 /** Busca por nombre en todas las subcarpetas. */
 filesRouter.get('/search', (req, res) => {
   const { root } = ctx(req);
-  const q = String(req.query.q || '').trim().toLowerCase();
+  const q = String(req.query.q || '')
+    .trim()
+    .toLowerCase();
   if (q.length < 2) throw new HttpError(400, 'Escribe al menos 2 letras');
   const start = safeJoin(root, req.query.path || '');
   const results = [];

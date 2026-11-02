@@ -154,11 +154,7 @@ export function LiveProvider({ children }) {
     };
   }, []);
 
-  return (
-    <LiveContext.Provider value={{ servers, loaded, runtime, installs, connected, refresh, subscribeConsole, playit }}>
-      {children}
-    </LiveContext.Provider>
-  );
+  return <LiveContext.Provider value={{ servers, loaded, runtime, installs, connected, refresh, subscribeConsole, playit }}>{children}</LiveContext.Provider>;
 }
 
 export const useLive = () => useContext(LiveContext);

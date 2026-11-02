@@ -29,8 +29,8 @@
 
   /* Grano de píxel: una textura de 16×16 dibujada en SVG, sin archivos ni internet.
      La suave va en fondos y losas; la marcada, en la tierra de la portada y el bloque de pasto. */
-  --grain-soft: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.028%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.09%22/%3E%3C/svg%3E");
-  --grain: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.07%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.22%22/%3E%3C/svg%3E");
+  --grain-soft: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.028%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.09%22/%3E%3C/svg%3E');
+  --grain: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 0h1v1h-1zM1 1h1v1h-1zM10 2h1v1h-1zM1 3h1v1h-1zM4 5h1v1h-1zM7 5h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM9 6h1v1h-1zM6 7h1v1h-1zM10 7h1v1h-1zM4 8h1v1h-1zM9 8h1v1h-1zM15 8h1v1h-1zM13 11h1v1h-1zM6 12h1v1h-1zM13 12h1v1h-1zM2 13h1v1h-1zM4 13h1v1h-1zM6 13h1v1h-1zM7 13h1v1h-1zM6 14h1v1h-1zM1 15h1v1h-1zM7 15h1v1h-1zM10 15h1v1h-1zM11 15h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.07%22/%3E%3Cpath d=%22M6 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM7 3h1v1h-1zM2 5h1v1h-1zM6 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM4 7h1v1h-1zM12 7h1v1h-1zM10 8h1v1h-1zM12 8h1v1h-1zM4 10h1v1h-1zM11 10h1v1h-1zM13 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 13h1v1h-1zM5 13h1v1h-1zM10 13h1v1h-1zM11 13h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM0 15h1v1h-1zM13 15h1v1h-1z%22 fill=%22%23000%22 fill-opacity=%22.22%22/%3E%3C/svg%3E');
 
   /* Bisel de bloque, como los botones del juego: luz arriba-izquierda, sombra abajo-derecha. */
   --bevel: inset 1px 1px 0 rgba(255, 255, 255, 0.07), inset -1px -1px 0 rgba(0, 0, 0, 0.45);
@@ -192,7 +192,9 @@ button,
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 0.12s, border-color 0.12s;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
 }
 
 button:active:not(:disabled),
@@ -215,7 +217,9 @@ button:disabled {
 
 .btn-go {
   background: var(--grass);
-  box-shadow: inset 2px 2px 0 var(--grass-light), inset -2px -2px 0 var(--grass-deep);
+  box-shadow:
+    inset 2px 2px 0 var(--grass-light),
+    inset -2px -2px 0 var(--grass-deep);
   color: #0b2410;
   font-weight: 700;
 }
@@ -226,13 +230,17 @@ button:disabled {
 }
 
 .btn-go:active:not(:disabled) {
-  box-shadow: inset 2px 2px 0 var(--grass-deep), inset -1px -1px 0 var(--grass-light);
+  box-shadow:
+    inset 2px 2px 0 var(--grass-deep),
+    inset -1px -1px 0 var(--grass-light);
 }
 
 .btn-stop {
   color: #f6b0a6;
   background: #3a2320;
-  box-shadow: inset 2px 2px 0 rgba(255, 170, 150, 0.18), inset -2px -2px 0 rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 170, 150, 0.18),
+    inset -2px -2px 0 rgba(0, 0, 0, 0.4);
 }
 
 .btn-stop:hover:not(:disabled) {
@@ -506,7 +514,9 @@ label.check input {
 .side-link.active {
   background: var(--slate);
   color: var(--sand);
-  box-shadow: var(--bevel), inset 3px 0 0 var(--prismarine);
+  box-shadow:
+    var(--bevel),
+    inset 3px 0 0 var(--prismarine);
 }
 
 /* Al abrir el menú en el celular, tocar fuera lo cierra. */
@@ -611,19 +621,19 @@ label.check input {
   flex: none;
   border-radius: 2px;
   background:
-    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%),
-    linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%),
-    var(--lamp-off);
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%), linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.35) 45% 55%, transparent 55%), var(--lamp-off);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
-  transition: background-color 0.35s, box-shadow 0.35s;
+  transition:
+    background-color 0.35s,
+    box-shadow 0.35s;
 }
 
 .dot.running {
   background:
-    linear-gradient(90deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%),
-    linear-gradient(0deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%),
-    var(--lamp);
-  box-shadow: inset 0 0 0 1px rgba(150, 90, 20, 0.6), 0 0 10px 1px rgba(255, 199, 87, 0.45);
+    linear-gradient(90deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%), linear-gradient(0deg, transparent 45%, rgba(160, 90, 10, 0.35) 45% 55%, transparent 55%), var(--lamp);
+  box-shadow:
+    inset 0 0 0 1px rgba(150, 90, 20, 0.6),
+    0 0 10px 1px rgba(255, 199, 87, 0.45);
 }
 
 .dot.starting,
@@ -639,10 +649,10 @@ label.check input {
 .dot.crashed,
 .dot.error {
   background:
-    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%),
-    linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%),
-    var(--redstone);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4), 0 0 8px rgba(239, 106, 88, 0.45);
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%), linear-gradient(0deg, transparent 45%, rgba(0, 0, 0, 0.3) 45% 55%, transparent 55%), var(--redstone);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 0 8px rgba(239, 106, 88, 0.45);
 }
 
 @keyframes lamp-flicker {
@@ -652,7 +662,9 @@ label.check input {
   }
   50% {
     background-color: var(--lamp);
-    box-shadow: inset 0 0 0 1px rgba(150, 90, 20, 0.6), 0 0 8px rgba(255, 199, 87, 0.35);
+    box-shadow:
+      inset 0 0 0 1px rgba(150, 90, 20, 0.6),
+      0 0 8px rgba(255, 199, 87, 0.35);
   }
 }
 
@@ -675,7 +687,9 @@ label.check input {
   height: 10px;
   background: #0e0f11;
   border: 1px solid #000;
-  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 1px 1px 0 rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.05);
   border-radius: 1px;
   overflow: hidden;
 }
@@ -684,7 +698,9 @@ label.check input {
   display: block;
   height: 100%;
   background: repeating-linear-gradient(90deg, transparent 0 9px, rgba(0, 0, 0, 0.3) 9px 10px), linear-gradient(var(--xp), #55c21f);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.3);
   transition: width 0.25s;
 }
 
@@ -722,7 +738,9 @@ label.check input {
 }
 
 .server-head .server-icon {
-  box-shadow: 0 0 0 1px #111214, var(--bevel);
+  box-shadow:
+    0 0 0 1px #111214,
+    var(--bevel);
 }
 
 .server-head .status {
@@ -778,7 +796,9 @@ label.check input {
   font-weight: 700;
   background: var(--slate);
   border-color: var(--edge);
-  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.1), inset -2px 0 0 rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 2px 2px 0 rgba(255, 255, 255, 0.1),
+    inset -2px 0 0 rgba(0, 0, 0, 0.3);
   margin-bottom: -2px;
   padding-bottom: calc(0.55rem + 2px);
 }
@@ -799,7 +819,9 @@ label.check input {
   background: #0e0f11;
   border: 1px solid var(--edge);
   border-radius: var(--r-control);
-  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 1px 1px 0 rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .subtab {
@@ -852,7 +874,9 @@ label.check input {
 .terminal {
   background: #0e0f11;
   border: 2px solid var(--edge);
-  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
   border-radius: var(--r-panel);
   display: flex;
   flex-direction: column;
@@ -1116,7 +1140,9 @@ label.check input {
   background: #0e0f11;
   border: 1px solid var(--edge);
   border-radius: var(--r-control);
-  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 1px 1px 0 rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .segmented button {
@@ -1173,7 +1199,9 @@ label.check input {
 
 .type-option.on {
   border-color: var(--grass);
-  box-shadow: inset 2px 2px 0 rgba(159, 220, 116, 0.35), inset -2px -2px 0 rgba(47, 106, 31, 0.6);
+  box-shadow:
+    inset 2px 2px 0 rgba(159, 220, 116, 0.35),
+    inset -2px -2px 0 rgba(47, 106, 31, 0.6);
   background: #2c3a28;
 }
 
@@ -1198,7 +1226,9 @@ label.check input {
   background-size: 32px 32px;
   border: 2px solid var(--edge);
   border-radius: var(--r-panel);
-  box-shadow: var(--bevel-strong), 0 24px 48px -16px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    var(--bevel-strong),
+    0 24px 48px -16px rgba(0, 0, 0, 0.8);
   padding: 1.4rem;
   display: grid;
   gap: 1rem;
@@ -1238,7 +1268,9 @@ label.check input {
   white-space: normal;
   font-weight: 400;
   color: var(--sand);
-  box-shadow: var(--bevel-strong), 0 12px 28px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    var(--bevel-strong),
+    0 12px 28px rgba(0, 0, 0, 0.5);
   animation: toast-in 0.25s ease-out;
   cursor: pointer;
 }
@@ -1249,7 +1281,9 @@ label.check input {
   width: 10px;
   height: 10px;
   background: var(--grass);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), inset -1px -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.4);
 }
 
 .toast:hover:not(:disabled) {
@@ -1287,7 +1321,9 @@ label.check input {
   padding: 1.5rem;
   background-color: #2a2017;
   background-image: radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0.55) 70%, rgba(0, 0, 0, 0.8) 100%), var(--grain);
-  background-size: 100% 100%, 64px 64px;
+  background-size:
+    100% 100%,
+    64px 64px;
 }
 
 .auth-card {
@@ -1984,7 +2020,9 @@ label.check input {
   border: 3px solid #555;
   border-radius: 4px;
   padding: 10px;
-  box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #8b8b8b;
+  box-shadow:
+    inset 2px 2px 0 #fff,
+    inset -2px -2px 0 #8b8b8b;
   width: max-content;
   max-width: 100%;
 }
@@ -2019,7 +2057,9 @@ label.check input {
   background: #8b8b8b;
   border: 0;
   border-radius: 0;
-  box-shadow: inset 2px 2px 0 #373737, inset -2px -2px 0 #fff;
+  box-shadow:
+    inset 2px 2px 0 #373737,
+    inset -2px -2px 0 #fff;
   color: #222;
 }
 .inv-slot:hover:not(:disabled) {
@@ -2238,7 +2278,9 @@ label.check input {
   color: var(--lamp);
   background-image: var(--grain-soft);
   background-size: 32px 32px;
-  box-shadow: inset 0 0 0 1px #111214, var(--bevel-strong);
+  box-shadow:
+    inset 0 0 0 1px #111214,
+    var(--bevel-strong);
 }
 .heads {
   display: flex;
@@ -2423,11 +2465,21 @@ label.check input {
   background: #55ff55;
   box-shadow: 1px 1px 0 #1a4d1a;
 }
-.mc-ping i:nth-child(1) { height: 3px; }
-.mc-ping i:nth-child(2) { height: 5px; }
-.mc-ping i:nth-child(3) { height: 7px; }
-.mc-ping i:nth-child(4) { height: 9px; }
-.mc-ping i:nth-child(5) { height: 11px; }
+.mc-ping i:nth-child(1) {
+  height: 3px;
+}
+.mc-ping i:nth-child(2) {
+  height: 5px;
+}
+.mc-ping i:nth-child(3) {
+  height: 7px;
+}
+.mc-ping i:nth-child(4) {
+  height: 9px;
+}
+.mc-ping i:nth-child(5) {
+  height: 11px;
+}
 .mc-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -2948,7 +3000,6 @@ label.check input {
   padding-top: 26px;
 }
 
-
 /* Recortador del ícono */
 .cropper {
   display: grid;
@@ -2983,7 +3034,6 @@ label.check input {
     grid-template-columns: 1fr;
   }
 }
-
 
 /* ---------- Texto solo para lectores de pantalla ---------- */
 .sr-only {
@@ -3129,10 +3179,8 @@ label.check input {
   /* Fondo "Aurora": luz de pasto, prismarina y amatista con un destello diagonal. */
   --bg-color: #0a0d13;
   --bg-image:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
-    radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
-    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%),
-    radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%), radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
   --bg-size: auto;
   --bg-filter: none;
 }
@@ -3142,12 +3190,9 @@ label.check input {
 .bg-preview[data-bg='cueva'] {
   --bg-color: #0b0c10;
   --bg-image:
-    radial-gradient(9% 12% at 12% 22%, rgba(111, 214, 234, 0.55), transparent 70%),
-    radial-gradient(7% 10% at 78% 14%, rgba(63, 207, 99, 0.5), transparent 70%),
-    radial-gradient(8% 11% at 88% 62%, rgba(239, 106, 88, 0.45), transparent 70%),
-    radial-gradient(6% 9% at 30% 78%, rgba(255, 199, 87, 0.45), transparent 70%),
-    radial-gradient(10% 13% at 58% 90%, rgba(111, 214, 234, 0.35), transparent 70%),
-    radial-gradient(7% 9% at 50% 40%, rgba(150, 120, 255, 0.35), transparent 70%),
+    radial-gradient(9% 12% at 12% 22%, rgba(111, 214, 234, 0.55), transparent 70%), radial-gradient(7% 10% at 78% 14%, rgba(63, 207, 99, 0.5), transparent 70%),
+    radial-gradient(8% 11% at 88% 62%, rgba(239, 106, 88, 0.45), transparent 70%), radial-gradient(6% 9% at 30% 78%, rgba(255, 199, 87, 0.45), transparent 70%),
+    radial-gradient(10% 13% at 58% 90%, rgba(111, 214, 234, 0.35), transparent 70%), radial-gradient(7% 9% at 50% 40%, rgba(150, 120, 255, 0.35), transparent 70%),
     linear-gradient(180deg, #121419, #0b0c10 60%, #08090c);
 }
 
@@ -3156,8 +3201,7 @@ label.check input {
 .bg-preview[data-bg='atardecer'] {
   --bg-color: #0d1322;
   --bg-image:
-    radial-gradient(28% 22% at 72% 30%, rgba(255, 226, 170, 0.55), transparent 70%),
-    linear-gradient(180deg, #0c1326 0%, #1b2a55 34%, #6a4a74 50%, #d2783f 60%, #1b2d1d 64%, #0f2214 78%, #0a1a10 100%);
+    radial-gradient(28% 22% at 72% 30%, rgba(255, 226, 170, 0.55), transparent 70%), linear-gradient(180deg, #0c1326 0%, #1b2a55 34%, #6a4a74 50%, #d2783f 60%, #1b2d1d 64%, #0f2214 78%, #0a1a10 100%);
   --bg-filter: blur(28px) saturate(120%);
 }
 
@@ -3166,11 +3210,9 @@ label.check input {
 .bg-preview[data-bg='fin'] {
   --bg-color: #07060c;
   --bg-image:
-    url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22240%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M74 10h1v1h-1zM206 98h1v1h-1zM113 67h1v1h-1zM52 171h1v1h-1zM141 198h1v1h-1zM91 20h1v1h-1zM142 133h1v1h-1zM114 56h1v1h-1zM2 46h1v1h-1zM138 171h1v1h-1zM212 125h1v1h-1zM23 146h1v1h-1zM216 4h1v1h-1zM172 193h1v1h-1zM40 191h1v1h-1zM227 175h1v1h-1zM103 61h1v1h-1zM147 5h1v1h-1zM84 209h1v1h-1zM0 159h1v1h-1zM163 122h1v1h-1zM204 104h1v1h-1zM102 194h1v1h-1zM121 54h1v1h-1zM198 26h1v1h-1zM84 132h1v1h-1zM25 90h1v1h-1zM41 137h1v1h-1zM23 235h1v1h-1zM238 185h1v1h-1zM206 155h1v1h-1zM120 73h1v1h-1zM230 136h1v1h-1zM218 35h1v1h-1zM165 69h1v1h-1zM198 87h1v1h-1zM122 55h1v1h-1zM24 191h1v1h-1zM181 81h1v1h-1zM206 104h1v1h-1zM7 133h1v1h-1zM70 193h1v1h-1zM237 118h1v1h-1zM181 41h1v1h-1zM58 63h1v1h-1zM119 149h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.45%22/%3E%3Cpath d=%22M0 107h2v2h-2zM124 112h2v2h-2zM33 91h2v2h-2zM52 176h2v2h-2zM73 191h2v2h-2zM3 92h2v2h-2zM230 76h2v2h-2zM227 68h2v2h-2zM239 192h2v2h-2zM228 199h2v2h-2zM228 131h2v2h-2zM222 239h2v2h-2zM11 12h2v2h-2zM90 113h2v2h-2zM132 221h2v2h-2zM135 88h2v2h-2zM127 61h2v2h-2zM38 230h2v2h-2zM210 115h2v2h-2zM209 62h2v2h-2zM0 4h2v2h-2zM76 153h2v2h-2zM156 118h2v2h-2zM110 72h2v2h-2z%22 fill=%22%23e9e4ff%22 fill-opacity=%22.7%22/%3E%3C/svg%3E"),
-    radial-gradient(50% 45% at 70% 30%, rgba(150, 110, 255, 0.28), transparent 70%),
-    radial-gradient(45% 40% at 20% 80%, rgba(90, 60, 170, 0.3), transparent 70%),
-    radial-gradient(30% 30% at 40% 20%, rgba(255, 255, 255, 0.05), transparent 70%),
-    linear-gradient(180deg, #0b0a16, #07060c);
+    url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22240%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M74 10h1v1h-1zM206 98h1v1h-1zM113 67h1v1h-1zM52 171h1v1h-1zM141 198h1v1h-1zM91 20h1v1h-1zM142 133h1v1h-1zM114 56h1v1h-1zM2 46h1v1h-1zM138 171h1v1h-1zM212 125h1v1h-1zM23 146h1v1h-1zM216 4h1v1h-1zM172 193h1v1h-1zM40 191h1v1h-1zM227 175h1v1h-1zM103 61h1v1h-1zM147 5h1v1h-1zM84 209h1v1h-1zM0 159h1v1h-1zM163 122h1v1h-1zM204 104h1v1h-1zM102 194h1v1h-1zM121 54h1v1h-1zM198 26h1v1h-1zM84 132h1v1h-1zM25 90h1v1h-1zM41 137h1v1h-1zM23 235h1v1h-1zM238 185h1v1h-1zM206 155h1v1h-1zM120 73h1v1h-1zM230 136h1v1h-1zM218 35h1v1h-1zM165 69h1v1h-1zM198 87h1v1h-1zM122 55h1v1h-1zM24 191h1v1h-1zM181 81h1v1h-1zM206 104h1v1h-1zM7 133h1v1h-1zM70 193h1v1h-1zM237 118h1v1h-1zM181 41h1v1h-1zM58 63h1v1h-1zM119 149h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%22.45%22/%3E%3Cpath d=%22M0 107h2v2h-2zM124 112h2v2h-2zM33 91h2v2h-2zM52 176h2v2h-2zM73 191h2v2h-2zM3 92h2v2h-2zM230 76h2v2h-2zM227 68h2v2h-2zM239 192h2v2h-2zM228 199h2v2h-2zM228 131h2v2h-2zM222 239h2v2h-2zM11 12h2v2h-2zM90 113h2v2h-2zM132 221h2v2h-2zM135 88h2v2h-2zM127 61h2v2h-2zM38 230h2v2h-2zM210 115h2v2h-2zM209 62h2v2h-2zM0 4h2v2h-2zM76 153h2v2h-2zM156 118h2v2h-2zM110 72h2v2h-2z%22 fill=%22%23e9e4ff%22 fill-opacity=%22.7%22/%3E%3C/svg%3E'),
+    radial-gradient(50% 45% at 70% 30%, rgba(150, 110, 255, 0.28), transparent 70%), radial-gradient(45% 40% at 20% 80%, rgba(90, 60, 170, 0.3), transparent 70%),
+    radial-gradient(30% 30% at 40% 20%, rgba(255, 255, 255, 0.05), transparent 70%), linear-gradient(180deg, #0b0a16, #07060c);
   --bg-size: 240px 240px, auto, auto, auto, auto;
 }
 
@@ -3179,10 +3221,8 @@ label.check input {
 .bg-preview[data-bg='nether'] {
   --bg-color: #140a0a;
   --bg-image:
-    radial-gradient(60% 40% at 50% 115%, rgba(255, 140, 40, 0.55), rgba(220, 60, 30, 0.25) 45%, transparent 70%),
-    radial-gradient(35% 30% at 10% 60%, rgba(255, 90, 40, 0.18), transparent 70%),
-    radial-gradient(35% 30% at 90% 50%, rgba(255, 120, 60, 0.14), transparent 70%),
-    linear-gradient(180deg, #16090b, #1a0c0c 60%, #241010);
+    radial-gradient(60% 40% at 50% 115%, rgba(255, 140, 40, 0.55), rgba(220, 60, 30, 0.25) 45%, transparent 70%), radial-gradient(35% 30% at 10% 60%, rgba(255, 90, 40, 0.18), transparent 70%),
+    radial-gradient(35% 30% at 90% 50%, rgba(255, 120, 60, 0.14), transparent 70%), linear-gradient(180deg, #16090b, #1a0c0c 60%, #241010);
 }
 
 /* Fondo "Océano": azul profundo con luz que ondula desde arriba. */
@@ -3190,8 +3230,7 @@ label.check input {
 .bg-preview[data-bg='oceano'] {
   --bg-color: #061420;
   --bg-image:
-    radial-gradient(60% 40% at 50% -10%, rgba(120, 220, 255, 0.35), transparent 70%),
-    radial-gradient(40% 35% at 15% 40%, rgba(40, 150, 200, 0.18), transparent 70%),
+    radial-gradient(60% 40% at 50% -10%, rgba(120, 220, 255, 0.35), transparent 70%), radial-gradient(40% 35% at 15% 40%, rgba(40, 150, 200, 0.18), transparent 70%),
     linear-gradient(180deg, #0a2236 0%, #071a2b 50%, #04101c 100%);
 }
 
@@ -3199,9 +3238,7 @@ label.check input {
 :root[data-theme='glass'][data-bg='nevada'],
 .bg-preview[data-bg='nevada'] {
   --bg-color: #0c1119;
-  --bg-image:
-    radial-gradient(40% 30% at 75% 15%, rgba(220, 235, 255, 0.16), transparent 70%),
-    linear-gradient(180deg, #0a0f18 0%, #141c2b 55%, #1d2838 85%, #27354a 100%);
+  --bg-image: radial-gradient(40% 30% at 75% 15%, rgba(220, 235, 255, 0.16), transparent 70%), linear-gradient(180deg, #0a0f18 0%, #141c2b 55%, #1d2838 85%, #27354a 100%);
 }
 
 /* ---- Vista previa de los fondos ---- */
@@ -3251,14 +3288,17 @@ label.check input {
   /* Aurora (sin atributo propio): los mismos valores que el tema. */
   --bg-color: #0a0d13;
   --bg-image:
-    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%),
-    radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
-    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%),
-    radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0%, transparent 35%), radial-gradient(55% 55% at 6% 0%, rgba(63, 207, 99, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 100% 18%, rgba(111, 214, 234, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(150, 120, 255, 0.26), transparent 70%);
 }
 
 .bg-preview[data-bg='fin'] {
-  background-size: 120px 120px, auto, auto, auto, auto;
+  background-size:
+    120px 120px,
+    auto,
+    auto,
+    auto,
+    auto;
 }
 
 .profile-head {
@@ -3344,10 +3384,8 @@ label.check input {
 /* Cueva: las menas laten. */
 :root[data-theme='glass'][data-bg='cueva'] {
   --anim-image:
-    radial-gradient(11% 14% at 12% 22%, rgba(111, 214, 234, 0.35), transparent 70%),
-    radial-gradient(9% 12% at 78% 14%, rgba(63, 207, 99, 0.35), transparent 70%),
-    radial-gradient(10% 13% at 88% 62%, rgba(239, 106, 88, 0.3), transparent 70%),
-    radial-gradient(8% 11% at 30% 78%, rgba(255, 199, 87, 0.3), transparent 70%);
+    radial-gradient(11% 14% at 12% 22%, rgba(111, 214, 234, 0.35), transparent 70%), radial-gradient(9% 12% at 78% 14%, rgba(63, 207, 99, 0.35), transparent 70%),
+    radial-gradient(10% 13% at 88% 62%, rgba(239, 106, 88, 0.3), transparent 70%), radial-gradient(8% 11% at 30% 78%, rgba(255, 199, 87, 0.3), transparent 70%);
   --anim-size: auto;
   --anim: bg-pulse 5s ease-in-out infinite alternate;
 }
@@ -3355,8 +3393,7 @@ label.check input {
 /* Atardecer: nubes desenfocadas que avanzan. */
 :root[data-theme='glass'][data-bg='atardecer'] {
   --anim-image:
-    radial-gradient(14% 7% at 20% 38%, rgba(255, 220, 200, 0.22), transparent 70%),
-    radial-gradient(18% 6% at 60% 44%, rgba(255, 200, 170, 0.18), transparent 70%),
+    radial-gradient(14% 7% at 20% 38%, rgba(255, 220, 200, 0.22), transparent 70%), radial-gradient(18% 6% at 60% 44%, rgba(255, 200, 170, 0.18), transparent 70%),
     radial-gradient(12% 5% at 85% 36%, rgba(255, 230, 210, 0.16), transparent 70%);
   --anim-size: 200% 100%;
   --anim: bg-sweep 60s linear infinite alternate;
@@ -3364,7 +3401,7 @@ label.check input {
 
 /* Fin: una segunda capa de estrellas que titila. */
 :root[data-theme='glass'][data-bg='fin'] {
-  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22260%22 height=%22260%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 6h1v1h-1zM98 142h1v1h-1zM65 9h1v1h-1zM21 159h1v1h-1zM162 129h1v1h-1zM213 246h1v1h-1zM29 206h1v1h-1zM59 47h1v1h-1zM113 46h1v1h-1zM212 139h1v1h-1zM156 206h1v1h-1zM142 104h1v1h-1zM120 31h1v1h-1zM29 10h1v1h-1zM147 33h1v1h-1zM243 137h1v1h-1zM9 23h1v1h-1zM241 142h1v1h-1zM143 103h1v1h-1zM206 104h1v1h-1zM177 155h1v1h-1zM161 85h1v1h-1zM256 174h1v1h-1zM137 90h1v1h-1zM70 9h1v1h-1zM163 256h1v1h-1zM121 83h1v1h-1zM68 215h1v1h-1zM49 167h1v1h-1zM237 102h1v1h-1zM209 157h1v1h-1zM227 87h1v1h-1zM180 93h1v1h-1zM31 22h1v1h-1zM207 181h1v1h-1zM134 217h1v1h-1zM96 4h1v1h-1zM47 177h1v1h-1zM167 39h1v1h-1zM133 185h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%220.8%22/%3E%3Cpath d=%22M10 229h2v2h-2zM94 216h2v2h-2zM252 124h2v2h-2zM242 177h2v2h-2zM256 113h2v2h-2zM94 11h2v2h-2zM19 209h2v2h-2zM154 118h2v2h-2zM124 92h2v2h-2zM50 144h2v2h-2z%22 fill=%22%23d9ccff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E");
+  --anim-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22260%22 height=%22260%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M0 6h1v1h-1zM98 142h1v1h-1zM65 9h1v1h-1zM21 159h1v1h-1zM162 129h1v1h-1zM213 246h1v1h-1zM29 206h1v1h-1zM59 47h1v1h-1zM113 46h1v1h-1zM212 139h1v1h-1zM156 206h1v1h-1zM142 104h1v1h-1zM120 31h1v1h-1zM29 10h1v1h-1zM147 33h1v1h-1zM243 137h1v1h-1zM9 23h1v1h-1zM241 142h1v1h-1zM143 103h1v1h-1zM206 104h1v1h-1zM177 155h1v1h-1zM161 85h1v1h-1zM256 174h1v1h-1zM137 90h1v1h-1zM70 9h1v1h-1zM163 256h1v1h-1zM121 83h1v1h-1zM68 215h1v1h-1zM49 167h1v1h-1zM237 102h1v1h-1zM209 157h1v1h-1zM227 87h1v1h-1zM180 93h1v1h-1zM31 22h1v1h-1zM207 181h1v1h-1zM134 217h1v1h-1zM96 4h1v1h-1zM47 177h1v1h-1zM167 39h1v1h-1zM133 185h1v1h-1z%22 fill=%22%23fff%22 fill-opacity=%220.8%22/%3E%3Cpath d=%22M10 229h2v2h-2zM94 216h2v2h-2zM252 124h2v2h-2zM242 177h2v2h-2zM256 113h2v2h-2zM94 11h2v2h-2zM19 209h2v2h-2zM154 118h2v2h-2zM124 92h2v2h-2zM50 144h2v2h-2z%22 fill=%22%23d9ccff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E');
   --anim-size: 260px 260px;
   --anim-repeat: repeat;
   --anim: bg-twinkle 3.5s ease-in-out infinite alternate;
@@ -3372,7 +3409,7 @@ label.check input {
 
 /* Nether: brasas que suben. */
 :root[data-theme='glass'][data-bg='nether'] {
-  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22440%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M78 335h2v2h-2zM133 44h2v2h-2zM117 65h2v2h-2zM100 334h2v2h-2zM64 204h2v2h-2zM214 92h2v2h-2zM166 214h2v2h-2zM81 161h2v2h-2zM148 393h2v2h-2zM96 439h2v2h-2zM20 138h2v2h-2zM15 232h2v2h-2zM135 143h2v2h-2zM125 227h2v2h-2zM35 133h2v2h-2zM88 438h2v2h-2zM100 295h2v2h-2zM192 403h2v2h-2zM108 173h2v2h-2zM111 197h2v2h-2zM125 428h2v2h-2zM174 179h2v2h-2zM135 176h2v2h-2zM57 436h2v2h-2zM175 103h2v2h-2zM147 46h2v2h-2z%22 fill=%22%23ffb45a%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M197 261h3v3h-3zM75 208h3v3h-3zM201 430h3v3h-3zM65 207h3v3h-3zM154 421h3v3h-3zM209 296h3v3h-3zM143 324h3v3h-3zM178 117h3v3h-3zM174 192h3v3h-3zM3 162h3v3h-3zM26 321h3v3h-3zM139 177h3v3h-3zM180 47h3v3h-3zM2 207h3v3h-3z%22 fill=%22%23ff7a3c%22 fill-opacity=%220.7%22/%3E%3C/svg%3E");
+  --anim-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22440%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M78 335h2v2h-2zM133 44h2v2h-2zM117 65h2v2h-2zM100 334h2v2h-2zM64 204h2v2h-2zM214 92h2v2h-2zM166 214h2v2h-2zM81 161h2v2h-2zM148 393h2v2h-2zM96 439h2v2h-2zM20 138h2v2h-2zM15 232h2v2h-2zM135 143h2v2h-2zM125 227h2v2h-2zM35 133h2v2h-2zM88 438h2v2h-2zM100 295h2v2h-2zM192 403h2v2h-2zM108 173h2v2h-2zM111 197h2v2h-2zM125 428h2v2h-2zM174 179h2v2h-2zM135 176h2v2h-2zM57 436h2v2h-2zM175 103h2v2h-2zM147 46h2v2h-2z%22 fill=%22%23ffb45a%22 fill-opacity=%220.85%22/%3E%3Cpath d=%22M197 261h3v3h-3zM75 208h3v3h-3zM201 430h3v3h-3zM65 207h3v3h-3zM154 421h3v3h-3zM209 296h3v3h-3zM143 324h3v3h-3zM178 117h3v3h-3zM174 192h3v3h-3zM3 162h3v3h-3zM26 321h3v3h-3zM139 177h3v3h-3zM180 47h3v3h-3zM2 207h3v3h-3z%22 fill=%22%23ff7a3c%22 fill-opacity=%220.7%22/%3E%3C/svg%3E');
   --anim-size: 220px 440px;
   --anim-repeat: repeat;
   --anim-opacity: 0.6;
@@ -3381,7 +3418,7 @@ label.check input {
 
 /* Océano: cáusticas de luz que se mecen. */
 :root[data-theme='glass'][data-bg='oceano'] {
-  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%239fe3ff%22 stop-opacity=%22.22%22/%3E%3Cstop offset=%221%22 stop-color=%22%239fe3ff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx=%2270%22 cy=%2290%22 rx=%2270%22 ry=%2240%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22220%22 cy=%2260%22 rx=%2260%22 ry=%2250%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22160%22 cy=%22220%22 rx=%2290%22 ry=%2245%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%2230%22 cy=%22250%22 rx=%2250%22 ry=%2235%22 fill=%22url(%23g)%22/%3E%3C/svg%3E");
+  --anim-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Cdefs%3E%3CradialGradient id=%22g%22%3E%3Cstop offset=%220%22 stop-color=%22%239fe3ff%22 stop-opacity=%22.22%22/%3E%3Cstop offset=%221%22 stop-color=%22%239fe3ff%22 stop-opacity=%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx=%2270%22 cy=%2290%22 rx=%2270%22 ry=%2240%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22220%22 cy=%2260%22 rx=%2260%22 ry=%2250%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%22160%22 cy=%22220%22 rx=%2290%22 ry=%2245%22 fill=%22url(%23g)%22/%3E%3Cellipse cx=%2230%22 cy=%22250%22 rx=%2250%22 ry=%2235%22 fill=%22url(%23g)%22/%3E%3C/svg%3E');
   --anim-size: 640px 640px;
   --anim-repeat: repeat;
   --anim-blend: screen;
@@ -3392,7 +3429,7 @@ label.check input {
 
 /* Nevada: nieve que cae. */
 :root[data-theme='glass'][data-bg='nevada'] {
-  --anim-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22480%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M9 193h2v2h-2zM145 205h2v2h-2zM237 456h2v2h-2zM151 434h2v2h-2zM180 383h2v2h-2zM201 305h2v2h-2zM194 385h2v2h-2zM92 303h2v2h-2zM211 265h2v2h-2zM25 464h2v2h-2zM203 72h2v2h-2zM169 456h2v2h-2zM139 314h2v2h-2zM86 399h2v2h-2zM90 250h2v2h-2zM63 77h2v2h-2zM29 376h2v2h-2zM238 220h2v2h-2zM99 120h2v2h-2zM14 210h2v2h-2zM90 35h2v2h-2zM157 239h2v2h-2zM98 117h2v2h-2zM85 329h2v2h-2zM141 39h2v2h-2zM219 225h2v2h-2zM122 96h2v2h-2zM85 362h2v2h-2zM229 124h2v2h-2zM62 401h2v2h-2zM65 54h2v2h-2zM180 265h2v2h-2zM95 415h2v2h-2zM235 255h2v2h-2zM120 84h2v2h-2zM3 9h2v2h-2zM188 349h2v2h-2zM81 291h2v2h-2zM167 313h2v2h-2zM173 114h2v2h-2zM73 28h2v2h-2zM41 422h2v2h-2zM137 230h2v2h-2zM220 437h2v2h-2z%22 fill=%22%23fff%22 fill-opacity=%220.75%22/%3E%3Cpath d=%22M207 452h3v3h-3zM215 380h3v3h-3zM231 92h3v3h-3zM220 255h3v3h-3zM208 13h3v3h-3zM171 235h3v3h-3zM110 124h3v3h-3zM98 294h3v3h-3zM147 409h3v3h-3zM33 75h3v3h-3zM197 32h3v3h-3zM12 301h3v3h-3zM173 439h3v3h-3zM89 162h3v3h-3zM11 287h3v3h-3zM1 134h3v3h-3zM3 152h3v3h-3zM95 273h3v3h-3z%22 fill=%22%23eaf4ff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E");
+  --anim-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22480%22 shape-rendering=%22crispEdges%22%3E%3Cpath d=%22M9 193h2v2h-2zM145 205h2v2h-2zM237 456h2v2h-2zM151 434h2v2h-2zM180 383h2v2h-2zM201 305h2v2h-2zM194 385h2v2h-2zM92 303h2v2h-2zM211 265h2v2h-2zM25 464h2v2h-2zM203 72h2v2h-2zM169 456h2v2h-2zM139 314h2v2h-2zM86 399h2v2h-2zM90 250h2v2h-2zM63 77h2v2h-2zM29 376h2v2h-2zM238 220h2v2h-2zM99 120h2v2h-2zM14 210h2v2h-2zM90 35h2v2h-2zM157 239h2v2h-2zM98 117h2v2h-2zM85 329h2v2h-2zM141 39h2v2h-2zM219 225h2v2h-2zM122 96h2v2h-2zM85 362h2v2h-2zM229 124h2v2h-2zM62 401h2v2h-2zM65 54h2v2h-2zM180 265h2v2h-2zM95 415h2v2h-2zM235 255h2v2h-2zM120 84h2v2h-2zM3 9h2v2h-2zM188 349h2v2h-2zM81 291h2v2h-2zM167 313h2v2h-2zM173 114h2v2h-2zM73 28h2v2h-2zM41 422h2v2h-2zM137 230h2v2h-2zM220 437h2v2h-2z%22 fill=%22%23fff%22 fill-opacity=%220.75%22/%3E%3Cpath d=%22M207 452h3v3h-3zM215 380h3v3h-3zM231 92h3v3h-3zM220 255h3v3h-3zM208 13h3v3h-3zM171 235h3v3h-3zM110 124h3v3h-3zM98 294h3v3h-3zM147 409h3v3h-3zM33 75h3v3h-3zM197 32h3v3h-3zM12 301h3v3h-3zM173 439h3v3h-3zM89 162h3v3h-3zM11 287h3v3h-3zM1 134h3v3h-3zM3 152h3v3h-3zM95 273h3v3h-3z%22 fill=%22%23eaf4ff%22 fill-opacity=%220.9%22/%3E%3C/svg%3E');
   --anim-size: 240px 480px;
   --anim-repeat: repeat;
   --anim-opacity: 0.85;
@@ -3561,10 +3598,17 @@ label.check input {
     linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 255, 255, 0.12)) padding-box,
     linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04)) padding-box,
     var(--lg-rim) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px 0 rgba(255, 255, 255, 0.06), 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.3),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.06),
+    0 6px 16px -8px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px) saturate(160%);
   -webkit-backdrop-filter: blur(10px) saturate(160%);
-  transition: background-color 0.15s, box-shadow 0.15s, transform 0.12s, filter 0.15s;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.12s,
+    filter 0.15s;
 }
 
 :where(:root[data-theme='glass']) button:hover:not(:disabled),
@@ -3573,7 +3617,10 @@ label.check input {
     linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18)) padding-box,
     linear-gradient(rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.06)) padding-box,
     var(--lg-rim) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), inset -1px -1px 0 rgba(255, 255, 255, 0.08), 0 10px 22px -10px rgba(0, 0, 0, 0.7);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 22px -10px rgba(0, 0, 0, 0.7);
 }
 
 :where(:root[data-theme='glass']) button:active:not(:disabled),
@@ -3587,17 +3634,37 @@ label.check input {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.02) 60%, rgba(255, 255, 255, 0.14)) padding-box,
     linear-gradient(color-mix(in srgb, var(--grass-deep) 92%, transparent), color-mix(in srgb, var(--grass-deep) 92%, transparent)) padding-box,
-    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 85%, #fff) , color-mix(in srgb, var(--grass-light) 25%, transparent) 35%, color-mix(in srgb, var(--grass-light) 20%, transparent) 65%, color-mix(in srgb, var(--grass-light) 70%, #fff)) border-box;
+    linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--grass-light) 85%, #fff),
+        color-mix(in srgb, var(--grass-light) 25%, transparent) 35%,
+        color-mix(in srgb, var(--grass-light) 20%, transparent) 65%,
+        color-mix(in srgb, var(--grass-light) 70%, #fff)
+      )
+      border-box;
   color: #fff;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.1), 0 10px 24px -8px color-mix(in srgb, var(--grass) 65%, transparent);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 24px -8px color-mix(in srgb, var(--grass) 65%, transparent);
 }
 
 :root[data-theme='glass'] .btn-go:hover:not(:disabled) {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.05) 60%, rgba(255, 255, 255, 0.2)) padding-box,
     linear-gradient(color-mix(in srgb, var(--grass-deep) 85%, var(--grass)), color-mix(in srgb, var(--grass-deep) 85%, var(--grass))) padding-box,
-    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 90%, #fff), color-mix(in srgb, var(--grass-light) 35%, transparent) 35%, color-mix(in srgb, var(--grass-light) 30%, transparent) 65%, color-mix(in srgb, var(--grass-light) 75%, #fff)) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(255, 255, 255, 0.12), 0 14px 30px -8px color-mix(in srgb, var(--grass) 80%, transparent);
+    linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--grass-light) 90%, #fff),
+        color-mix(in srgb, var(--grass-light) 35%, transparent) 35%,
+        color-mix(in srgb, var(--grass-light) 30%, transparent) 65%,
+        color-mix(in srgb, var(--grass-light) 75%, #fff)
+      )
+      border-box;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.55),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.12),
+    0 14px 30px -8px color-mix(in srgb, var(--grass) 80%, transparent);
 }
 
 :root[data-theme='glass'] .btn-go:active:not(:disabled) {
@@ -3610,7 +3677,9 @@ label.check input {
     linear-gradient(rgba(239, 106, 88, 0.16), rgba(239, 106, 88, 0.16)) padding-box,
     linear-gradient(135deg, rgba(255, 190, 180, 0.6), rgba(239, 106, 88, 0.25) 35%, rgba(239, 106, 88, 0.2) 65%, rgba(255, 190, 180, 0.45)) border-box;
   color: #ffb8ae;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2), 0 6px 16px -8px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 16px -8px rgba(0, 0, 0, 0.6);
 }
 
 :root[data-theme='glass'] .btn-stop:hover:not(:disabled) {
@@ -3641,8 +3710,17 @@ label.check input {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01) 60%, rgba(255, 255, 255, 0.08)) padding-box,
     linear-gradient(color-mix(in srgb, var(--grass) 16%, transparent), color-mix(in srgb, var(--grass) 16%, transparent)) padding-box,
-    linear-gradient(135deg, color-mix(in srgb, var(--grass-light) 85%, #fff), color-mix(in srgb, var(--grass) 35%, transparent) 35%, color-mix(in srgb, var(--grass) 30%, transparent) 65%, color-mix(in srgb, var(--grass-light) 70%, #fff)) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35), 0 10px 24px -10px color-mix(in srgb, var(--grass) 50%, transparent);
+    linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--grass-light) 85%, #fff),
+        color-mix(in srgb, var(--grass) 35%, transparent) 35%,
+        color-mix(in srgb, var(--grass) 30%, transparent) 65%,
+        color-mix(in srgb, var(--grass-light) 70%, #fff)
+      )
+      border-box;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 24px -10px color-mix(in srgb, var(--grass) 50%, transparent);
 }
 
 /* ---- Campos ---- */
@@ -3653,14 +3731,18 @@ label.check input {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--r-control);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.35),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
 }
 
 :where(:root[data-theme='glass']) input:focus,
 :where(:root[data-theme='glass']) select:focus,
 :where(:root[data-theme='glass']) textarea:focus {
   border-color: rgba(111, 214, 234, 0.9);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(111, 214, 234, 0.2);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(111, 214, 234, 0.2);
 }
 
 :root[data-theme='glass'] input[type='checkbox'] {
@@ -3694,7 +3776,9 @@ label.check input {
     linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.03) 60%, rgba(255, 255, 255, 0.1)) padding-box,
     linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)) padding-box,
     var(--lg-rim) border-box;
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.25), 0 8px 18px -10px rgba(0, 0, 0, 0.7);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25),
+    0 8px 18px -10px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme='glass'] .side-foot {
@@ -3718,7 +3802,10 @@ label.check input {
 :root[data-theme='glass'] .server-icon.placeholder {
   border-radius: 16px;
   background-image: none;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 12px 24px -10px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 12px 24px -10px rgba(0, 0, 0, 0.8);
 }
 
 /* ---- Pestañas: cápsula flotante con la selección como una gota de vidrio ---- */
@@ -3741,7 +3828,9 @@ label.check input {
   margin-bottom: 0;
   font-size: var(--step--1);
   font-weight: 600;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 :root[data-theme='glass'] .tab:hover,
@@ -3754,10 +3843,11 @@ label.check input {
 :root[data-theme='glass'] .segmented button.on {
   border: 0;
   padding-bottom: 0.45rem;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18)),
-    rgba(255, 255, 255, 0.06);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(255, 255, 255, 0.08), 0 6px 14px -6px rgba(0, 0, 0, 0.7);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.08) 60%, rgba(255, 255, 255, 0.18)), rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 14px -6px rgba(0, 0, 0, 0.7);
 }
 
 :root[data-theme='glass'] .tabs:has(+ .subtabs) {
@@ -3813,18 +3903,24 @@ label.check input {
 :root[data-theme='glass'] .dot {
   border-radius: 50%;
   background: #3a3f4b;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme='glass'] .dot.running {
   background: radial-gradient(circle at 35% 30%, #fff1c9, var(--lamp) 60%);
-  box-shadow: 0 0 0 3px rgba(255, 199, 87, 0.18), 0 0 14px rgba(255, 199, 87, 0.7);
+  box-shadow:
+    0 0 0 3px rgba(255, 199, 87, 0.18),
+    0 0 14px rgba(255, 199, 87, 0.7);
 }
 
 :root[data-theme='glass'] .dot.crashed,
 :root[data-theme='glass'] .dot.error {
   background: radial-gradient(circle at 35% 30%, #ffd0c8, var(--redstone) 60%);
-  box-shadow: 0 0 0 3px rgba(239, 106, 88, 0.18), 0 0 14px rgba(239, 106, 88, 0.7);
+  box-shadow:
+    0 0 0 3px rgba(239, 106, 88, 0.18),
+    0 0 14px rgba(239, 106, 88, 0.7);
 }
 
 /* ---- Progreso: tubo de vidrio con líquido verde ---- */
@@ -3840,7 +3936,9 @@ label.check input {
 :root[data-theme='glass'] .progress > i {
   border-radius: var(--r-pill);
   background: linear-gradient(180deg, var(--grass-light), var(--grass) 55%, color-mix(in srgb, var(--grass) 80%, #000));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 14px color-mix(in srgb, var(--grass) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 14px color-mix(in srgb, var(--grass) 60%, transparent);
 }
 
 :root[data-theme='glass'] .meter {
@@ -3852,7 +3950,9 @@ label.check input {
 :root[data-theme='glass'] .meter > i {
   border-radius: var(--r-pill);
   background: linear-gradient(180deg, #a9ecf7, var(--prismarine));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 0 8px rgba(111, 214, 234, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 0 8px rgba(111, 214, 234, 0.5);
 }
 
 /* ---- Diálogos, avisos y menús ---- */
@@ -3866,7 +3966,9 @@ label.check input {
 :root[data-theme='glass'] .modal {
   --lg-tint: rgba(18, 22, 32, 0.6);
   border-radius: 26px;
-  box-shadow: var(--lg-edge), 0 50px 100px -30px rgba(0, 0, 0, 0.9);
+  box-shadow:
+    var(--lg-edge),
+    0 50px 100px -30px rgba(0, 0, 0, 0.9);
 }
 
 :root[data-theme='glass'] .toast {
@@ -3972,20 +4074,47 @@ label.check input {
   }
 }
 
-
 /* ======================================================================================
    Personalización: color de acento, letra, tamaño y la foto de fondo. Van después de los
    temas para ganarles.
    ====================================================================================== */
 
 /* El acento mueve el verde pasto de los dos temas; el texto del botón principal cambia con él. */
-:root[data-accent='esmeralda'] { --grass: #39d353; --grass-light: #93f0a4; --grass-deep: #176b2a; }
-:root[data-accent='prismarina'] { --grass: #6fd6ea; --grass-light: #b6ecf5; --grass-deep: #1c6b7a; }
-:root[data-accent='diamante'] { --grass: #5fd6ff; --grass-light: #b3ecff; --grass-deep: #0f6b8a; }
-:root[data-accent='amatista'] { --grass: #b48cff; --grass-light: #d9c6ff; --grass-deep: #5c3aa8; }
-:root[data-accent='oro'] { --grass: #ffc757; --grass-light: #ffe3a3; --grass-deep: #8a5a00; }
-:root[data-accent='cobre'] { --grass: #e8954e; --grass-light: #f5c79b; --grass-deep: #8a4a14; }
-:root[data-accent='redstone'] { --grass: #ef6a58; --grass-light: #f8b4aa; --grass-deep: #8f2a1e; }
+:root[data-accent='esmeralda'] {
+  --grass: #39d353;
+  --grass-light: #93f0a4;
+  --grass-deep: #176b2a;
+}
+:root[data-accent='prismarina'] {
+  --grass: #6fd6ea;
+  --grass-light: #b6ecf5;
+  --grass-deep: #1c6b7a;
+}
+:root[data-accent='diamante'] {
+  --grass: #5fd6ff;
+  --grass-light: #b3ecff;
+  --grass-deep: #0f6b8a;
+}
+:root[data-accent='amatista'] {
+  --grass: #b48cff;
+  --grass-light: #d9c6ff;
+  --grass-deep: #5c3aa8;
+}
+:root[data-accent='oro'] {
+  --grass: #ffc757;
+  --grass-light: #ffe3a3;
+  --grass-deep: #8a5a00;
+}
+:root[data-accent='cobre'] {
+  --grass: #e8954e;
+  --grass-light: #f5c79b;
+  --grass-deep: #8a4a14;
+}
+:root[data-accent='redstone'] {
+  --grass: #ef6a58;
+  --grass-light: #f8b4aa;
+  --grass-deep: #8f2a1e;
+}
 
 :root[data-accent='prismarina'] .btn-go,
 :root[data-accent='diamante'] .btn-go,
@@ -4158,7 +4287,9 @@ button.bg-drop:hover:not(:disabled) {
   height: 18px;
   border-radius: 50%;
   background: var(--swatch);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme='blocks'] .swatch i {
@@ -4169,7 +4300,6 @@ button.bg-drop:hover:not(:disabled) {
   outline: 2px solid var(--swatch);
   outline-offset: 2px;
 }
-
 
 /* ---------- Página pública de un servidor ---------- */
 .public-card {
@@ -4198,7 +4328,6 @@ button.bg-drop:hover:not(:disabled) {
   font-weight: 600;
   color: var(--sand);
 }
-
 
 /* ---------- Horario de energía ---------- */
 .power-grid {
@@ -4246,7 +4375,9 @@ button.bg-drop:hover:not(:disabled) {
 .power-cell.on:hover:not(:disabled) {
   background: var(--grass);
   border-color: var(--grass-light);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 8px color-mix(in srgb, var(--grass) 50%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 8px color-mix(in srgb, var(--grass) 50%, transparent);
 }
 
 @media (max-width: 640px) {
@@ -4258,7 +4389,6 @@ button.bg-drop:hover:not(:disabled) {
     height: 14px;
   }
 }
-
 
 /* ---------- Chat ---------- */
 .chat-layout {
@@ -4397,7 +4527,6 @@ mark.mention {
   padding: 0;
 }
 
-
 /* ---------- Fondos vivos: mapa y skin ---------- */
 :root[data-bg='mapa'],
 :root[data-bg='skin'] {
@@ -4406,7 +4535,8 @@ mark.mention {
 }
 
 .bg-preview[data-bg='mapa'] {
-  --bg-image: radial-gradient(40% 50% at 30% 60%, rgba(63, 207, 99, 0.5), transparent 70%), radial-gradient(30% 40% at 70% 30%, rgba(111, 214, 234, 0.4), transparent 70%), linear-gradient(#1b2a1d, #0d1a24);
+  --bg-image:
+    radial-gradient(40% 50% at 30% 60%, rgba(63, 207, 99, 0.5), transparent 70%), radial-gradient(30% 40% at 70% 30%, rgba(111, 214, 234, 0.4), transparent 70%), linear-gradient(#1b2a1d, #0d1a24);
 }
 
 .bg-preview[data-bg='skin'] {
@@ -4528,18 +4658,71 @@ mark.mention {
 }
 
 /* ---------- Paletas por bioma: tiñen la luz del fondo y el acento ---------- */
-:root[data-palette='jungla'] { --grass: #4fd36a; --grass-light: #a8f3b4; --grass-deep: #15702d; }
-:root[data-palette='jungla'][data-theme='glass'] { --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.04), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(60, 200, 90, 0.38), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(190, 230, 80, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(20, 120, 70, 0.4), transparent 70%); }
-:root[data-palette='desierto'] { --grass: #e8b65a; --grass-light: #ffe3a3; --grass-deep: #8a5a10; }
-:root[data-palette='desierto'][data-theme='glass'] { --bg-color: #15100b; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 200, 110, 0.3), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(220, 120, 70, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(210, 150, 60, 0.3), transparent 70%); }
-:root[data-palette='taiga'] { --grass: #6fd6ea; --grass-light: #b6ecf5; --grass-deep: #1c6b7a; }
-:root[data-palette='taiga'][data-theme='glass'] { --bg-color: #0b1018; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.06), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 200, 230, 0.28), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(40, 110, 80, 0.3), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(200, 230, 255, 0.18), transparent 70%); }
-:root[data-palette='cerezo'] { --grass: #f08cc0; --grass-light: #ffd0e8; --grass-deep: #8a2c5e; }
-:root[data-palette='cerezo'][data-theme='glass'] { --bg-color: #140b12; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 150, 200, 0.35), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(255, 200, 230, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 100, 0.4), transparent 70%); }
-:root[data-palette='pantano'] { --grass: #8fbf5a; --grass-light: #cde9a8; --grass-deep: #3f6020; }
-:root[data-palette='pantano'][data-theme='glass'] { --bg-color: #0e120c; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.03), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 150, 70, 0.32), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(90, 110, 60, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(60, 80, 40, 0.45), transparent 70%); }
-:root[data-palette='champinon'] { --grass: #e85d6a; --grass-light: #ffb8c0; --grass-deep: #8a1f2a; }
-:root[data-palette='champinon'][data-theme='glass'] { --bg-color: #140c12; --bg-image: linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(230, 90, 110, 0.32), transparent 70%), radial-gradient(45% 50% at 100% 20%, rgba(170, 120, 200, 0.28), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 110, 0.4), transparent 70%); }
+:root[data-palette='jungla'] {
+  --grass: #4fd36a;
+  --grass-light: #a8f3b4;
+  --grass-deep: #15702d;
+}
+:root[data-palette='jungla'][data-theme='glass'] {
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.04), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(60, 200, 90, 0.38), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(190, 230, 80, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(20, 120, 70, 0.4), transparent 70%);
+}
+:root[data-palette='desierto'] {
+  --grass: #e8b65a;
+  --grass-light: #ffe3a3;
+  --grass-deep: #8a5a10;
+}
+:root[data-palette='desierto'][data-theme='glass'] {
+  --bg-color: #15100b;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 200, 110, 0.3), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(220, 120, 70, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(210, 150, 60, 0.3), transparent 70%);
+}
+:root[data-palette='taiga'] {
+  --grass: #6fd6ea;
+  --grass-light: #b6ecf5;
+  --grass-deep: #1c6b7a;
+}
+:root[data-palette='taiga'][data-theme='glass'] {
+  --bg-color: #0b1018;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.06), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 200, 230, 0.28), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(40, 110, 80, 0.3), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(200, 230, 255, 0.18), transparent 70%);
+}
+:root[data-palette='cerezo'] {
+  --grass: #f08cc0;
+  --grass-light: #ffd0e8;
+  --grass-deep: #8a2c5e;
+}
+:root[data-palette='cerezo'][data-theme='glass'] {
+  --bg-color: #140b12;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(255, 150, 200, 0.35), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(255, 200, 230, 0.2), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 100, 0.4), transparent 70%);
+}
+:root[data-palette='pantano'] {
+  --grass: #8fbf5a;
+  --grass-light: #cde9a8;
+  --grass-deep: #3f6020;
+}
+:root[data-palette='pantano'][data-theme='glass'] {
+  --bg-color: #0e120c;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.03), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(120, 150, 70, 0.32), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(90, 110, 60, 0.25), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(60, 80, 40, 0.45), transparent 70%);
+}
+:root[data-palette='champinon'] {
+  --grass: #e85d6a;
+  --grass-light: #ffb8c0;
+  --grass-deep: #8a1f2a;
+}
+:root[data-palette='champinon'][data-theme='glass'] {
+  --bg-color: #140c12;
+  --bg-image:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.05), transparent 35%), radial-gradient(55% 55% at 10% 0%, rgba(230, 90, 110, 0.32), transparent 70%),
+    radial-gradient(45% 50% at 100% 20%, rgba(170, 120, 200, 0.28), transparent 70%), radial-gradient(60% 55% at 55% 115%, rgba(120, 60, 110, 0.4), transparent 70%);
+}
 
 /* ---------- Widget flotante ---------- */
 .widget {

@@ -146,9 +146,13 @@ npm install
 npm run dev          # API + WebSocket en http://localhost:8080 (se reinicia al guardar)
 npm run dev:client   # interfaz con recarga en http://localhost:5173
 npm run build        # compila la interfaz a dist/
+npm run check        # lint (ESLint), formato (Prettier) y tipos (tsc sobre los archivos con // @ts-check)
+npm run format       # da formato a todo el código
 ```
 
 Variables de entorno: `PORT` (puerto del panel), `MCP_DATA_DIR` (carpeta de datos).
+
+El formato lo pone Prettier (`.prettierrc`) y ESLint solo busca errores reales (`eslint.config.js`); la CI corre `npm run check` antes de las pruebas. `jsconfig.json` da autocompletado en el editor; los archivos que empiezan con `// @ts-check` (por ahora `server/lib/` y `config.js`/`db.js`) se revisan con TypeScript a partir de sus comentarios JSDoc, sin migrar nada a TS. Para sumar un archivo basta con añadirle esa línea y corregir lo que marque.
 
 ### Estructura
 

@@ -1,3 +1,4 @@
+// @ts-check
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -14,8 +15,14 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Compara versiones tipo 1.20.4, 26.1, 21.1.77-beta. */
 export function compareVersions(a, b) {
-  const pa = String(a).split(/[^0-9]+/).filter(Boolean).map(Number);
-  const pb = String(b).split(/[^0-9]+/).filter(Boolean).map(Number);
+  const pa = String(a)
+    .split(/[^0-9]+/)
+    .filter(Boolean)
+    .map(Number);
+  const pb = String(b)
+    .split(/[^0-9]+/)
+    .filter(Boolean)
+    .map(Number);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const d = (pa[i] || 0) - (pb[i] || 0);
     if (d !== 0) return d;
@@ -91,5 +98,7 @@ export async function moveFile(from, to) {
 }
 
 export function sanitizeFileName(name) {
-  return String(name).replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').slice(0, 200);
+  return String(name)
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+    .slice(0, 200);
 }

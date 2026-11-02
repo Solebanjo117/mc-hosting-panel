@@ -48,7 +48,7 @@ export function readPack(packPath) {
     const data = zip.read(name);
     if (!data) return null;
     try {
-      return JSON.parse(data.toString('utf8').replace(/^﻿/, ''));
+      return JSON.parse(data.toString('utf8').replace(/^\uFEFF/, ''));
     } catch {
       throw new HttpError(400, `El archivo ${name} del modpack está dañado`);
     }
@@ -215,10 +215,7 @@ export async function downloadPack(source, projectId, versionId) {
   if (!version) throw new HttpError(404, 'Esa versión del modpack ya no está disponible');
   if (!version.file?.url) {
     if (source === 'curseforge') {
-      throw new HttpError(
-        422,
-        `El autor de este modpack no permite descargarlo desde otras apps. Descárgalo de ${version.externalUrl} y súbelo en "Subir archivo".`
-      );
+      throw new HttpError(422, `El autor de este modpack no permite descargarlo desde otras apps. Descárgalo de ${version.externalUrl} y súbelo en "Subir archivo".`);
     }
     throw new HttpError(404, 'Esa versión no tiene archivo descargable');
   }
@@ -343,10 +340,7 @@ async function curseforgeJobs(index, server, report) {
     throw new HttpError(409, 'Para instalar modpacks de CurseForge agrega tu clave de CurseForge en Ajustes del panel (es gratis).');
   }
   report({ message: 'Consultando los mods del modpack en CurseForge…', progress: null });
-  const [files, mods] = await Promise.all([
-    curseforge.filesInfo(wanted.map((f) => Number(f.fileID))),
-    curseforge.modsInfo([...new Set(wanted.map((f) => Number(f.projectID)))]),
-  ]);
+  const [files, mods] = await Promise.all([curseforge.filesInfo(wanted.map((f) => Number(f.fileID))), curseforge.modsInfo([...new Set(wanted.map((f) => Number(f.projectID)))])]);
   const level = readProperties(server.id)['level-name'] || 'world';
   const jobs = [];
   const failed = [];
@@ -366,7 +360,9 @@ async function curseforgeJobs(index, server, report) {
     }
     const folder = classId === curseforge.CLASS_IDS.datapack ? `${level}/datapacks` : 'mods';
     if (!f.downloadUrl) {
-      failed.push(`${mod?.name || f.fileName}: su autor no permite descargarlo desde otras apps. Bájalo de ${mod ? curseforge.fileUrl(mod, f.id) : 'CurseForge'} y súbelo en Archivos (carpeta ${folder}).`);
+      failed.push(
+        `${mod?.name || f.fileName}: su autor no permite descargarlo desde otras apps. Bájalo de ${mod ? curseforge.fileUrl(mod, f.id) : 'CurseForge'} y súbelo en Archivos (carpeta ${folder}).`
+      );
       continue;
     }
     jobs.push({
@@ -375,10 +371,7 @@ async function curseforgeJobs(index, server, report) {
       urls: [f.downloadUrl],
       sha1: f.hashes?.find((h) => h.algo === 1)?.value || null,
       trusted: true, // viene de la API de CurseForge, no del archivo
-      record:
-        folder === 'mods'
-          ? { source: 'curseforge', projectId: String(w.projectID), versionId: String(w.fileID), title: mod?.name || f.fileName, icon: mod?.logo?.thumbnailUrl || null }
-          : null,
+      record: folder === 'mods' ? { source: 'curseforge', projectId: String(w.projectID), versionId: String(w.fileID), title: mod?.name || f.fileName, icon: mod?.logo?.thumbnailUrl || null } : null,
     });
   }
   return { jobs, skipped, failed };
@@ -482,8 +475,7 @@ function requireServer(id) {
   return server;
 }
 
-const projectPage = (source) =>
-  !source?.projectId ? null : source.site === 'curseforge' ? source.url || null : `https://modrinth.com/modpack/${source.projectId}`;
+const projectPage = (source) => (!source?.projectId ? null : source.site === 'curseforge' ? source.url || null : `https://modrinth.com/modpack/${source.projectId}`);
 
 /** Información del modpack del servidor y versiones más nuevas. */
 export async function modpackStatus(id) {
@@ -648,7 +640,15 @@ function serversDat(name, address) {
           name: 'servers',
           type: 'list',
           listType: 'compound',
-          value: [{ type: 'compound', value: [{ name: 'name', type: 'string', value: name }, { name: 'ip', type: 'string', value: address }] }],
+          value: [
+            {
+              type: 'compound',
+              value: [
+                { name: 'name', type: 'string', value: name },
+                { name: 'ip', type: 'string', value: address },
+              ],
+            },
+          ],
         },
       ],
     },

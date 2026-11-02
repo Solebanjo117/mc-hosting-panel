@@ -8,13 +8,7 @@ import { download } from '../lib/http.js';
 import { HttpError } from '../lib/util.js';
 import { ensureJava, requiredJava } from './java.js';
 import { writeProperties } from './properties.js';
-import {
-  vanillaServerUrl,
-  paperBuild,
-  fabricLauncherUrl,
-  forgeInstallerUrl,
-  neoforgeInstallerUrl,
-} from './versions.js';
+import { vanillaServerUrl, paperBuild, fabricLauncherUrl, forgeInstallerUrl, neoforgeInstallerUrl } from './versions.js';
 
 const running = new Set();
 
@@ -44,9 +38,7 @@ function runInstaller(javaPath, installerJar, cwd, report) {
     p.stdout.on('data', onData);
     p.stderr.on('data', onData);
     p.on('error', reject);
-    p.on('close', (code) =>
-      code === 0 ? resolve() : reject(new Error(`El instalador terminó con código ${code}:\n${tail.join('\n')}`))
-    );
+    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`El instalador terminó con código ${code}:\n${tail.join('\n')}`))));
   });
 }
 
@@ -65,7 +57,10 @@ export function detectForgeLaunch(dir, loaderVersion = null) {
       return mb - ma || fs.statSync(path.join(dir, b.rel)).mtimeMs - fs.statSync(path.join(dir, a.rel)).mtimeMs;
     });
 
-  const shims = fs.readdirSync(dir).filter((f) => /-shim\.jar$/.test(f)).map((f) => ({ rel: f, name: f }));
+  const shims = fs
+    .readdirSync(dir)
+    .filter((f) => /-shim\.jar$/.test(f))
+    .map((f) => ({ rel: f, name: f }));
   if (shims.length) return { type: 'jar', jar: prefer(shims, (x) => x.name)[0].rel };
 
   const found = [];
@@ -80,9 +75,7 @@ export function detectForgeLaunch(dir, loaderVersion = null) {
   }
   if (found.length) return { type: 'args', argsDir: prefer(found, (x) => x.name)[0].rel };
 
-  const legacy = fs
-    .readdirSync(dir)
-    .find((f) => /^(forge|neoforge)-.*\.jar$/.test(f) && !f.includes('installer'));
+  const legacy = fs.readdirSync(dir).find((f) => /^(forge|neoforge)-.*\.jar$/.test(f) && !f.includes('installer'));
   if (legacy) return { type: 'jar', jar: legacy };
   throw new Error('No se encontró cómo iniciar el servidor después de instalar Forge/NeoForge');
 }
@@ -97,10 +90,7 @@ export function launchArgs(launch) {
 
 function writeDefaults(server) {
   const dir = serverDir(server.id);
-  fs.writeFileSync(
-    path.join(dir, 'eula.txt'),
-    `# Aceptada desde MC Hosting Panel el ${new Date().toISOString()}\n# https://aka.ms/MinecraftEULA\neula=true\n`
-  );
+  fs.writeFileSync(path.join(dir, 'eula.txt'), `# Aceptada desde MC Hosting Panel el ${new Date().toISOString()}\n# https://aka.ms/MinecraftEULA\neula=true\n`);
   const isNew = !fs.existsSync(path.join(dir, 'server.properties'));
   writeProperties(server.id, {
     'server-port': server.port,

@@ -98,7 +98,11 @@ function Ranking({ server, running }) {
                   <PlayerHead uuid={p.uuid} name={p.name} size={24} className="rank-head" />
                   <span className="rank-name">
                     {p.name || p.uuid.slice(0, 8)}
-                    {p.online && <span className="chip" style={{ marginLeft: '0.4rem' }}>En línea</span>}
+                    {p.online && (
+                      <span className="chip" style={{ marginLeft: '0.4rem' }}>
+                        En línea
+                      </span>
+                    )}
                   </span>
                   <span className="rank-bar" aria-hidden="true">
                     <i style={{ width: `${((p[metric] || 0) / max) * 100}%` }} />
@@ -140,7 +144,11 @@ function PlayerCard({ server, player, onInventory }) {
             {player.sessions ? ` · ${player.sessions} ${player.sessions === 1 ? 'sesión' : 'sesiones'}` : ''}
           </div>
         </div>
-        <button className="btn-sm" onClick={() => downloadPlayerCard({ server, player, accent: getComputedStyle(document.documentElement).getPropertyValue('--grass').trim() || '#3fcf63' })} title="Descarga una imagen con su cara y sus estadísticas para compartir">
+        <button
+          className="btn-sm"
+          onClick={() => downloadPlayerCard({ server, player, accent: getComputedStyle(document.documentElement).getPropertyValue('--grass').trim() || '#3fcf63' })}
+          title="Descarga una imagen con su cara y sus estadísticas para compartir"
+        >
           Descargar tarjeta
         </button>
         {player.playerdata && (

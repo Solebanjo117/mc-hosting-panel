@@ -28,7 +28,9 @@ export function saveZones(id, zones) {
     const n = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v)) : null);
     const [x1, z1, x2, z2] = [n(z.x1), n(z.z1), n(z.x2), n(z.z2)];
     if ([x1, z1, x2, z2].some((v) => v === null)) throw new HttpError(400, `Zona ${i + 1}: faltan coordenadas`);
-    const name = String(z.name || '').trim().slice(0, 40);
+    const name = String(z.name || '')
+      .trim()
+      .slice(0, 40);
     if (!name) throw new HttpError(400, `Zona ${i + 1}: ponle nombre`);
     return { id: String(z.id || `z${Date.now().toString(36)}${i}`), name, x1: Math.min(x1, x2), x2: Math.max(x1, x2), z1: Math.min(z1, z2), z2: Math.max(z1, z2), notify: z.notify !== false };
   });

@@ -114,27 +114,31 @@ function Shell({ username, onLogout }) {
                 + Nuevo
               </NavLink>
             </div>
-            {servers.length === 0 && <p className="faint small" style={{ padding: '0 0.5rem' }}>Todavía no hay servidores.</p>}
+            {servers.length === 0 && (
+              <p className="faint small" style={{ padding: '0 0.5rem' }}>
+                Todavía no hay servidores.
+              </p>
+            )}
             {servers.map((s) => {
               const st = serverState(s, runtime[s.id]);
               // El estado se ve en el borde eléctrico (color según el estado); apagado no lleva nada.
               return (
-              <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
-                {electric ? (
-                  <>
-                    {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
-                    <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
-                  </>
-                ) : (
-                  <i className={`dot ${st}`} aria-hidden="true" title={STATUS_LABEL[st] || st} />
-                )}
-                <span className="name">{s.name}</span>
-                {runtime[s.id]?.players?.length ? (
-                  <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>
-                    {runtime[s.id].players.length}
-                  </span>
-                ) : null}
-              </NavLink>
+                <NavLink key={s.id} to={`/servidor/${s.id}`} className="side-link">
+                  {electric ? (
+                    <>
+                      {ELECTRIC_STATES.has(st) && <Electric state={st} small />}
+                      <span className="sr-only">{STATUS_LABEL[st] || st}: </span>
+                    </>
+                  ) : (
+                    <i className={`dot ${st}`} aria-hidden="true" title={STATUS_LABEL[st] || st} />
+                  )}
+                  <span className="name">{s.name}</span>
+                  {runtime[s.id]?.players?.length ? (
+                    <span className="faint small tabular" title={`${runtime[s.id].players.length} jugando`}>
+                      {runtime[s.id].players.length}
+                    </span>
+                  ) : null}
+                </NavLink>
               );
             })}
           </div>
@@ -163,7 +167,11 @@ function Shell({ username, onLogout }) {
           >
             Cerrar sesión ({username})
           </button>
-          {!connected && <p className="small" style={{ color: 'var(--gold)', padding: '0.3rem 0.55rem' }}>Reconectando con el panel…</p>}
+          {!connected && (
+            <p className="small" style={{ color: 'var(--gold)', padding: '0.3rem 0.55rem' }}>
+              Reconectando con el panel…
+            </p>
+          )}
         </div>
       </aside>
 

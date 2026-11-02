@@ -41,10 +41,13 @@ describe('Usar un agente de playit que ya existe', { skip: !hasJava() && 'Se nec
   it('si rechazas la vinculación, explica que puedes usar tu agente', async () => {
     pl().claim.rejected = true;
     await c.ok('POST', '/api/integrations/playit/claim');
-    const st = await waitFor(async () => {
-      const x = await c.ok('GET', '/api/integrations/playit');
-      return x.claim?.state === 'error' ? x : null;
-    }, { message: 'el rechazo' });
+    const st = await waitFor(
+      async () => {
+        const x = await c.ok('GET', '/api/integrations/playit');
+        return x.claim?.state === 'error' ? x : null;
+      },
+      { message: 'el rechazo' }
+    );
     assert.match(st.claim.error, /Rechazaste la vinculación.*úsalo abajo en vez de crear otro/);
     pl().claim.rejected = false;
   });
@@ -52,7 +55,10 @@ describe('Usar un agente de playit que ya existe', { skip: !hasJava() && 'Se nec
   it('encuentra el agente del programa oficial en esta PC sin mostrar su clave', async () => {
     const r = await c.get('/api/integrations/playit');
     assert.equal(r.body.claimed, false);
-    assert.deepEqual(r.body.detected.map((d) => [d.id, d.hint]), [['official', '…3210']]);
+    assert.deepEqual(
+      r.body.detected.map((d) => [d.id, d.hint]),
+      [['official', '…3210']]
+    );
     assert.ok(!r.text.includes(OFFICIAL_KEY), 'la clave no sale del panel');
   });
 
@@ -75,7 +81,14 @@ describe('Usar un agente de playit que ya existe', { skip: !hasJava() && 'Se nec
     // Con ese agente se pueden vincular los túneles que ya tenía.
     const s = await panel.createServer({ name: 'Con agente oficial', type: 'paper', mcVersion: '1.21.4' });
     const id = crypto.randomUUID();
-    pl().tunnels.push({ id, name: 'Del programa', display_address: mocks.state.addPlayitAddress('java'), tunnel_type: 'minecraft-java', port_type: 'tcp', agent_config: { fields: [{ name: 'local_port', value: String(s.port) }] } });
+    pl().tunnels.push({
+      id,
+      name: 'Del programa',
+      display_address: mocks.state.addPlayitAddress('java'),
+      tunnel_type: 'minecraft-java',
+      port_type: 'tcp',
+      agent_config: { fields: [{ name: 'local_port', value: String(s.port) }] },
+    });
     const linked = await c.ok('POST', `/api/servers/${s.id}/playit/link`, { java: id });
     assert.equal(linked.java.id, id);
   });
@@ -84,7 +97,11 @@ describe('Usar un agente de playit que ya existe', { skip: !hasJava() && 'Se nec
     await c.ok('POST', '/api/integrations/playit/unlink');
     assert.ok(!fs.existsSync(secretFile()));
     const st = await c.ok('GET', '/api/integrations/playit');
-    assert.deepEqual(st.detected.map((d) => d.id), ['previous'], 'el anterior y el oficial son el mismo: aparece una vez');
+    assert.deepEqual(
+      st.detected.map((d) => d.id),
+      ['previous'],
+      'el anterior y el oficial son el mismo: aparece una vez'
+    );
     const r = await c.ok('POST', '/api/integrations/playit/use-agent', { source: 'previous' });
     assert.equal(r.agentId, 'agente-oficial-02');
     assert.ok(!fs.existsSync(path.join(panel.dataDir, 'playit', 'playit.anterior.toml')));
@@ -93,10 +110,20 @@ describe('Usar un agente de playit que ya existe', { skip: !hasJava() && 'Se nec
   it('acepta pegar el playit.toml completo de otro agente (y guarda el que reemplaza)', async () => {
     const r = await c.ok('POST', '/api/integrations/playit/use-agent', { secret: `# playit\nsecret_key = "${PANEL_KEY}"\nlast_update = 1\n` });
     assert.equal(r.agentId, 'agente-panel-0001');
-    assert.deepEqual(r.warnings.filter((w) => /Cierra el programa/.test(w)), [], 'no es el del programa oficial');
+    assert.deepEqual(
+      r.warnings.filter((w) => /Cierra el programa/.test(w)),
+      [],
+      'no es el del programa oficial'
+    );
     await c.ok('POST', '/api/integrations/playit/unlink');
     const st = await c.ok('GET', '/api/integrations/playit');
-    assert.deepEqual(st.detected.map((d) => [d.id, d.hint]), [['previous', '…6789'], ['official', '…3210']]);
+    assert.deepEqual(
+      st.detected.map((d) => [d.id, d.hint]),
+      [
+        ['previous', '…6789'],
+        ['official', '…3210'],
+      ]
+    );
   });
 
   it('una clave pegada con el agente ya borrado en playit.gg no rompe nada', async () => {

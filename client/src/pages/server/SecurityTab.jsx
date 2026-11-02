@@ -119,8 +119,8 @@ export default function SecurityTab({ server }) {
           {form.enabled && <span className="muted small">{p.connectionsLastMinute} conexiones en el último minuto</span>}
         </div>
         <p className="muted small" style={{ maxWidth: '75ch' }}>
-          Vigila las conexiones que registra la consola. Si una IP insiste demasiado, se bloquea un rato. Si llegan muchas conexiones de golpe desde
-          muchas IP, se activa la lista blanca hasta que pase. Las IP de tu casa, de Tailscale y del túnel de playit nunca se bloquean.
+          Vigila las conexiones que registra la consola. Si una IP insiste demasiado, se bloquea un rato. Si llegan muchas conexiones de golpe desde muchas IP, se activa la lista blanca hasta que
+          pase. Las IP de tu casa, de Tailscale y del túnel de playit nunca se bloquean.
         </p>
         <label className="check">
           <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
@@ -163,8 +163,7 @@ export default function SecurityTab({ server }) {
         </div>
         {form.enabled && (
           <p className="note">
-            Ten a tus amigos en la lista blanca (pestaña <Link to={`/servidor/${server.id}/jugadores`}>Jugadores</Link>): durante una emergencia solo
-            ellos pueden entrar.
+            Ten a tus amigos en la lista blanca (pestaña <Link to={`/servidor/${server.id}/jugadores`}>Jugadores</Link>): durante una emergencia solo ellos pueden entrar.
           </p>
         )}
 
@@ -203,8 +202,8 @@ export default function SecurityTab({ server }) {
       </section>
 
       <p className="faint small" style={{ maxWidth: '75ch' }}>
-        Ningún programa en tu PC puede detener un DDoS que satura todo tu internet: ese tráfico llena la conexión antes de llegar al servidor. La mejor
-        defensa es que no conozcan tu IP. <Link to="/guia#13-seguridad-y-ataques-ddos">Lee la sección de seguridad de la guía</Link>.
+        Ningún programa en tu PC puede detener un DDoS que satura todo tu internet: ese tráfico llena la conexión antes de llegar al servidor. La mejor defensa es que no conozcan tu IP.{' '}
+        <Link to="/guia#13-seguridad-y-ataques-ddos">Lee la sección de seguridad de la guía</Link>.
       </p>
     </div>
   );

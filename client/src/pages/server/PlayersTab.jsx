@@ -3,7 +3,6 @@ import { api } from '../../api.js';
 import { PlayerHead, useAction } from '../../ui.jsx';
 import ZonesSection from './ZonesSection.jsx';
 
-
 export default function PlayersTab({ server, runtime }) {
   const [data, setData] = useState(null);
   const [run, busy] = useAction();
@@ -20,8 +19,7 @@ export default function PlayersTab({ server, runtime }) {
   }, [server.id]);
   const positions = runtime?.positions || {};
 
-  const act = (action, target, reason, msg) =>
-    run(() => api(`/servers/${server.id}/players`, { method: 'POST', body: { action, name: target, reason } }).then(setData), msg);
+  const act = (action, target, reason, msg) => run(() => api(`/servers/${server.id}/players`, { method: 'POST', body: { action, name: target, reason } }).then(setData), msg);
 
   if (!data) return <p className="muted">Cargando…</p>;
   const running = runtime?.status === 'running';
@@ -151,7 +149,11 @@ function List({ title, hint, items, actionLabel, onAction, busy, detail, noAvata
   return (
     <section className="panel">
       <h2 style={{ marginBottom: hint ? '0.2rem' : '0.9rem' }}>{title}</h2>
-      {hint && <p className="muted small" style={{ marginBottom: '0.8rem' }}>{hint}</p>}
+      {hint && (
+        <p className="muted small" style={{ marginBottom: '0.8rem' }}>
+          {hint}
+        </p>
+      )}
       {items.length === 0 ? (
         <p className="faint small">Vacía.</p>
       ) : (

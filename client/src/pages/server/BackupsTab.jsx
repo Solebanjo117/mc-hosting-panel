@@ -89,12 +89,7 @@ export default function BackupsTab({ server, state }) {
                       <a className="btn btn-sm" href={`/api${base}/${encodeURIComponent(b.file)}/download`}>
                         Descargar
                       </a>{' '}
-                      <button
-                        className="btn-sm"
-                        disabled={!stopped}
-                        title={stopped ? '' : 'Apaga el servidor para restaurar'}
-                        onClick={() => setConfirm({ type: 'restore', b })}
-                      >
+                      <button className="btn-sm" disabled={!stopped} title={stopped ? '' : 'Apaga el servidor para restaurar'} onClick={() => setConfirm({ type: 'restore', b })}>
                         Restaurar
                       </button>{' '}
                       <button className="btn-sm btn-stop" onClick={() => setConfirm({ type: 'delete', b })}>

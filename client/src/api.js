@@ -23,8 +23,7 @@ export async function api(path, { method = 'GET', body, form, signal } = {}) {
   return data;
 }
 
-export const qs = (obj) =>
-  new URLSearchParams(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== '')).toString();
+export const qs = (obj) => new URLSearchParams(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== '')).toString();
 
 export function formatBytes(n) {
   if (n == null) return '';

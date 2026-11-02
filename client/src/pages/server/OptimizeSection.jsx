@@ -9,7 +9,9 @@ export default function OptimizeSection({ server, running }) {
   const toast = useToast();
 
   useEffect(() => {
-    api(`/servers/${server.id}/optimize`).then(setS).catch(() => {});
+    api(`/servers/${server.id}/optimize`)
+      .then(setS)
+      .catch(() => {});
   }, [server.id]);
   if (!s) return null;
 
@@ -82,7 +84,11 @@ export default function OptimizeSection({ server, running }) {
         )}
         {s.optimizedAt && <span className="faint small">Última optimización: {formatDate(s.optimizedAt)}</span>}
       </div>
-      {running && <p className="faint small" style={{ margin: 0 }}>Los cambios se aplican al reiniciar el servidor.</p>}
+      {running && (
+        <p className="faint small" style={{ margin: 0 }}>
+          Los cambios se aplican al reiniciar el servidor.
+        </p>
+      )}
     </section>
   );
 }

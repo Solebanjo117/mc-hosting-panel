@@ -26,7 +26,9 @@ export async function createServerRecord({ name, type, mcVersion, loaderVersion,
   if (!eula) throw new HttpError(400, 'Debes aceptar el EULA de Minecraft para crear un servidor');
   if (!SERVER_TYPES[type]) throw new HttpError(400, 'Tipo de servidor inválido');
   if (!mcVersion) throw new HttpError(400, 'Elige una versión de Minecraft');
-  const cleanName = String(name || '').trim().slice(0, 40);
+  const cleanName = String(name || '')
+    .trim()
+    .slice(0, 40);
   if (!cleanName) throw new HttpError(400, 'Ponle un nombre al servidor');
   const finalPort = await validatePort(port || nextFreePort());
   if (!(await isPortFree(finalPort))) throw new HttpError(409, `Otro programa ya está usando el puerto ${finalPort} en esta PC`);

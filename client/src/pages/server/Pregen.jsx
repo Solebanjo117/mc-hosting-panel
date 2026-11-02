@@ -23,7 +23,10 @@ export default function Pregen({ server, state }) {
   const timer = useRef();
   const on = state === 'running';
 
-  const load = () => api(`/servers/${server.id}/pregen`).then(setSt).catch(() => {});
+  const load = () =>
+    api(`/servers/${server.id}/pregen`)
+      .then(setSt)
+      .catch(() => {});
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,8 +68,8 @@ export default function Pregen({ server, state }) {
         Pregenerar el mundo
       </h2>
       <p className="muted small" style={{ margin: 0 }}>
-        Genera por adelantado el terreno alrededor del spawn con <strong>Chunky</strong>: explorar ya no da tirones y el mapa se puede dibujar entero. Usa
-        mucho procesador mientras trabaja: hazlo cuando nadie esté jugando o páusalo.
+        Genera por adelantado el terreno alrededor del spawn con <strong>Chunky</strong>: explorar ya no da tirones y el mapa se puede dibujar entero. Usa mucho procesador mientras trabaja: hazlo
+        cuando nadie esté jugando o páusalo.
       </p>
 
       {!st.supported ? (
@@ -195,8 +198,7 @@ export default function Pregen({ server, state }) {
               )}
               {est && (
                 <p className="faint small" style={{ margin: 0 }}>
-                  Unos {formatNumber(est.chunks)} chunks, aproximadamente {formatBytes(est.diskMb * 1024 * 1024)} en disco. Chunky muestra cuánto falta mientras
-                  trabaja.
+                  Unos {formatNumber(est.chunks)} chunks, aproximadamente {formatBytes(est.diskMb * 1024 * 1024)} en disco. Chunky muestra cuánto falta mientras trabaja.
                 </p>
               )}
               <div>

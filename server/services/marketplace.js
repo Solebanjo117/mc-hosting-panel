@@ -58,14 +58,8 @@ const q = (obj) => new URLSearchParams(Object.entries(obj).filter(([, v]) => v !
 // --- Búsqueda ----------------------------------------------------------------
 
 async function searchModrinth(server, profile, { query, offset, limit, sort }) {
-  const facets = [
-    [`project_type:${profile.kind}`],
-    profile.loaders.map((l) => `categories:${l}`),
-    [`versions:${server.mcVersion}`],
-  ];
-  const data = await getJson(
-    `${MODRINTH}/search?${q({ query, offset, limit, index: sort || 'downloads', facets: JSON.stringify(facets) })}`
-  );
+  const facets = [[`project_type:${profile.kind}`], profile.loaders.map((l) => `categories:${l}`), [`versions:${server.mcVersion}`]];
+  const data = await getJson(`${MODRINTH}/search?${q({ query, offset, limit, index: sort || 'downloads', facets: JSON.stringify(facets) })}`);
   return {
     total: data.total_hits,
     results: data.hits.map((h) => ({
@@ -123,12 +117,7 @@ export async function search(id, { source = 'modrinth', query = '', offset = 0, 
   const profile = contentProfile(server, kind);
   if (!profile.sources.includes(source)) throw new HttpError(400, `${source} no aplica para servidores ${server.type}`);
   const opts = { query, offset: Number(offset) || 0, limit: Math.min(Number(limit) || 20, 50), sort };
-  const res =
-    source === 'hangar'
-      ? await searchHangar(server, opts)
-      : source === 'curseforge'
-        ? await curseforge.search(server, profile, opts)
-        : await searchModrinth(server, profile, opts);
+  const res = source === 'hangar' ? await searchHangar(server, opts) : source === 'curseforge' ? await curseforge.search(server, profile, opts) : await searchModrinth(server, profile, opts);
   return { ...res, kind: profile.kind, sources: profile.sources };
 }
 
@@ -212,9 +201,7 @@ async function modrinthVersions(server, profile, projectId) {
       downloads: v.downloads,
       changelog: v.changelog || '',
       file: file ? { url: file.url, name: file.filename, size: file.size, sha1: file.hashes?.sha1 } : null,
-      dependencies: (v.dependencies || [])
-        .filter((d) => d.dependency_type === 'required' && d.project_id)
-        .map((d) => ({ projectId: d.project_id, versionId: d.version_id })),
+      dependencies: (v.dependencies || []).filter((d) => d.dependency_type === 'required' && d.project_id).map((d) => ({ projectId: d.project_id, versionId: d.version_id })),
     };
   });
 }

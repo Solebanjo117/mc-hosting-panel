@@ -54,10 +54,9 @@ export default function PanelSettings() {
           onSubmit={(e) => {
             e.preventDefault();
             if (pw.password !== pw.confirm) return toast('Las contraseñas no coinciden', 'error');
-            run(
-              () => api('/auth/password', { method: 'POST', body: { current: pw.current, password: pw.password } }),
-              'Contraseña cambiada. Las demás sesiones se cerraron.'
-            ).then(() => setPw({ current: '', password: '', confirm: '' }));
+            run(() => api('/auth/password', { method: 'POST', body: { current: pw.current, password: pw.password } }), 'Contraseña cambiada. Las demás sesiones se cerraron.').then(() =>
+              setPw({ current: '', password: '', confirm: '' })
+            );
           }}
         >
           <label className="field">
@@ -83,8 +82,7 @@ export default function PanelSettings() {
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Java</h2>
         <p className="muted small">
-          El panel descarga solo el Java que necesita cada versión de Minecraft (Eclipse Temurin) y lo guarda en <span className="mono">data\java</span>.
-          Puedes descargarlo por adelantado.
+          El panel descarga solo el Java que necesita cada versión de Minecraft (Eclipse Temurin) y lo guarda en <span className="mono">data\java</span>. Puedes descargarlo por adelantado.
         </p>
         <table className="table">
           <tbody>
@@ -128,10 +126,7 @@ export default function PanelSettings() {
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Puerto del panel</h2>
-        <p className="muted small">
-          Por dónde abres esta página (ahora {panelPort}). No lo abras en tu router: si quieres administrar desde fuera de casa usa Tailscale, como explica la
-          guía.
-        </p>
+        <p className="muted small">Por dónde abres esta página (ahora {panelPort}). No lo abras en tu router: si quieres administrar desde fuera de casa usa Tailscale, como explica la guía.</p>
         <div className="row">
           <input type="number" min={1024} max={65535} value={panelPort} onChange={(e) => setPanelPort(e.target.value)} style={{ width: 140 }} aria-label="Puerto del panel" />
           <button
@@ -145,8 +140,7 @@ export default function PanelSettings() {
 
       {info && (
         <p className="faint small">
-          MC Hosting Panel {info.version}, {info.system.cpuModel} ({info.system.cores} núcleos), {Math.round(info.system.totalMemMb / 1024)} GB de RAM,
-          equipo {info.system.hostname}.
+          MC Hosting Panel {info.version}, {info.system.cpuModel} ({info.system.cores} núcleos), {Math.round(info.system.totalMemMb / 1024)} GB de RAM, equipo {info.system.hostname}.
         </p>
       )}
     </div>
@@ -164,8 +158,12 @@ function PanelAccess() {
   const [log, setLog] = useState([]);
   const [run, busy] = useAction();
   useEffect(() => {
-    api('/system/network').then((n) => setMode(n.remoteAccess)).catch(() => {});
-    api('/auth/log').then(setLog).catch(() => {});
+    api('/system/network')
+      .then((n) => setMode(n.remoteAccess))
+      .catch(() => {});
+    api('/auth/log')
+      .then(setLog)
+      .catch(() => {});
   }, []);
   if (!mode) return null;
   const failed = log.filter((l) => !l.ok).length;
@@ -194,7 +192,11 @@ function PanelAccess() {
       </div>
       <div>
         <h3 style={{ marginBottom: '0.4rem' }}>Inicios de sesión recientes</h3>
-        {failed > 0 && <p className="note" style={{ marginBottom: '0.5rem' }}>{failed} intento(s) fallido(s). Si no fuiste tú, cambia la contraseña.</p>}
+        {failed > 0 && (
+          <p className="note" style={{ marginBottom: '0.5rem' }}>
+            {failed} intento(s) fallido(s). Si no fuiste tú, cambia la contraseña.
+          </p>
+        )}
         {log.length === 0 ? (
           <p className="faint small">Sin registros todavía.</p>
         ) : (
@@ -240,7 +242,10 @@ function PanelUpdate() {
   const toast = useToast();
   const timer = useRef();
 
-  const load = () => api('/system/update').then(setSt).catch(() => {});
+  const load = () =>
+    api('/system/update')
+      .then(setSt)
+      .catch(() => {});
   useEffect(() => {
     load();
     return () => clearTimeout(timer.current);
@@ -292,8 +297,8 @@ function PanelUpdate() {
       </div>
       {st.mode === 'manual' ? (
         <p className="muted small">
-          Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos
-          conservando la carpeta <span className="mono">data</span>.
+          Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos conservando la carpeta{' '}
+          <span className="mono">data</span>.
         </p>
       ) : (
         <p className="muted small">{MODE_HINT[st.mode]} Al terminar, los servidores encendidos se apagan con cuidado y el panel se vuelve a abrir solo.</p>
@@ -310,17 +315,23 @@ function PanelUpdate() {
               {c.changes.length > 12 && <li className="faint">y {c.changes.length - 12} cambios más</li>}
             </ul>
           )}
-          {c.notes && <p className="small" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{c.notes.slice(0, 800)}</p>}
-          {c.dirty && <p className="small" style={{ margin: 0 }}>Hay archivos del panel modificados a mano: si chocan con la versión nueva, git no actualizará.</p>}
+          {c.notes && (
+            <p className="small" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+              {c.notes.slice(0, 800)}
+            </p>
+          )}
+          {c.dirty && (
+            <p className="small" style={{ margin: 0 }}>
+              Hay archivos del panel modificados a mano: si chocan con la versión nueva, git no actualizará.
+            </p>
+          )}
         </div>
       )}
 
       {(st.running || st.log.length > 0) && (
         <div role="status" aria-live="polite" className="stack" style={{ gap: '0.3rem' }}>
           <strong className="small">{st.error ? 'No se pudo actualizar' : st.running ? st.step : restarting ? 'Reiniciando el panel…' : st.step}</strong>
-          <pre className="log-box">
-            {st.log.join('\n')}
-          </pre>
+          <pre className="log-box">{st.log.join('\n')}</pre>
         </div>
       )}
 
@@ -362,7 +373,9 @@ function StartWithWindows() {
   const [st, setSt] = useState(null);
   const [run, busy] = useAction();
   useEffect(() => {
-    api('/system/startup').then(setSt).catch(() => {});
+    api('/system/startup')
+      .then(setSt)
+      .catch(() => {});
   }, []);
   if (!st?.supported) return null;
   return (

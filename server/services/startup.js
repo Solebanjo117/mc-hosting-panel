@@ -57,7 +57,16 @@ export async function setStartup(enabled) {
   ].join('; ');
   await new Promise((resolve, reject) =>
     execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 30_000 }, (err, _out, stderr) =>
-      err ? reject(new HttpError(500, `No se pudo crear el acceso directo: ${String(stderr || err.message).trim().slice(0, 300)}`)) : resolve()
+      err
+        ? reject(
+            new HttpError(
+              500,
+              `No se pudo crear el acceso directo: ${String(stderr || err.message)
+                .trim()
+                .slice(0, 300)}`
+            )
+          )
+        : resolve()
     )
   );
   if (!fs.existsSync(link)) throw new HttpError(500, 'No se pudo crear el acceso directo de inicio');

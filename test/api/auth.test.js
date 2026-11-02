@@ -51,8 +51,7 @@ describe('Cuenta y sesión', () => {
   });
 
   it('la cookie de sesión es HttpOnly y lleva Secure cuando se entra por HTTPS (Caddy, Tailscale)', async () => {
-    const login = (headers) =>
-      fetch(`${panel.base}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(ADMIN) });
+    const login = (headers) => fetch(`${panel.base}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(ADMIN) });
     const plain = (await login({})).headers.get('set-cookie');
     assert.match(plain, /mcp_token=/);
     assert.match(plain, /HttpOnly/);
@@ -84,7 +83,10 @@ describe('Cuenta y sesión', () => {
     assert.equal((await atacante.post('/api/auth/login', ADMIN, via('198.51.100.7'))).status, 429, 'el atacante queda bloqueado');
     assert.equal((await new Client(panel.base).post('/api/auth/login', ADMIN, via('203.0.113.10'))).status, 200, 'los demás siguen entrando');
     const log = await otro.ok('GET', '/api/auth/log');
-    assert.ok(log.some((e) => e.ip === '198.51.100.7'), 'el historial muestra la IP real');
+    assert.ok(
+      log.some((e) => e.ip === '198.51.100.7'),
+      'el historial muestra la IP real'
+    );
   });
 
   it('cambiar la contraseña cierra las demás sesiones', async () => {
@@ -202,7 +204,11 @@ describe('Olvidé mi contraseña', () => {
       assert.match(r.out, /Se aplicará cuando abras el panel/);
       const pending = fs.readFileSync(path.join(dir, 'restablecer-contrasena.json'), 'utf8');
 
-      const p = await startPanel({ setup: false, db: { admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) } }, beforeStart: (d) => fs.writeFileSync(path.join(d, 'restablecer-contrasena.json'), pending) });
+      const p = await startPanel({
+        setup: false,
+        db: { admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) } },
+        beforeStart: (d) => fs.writeFileSync(path.join(d, 'restablecer-contrasena.json'), pending),
+      });
       try {
         await new Client(p.base).ok('POST', '/api/auth/login', { username: 'admin', password: 'al-abrir-123' });
       } finally {

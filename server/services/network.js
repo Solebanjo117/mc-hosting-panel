@@ -52,8 +52,6 @@ export async function externalCheck(host, port, edition = 'java') {
     version: data.version || null,
     players: data.players ? { online: data.players.online, max: data.players.max } : null,
     motd: data.motd?.clean?.join(' ') || null,
-    debug: data.debug
-      ? { ping: data.debug.ping, query: data.debug.query, srv: data.debug.srv, error: data.debug.error || null }
-      : null,
+    debug: data.debug ? { ping: data.debug.ping, query: data.debug.query, srv: data.debug.srv, error: data.debug.error || null } : null,
   };
 }

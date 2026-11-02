@@ -19,7 +19,9 @@ export default function Home() {
   usePageTitle('Tus servidores');
 
   useEffect(() => {
-    api('/system/info').then(setInfo).catch(() => {});
+    api('/system/info')
+      .then(setInfo)
+      .catch(() => {});
     const load = () =>
       api('/system/dashboard')
         .then((d) => setDash(Object.fromEntries(d.servers.map((s) => [s.id, s]))))
@@ -85,8 +87,7 @@ export default function Home() {
         <div className="empty">
           <h2>Crea tu primer servidor</h2>
           <p className="muted" style={{ maxWidth: '60ch' }}>
-            Elige el tipo (Vanilla, Paper para plugins, o Fabric/Forge/NeoForge para mods) y la versión. El panel descarga todo, incluido
-            Java, y lo deja listo para encender.
+            Elige el tipo (Vanilla, Paper para plugins, o Fabric/Forge/NeoForge para mods) y la versión. El panel descarga todo, incluido Java, y lo deja listo para encender.
           </p>
           <Link to="/nuevo" className="btn btn-go">
             Crear servidor
@@ -101,8 +102,7 @@ export default function Home() {
       )}
 
       <div className="note" style={{ marginTop: '2rem', maxWidth: '75ch' }}>
-        Para que tus amigos entren desde fuera de tu casa abre el puerto en tu router o crea un túnel de playit.gg en la pestaña Conexión.{' '}
-        <Link to="/guia">Ver la guía paso a paso</Link>.
+        Para que tus amigos entren desde fuera de tu casa abre el puerto en tu router o crea un túnel de playit.gg en la pestaña Conexión. <Link to="/guia">Ver la guía paso a paso</Link>.
       </div>
     </div>
   );
@@ -118,16 +118,7 @@ export function ServerIcon({ server, size = 48 }) {
       </span>
     );
   }
-  return (
-    <img
-      className="server-icon"
-      src={`/api/servers/${server.id}/icon?v=${server.iconAt || 0}`}
-      width={size}
-      height={size}
-      alt=""
-      onError={() => setFailed(true)}
-    />
-  );
+  return <img className="server-icon" src={`/api/servers/${server.id}/icon?v=${server.iconAt || 0}`} width={size} height={size} alt="" onError={() => setFailed(true)} />;
 }
 
 function ServerCard({ server, rt, dash }) {
@@ -169,9 +160,7 @@ function ServerCard({ server, rt, dash }) {
                 ))}
                 {players.length > 6 && <span className="heads-more">+{players.length - 6}</span>}
               </div>
-              <span className="small">
-                {players.length} jugando
-              </span>
+              <span className="small">{players.length} jugando</span>
             </>
           ) : (
             <span className="small faint">Nadie conectado</span>

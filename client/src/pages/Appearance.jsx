@@ -4,22 +4,7 @@ import { GrassBlock, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { useLive } from '../live.jsx';
 import { SkinModel } from '../Backdrops.jsx';
 import { playSound } from '../sounds.js';
-import {
-  ACCENTS,
-  BACKGROUNDS,
-  PALETTES,
-  FITS,
-  FONTS,
-  POSITIONS,
-  SIZES,
-  THEMES,
-  imageUrl,
-  removeBackground,
-  resetAppearance,
-  saveAppearance,
-  uploadBackground,
-  useAppearance,
-} from '../appearance.js';
+import { ACCENTS, BACKGROUNDS, PALETTES, FITS, FONTS, POSITIONS, SIZES, THEMES, imageUrl, removeBackground, resetAppearance, saveAppearance, uploadBackground, useAppearance } from '../appearance.js';
 
 /**
  * Perfil y apariencia: todo lo que cambia cómo se ve el panel. Se guarda en el servidor,
@@ -41,8 +26,7 @@ export default function Appearance({ username }) {
         <div className="grow">
           <h1>{username}</h1>
           <p className="muted small">
-            Administrador del panel. Lo que elijas aquí se guarda en el panel y se ve igual desde cualquier equipo.{' '}
-            <Link to="/ajustes">Cambiar la contraseña</Link>.
+            Administrador del panel. Lo que elijas aquí se guarda en el panel y se ve igual desde cualquier equipo. <Link to="/ajustes">Cambiar la contraseña</Link>.
           </p>
         </div>
         <button type="button" className="btn-sm" disabled={busy} onClick={() => run(() => resetAppearance(), 'Apariencia restablecida')}>
@@ -113,7 +97,12 @@ export default function Appearance({ username }) {
             <div className="row" style={{ alignItems: 'flex-start', gap: '1.5rem' }}>
               <label className="field" style={{ maxWidth: 320 }}>
                 <span>Nombre del jugador</span>
-                <input defaultValue={a.skinName} maxLength={16} placeholder="Tu nombre de Minecraft" onBlur={(e) => e.target.value.trim() !== a.skinName && save({ skinName: e.target.value.trim() })} />
+                <input
+                  defaultValue={a.skinName}
+                  maxLength={16}
+                  placeholder="Tu nombre de Minecraft"
+                  onBlur={(e) => e.target.value.trim() !== a.skinName && save({ skinName: e.target.value.trim() })}
+                />
                 <span>La skin se descarga de mc-heads.net; con cuentas de Bedrock o sin internet se ve el jugador por defecto.</span>
               </label>
               {a.skinName && <SkinModel name={a.skinName} size={4} />}
@@ -133,7 +122,15 @@ export default function Appearance({ username }) {
         <p className="muted small">El color de los botones principales, lo seleccionado y la barra de progreso.</p>
         <div className="swatches" role="radiogroup" aria-label="Color de acento">
           {ACCENTS.map((c) => (
-            <button key={c.id} type="button" role="radio" aria-checked={a.accent === c.id} className={`swatch${a.accent === c.id ? ' on' : ''}`} style={{ '--swatch': c.color }} onClick={() => save({ accent: c.id })}>
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={a.accent === c.id}
+              className={`swatch${a.accent === c.id ? ' on' : ''}`}
+              style={{ '--swatch': c.color }}
+              onClick={() => save({ accent: c.id })}
+            >
               <i aria-hidden="true" />
               {c.label}
             </button>
@@ -229,7 +226,15 @@ function CustomBackground({ a, busy, run, toast }) {
     >
       <input ref={input} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={(e) => pick(e.target.files?.[0])} />
       {url ? (
-        <button type="button" role="radio" aria-checked={a.background === 'custom'} className="bg-preview-btn" disabled={busy} onClick={() => run(() => saveAppearance({ background: 'custom' }))} aria-label="Usar tu foto de fondo">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={a.background === 'custom'}
+          className="bg-preview-btn"
+          disabled={busy}
+          onClick={() => run(() => saveAppearance({ background: 'custom' }))}
+          aria-label="Usar tu foto de fondo"
+        >
           <span className="bg-preview" data-bg="custom" aria-hidden="true" />
         </button>
       ) : (

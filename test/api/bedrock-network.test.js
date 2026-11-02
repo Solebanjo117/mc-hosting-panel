@@ -137,7 +137,10 @@ describe('Bedrock (Geyser) y revisión de red', { skip: !hasJava() && 'Se necesi
     assert.ok(mocks.state.requests.some((x) => x.path === `/mcsrvstat/3/203.0.113.7:${paper.port}`));
 
     await c.ok('GET', `/api/servers/${paper.id}/network/check?host=mc.midominio.com`);
-    assert.ok(mocks.state.requests.some((x) => x.path === '/mcsrvstat/3/mc.midominio.com'), 'un dominio sin puerto respeta el SRV');
+    assert.ok(
+      mocks.state.requests.some((x) => x.path === '/mcsrvstat/3/mc.midominio.com'),
+      'un dominio sin puerto respeta el SRV'
+    );
 
     mocks.state.mcsrvstatOnline = false;
     assert.equal((await c.ok('GET', `/api/servers/${paper.id}/network/check?host=1.2.3.4:25570`)).online, false);

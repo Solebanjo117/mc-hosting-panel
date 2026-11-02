@@ -58,8 +58,8 @@ export default function BedrockTab({ server, state }) {
 
   const intro = (
     <p className="muted" style={{ maxWidth: '70ch' }}>
-      Con Geyser, los jugadores de Minecraft Bedrock (celular, tablet, Windows 10/11, Xbox, PlayStation y Switch) entran a este mismo servidor junto
-      con los de Java. Bedrock usa su propio puerto, por <strong>UDP</strong>.
+      Con Geyser, los jugadores de Minecraft Bedrock (celular, tablet, Windows 10/11, Xbox, PlayStation y Switch) entran a este mismo servidor junto con los de Java. Bedrock usa su propio puerto, por{' '}
+      <strong>UDP</strong>.
     </p>
   );
 
@@ -77,9 +77,7 @@ export default function BedrockTab({ server, state }) {
   return (
     <div className="stack" style={{ gap: '1.5rem', maxWidth: 900 }}>
       {intro}
-      {info.compatibilityError && (
-        <div className="error-box">No se pudo revisar la compatibilidad en Modrinth: {info.compatibilityError}</div>
-      )}
+      {info.compatibilityError && <div className="error-box">No se pudo revisar la compatibilidad en Modrinth: {info.compatibilityError}</div>}
 
       <section className="panel stack">
         <div className="row">
@@ -182,13 +180,10 @@ export default function BedrockTab({ server, state }) {
           <section className="panel stack" style={{ gap: '0.6rem' }}>
             <h2 style={{ margin: 0 }}>Cómo entran los jugadores de Bedrock</h2>
             <p className="muted small">
-              En Minecraft Bedrock: Jugar, pestaña Servidores, Agregar servidor. Escriben la dirección y el puerto {info.port}. Para jugar fuera de tu
-              casa abre el puerto <strong>{info.port} UDP</strong> en el firewall y en el router; las direcciones y la prueba están en{' '}
-              <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
+              En Minecraft Bedrock: Jugar, pestaña Servidores, Agregar servidor. Escriben la dirección y el puerto {info.port}. Para jugar fuera de tu casa abre el puerto{' '}
+              <strong>{info.port} UDP</strong> en el firewall y en el router; las direcciones y la prueba están en <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
             </p>
-            <p className="muted small">
-              Xbox, PlayStation y Switch no dejan agregar servidores propios; para ellos activa la opción de abajo.
-            </p>
+            <p className="muted small">Xbox, PlayStation y Switch no dejan agregar servidores propios; para ellos activa la opción de abajo.</p>
           </section>
 
           <Broadcast server={server} info={info} xbox={xbox} on={on} onChange={load} />
@@ -217,8 +212,8 @@ function Broadcast({ server, info, xbox, on, onChange }) {
         {b.installed && <span className="chip">MCXboxBroadcast</span>}
       </div>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        MCXboxBroadcast conecta el servidor a una cuenta de Xbox. Tus amigos agregan esa cuenta como amiga y el servidor les aparece en la pestaña
-        Amigos de Minecraft, desde cualquier consola. Usa una cuenta de Microsoft secundaria, no la tuya principal: es una herramienta no oficial.
+        MCXboxBroadcast conecta el servidor a una cuenta de Xbox. Tus amigos agregan esa cuenta como amiga y el servidor les aparece en la pestaña Amigos de Minecraft, desde cualquier consola. Usa una
+        cuenta de Microsoft secundaria, no la tuya principal: es una herramienta no oficial.
       </p>
 
       {!b.installed ? (
@@ -248,8 +243,8 @@ function Broadcast({ server, info, xbox, on, onChange }) {
           ) : xbox?.state === 'authenticated' || xbox?.state === 'live' || b.gamertag ? (
             <p className="small">
               Anunciando con la cuenta <strong>{xbox?.gamertag || b.gamertag}</strong>
-              {xbox?.state === 'live' ? ' (sesión de Xbox activa)' : ''}. Tus amigos deben agregar <strong>{xbox?.gamertag || b.gamertag}</strong> como
-              amigo en Xbox; se acepta solo y el servidor aparece en Minecraft, pestaña Amigos.
+              {xbox?.state === 'live' ? ' (sesión de Xbox activa)' : ''}. Tus amigos deben agregar <strong>{xbox?.gamertag || b.gamertag}</strong> como amigo en Xbox; se acepta solo y el servidor
+              aparece en Minecraft, pestaña Amigos.
             </p>
           ) : (
             <p className="muted small">

@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
-import { serverDir, backupDir, DATA_DIR } from '../config.js';
+import { serverDir, backupDir } from '../config.js';
 import { db, getServer, updateServer } from '../db.js';
 import { bus } from '../lib/bus.js';
 import { HttpError, dirSize } from '../lib/util.js';
@@ -238,9 +238,7 @@ serversRouter.post('/:id/bedrock/disable', (req, res) => {
 
 serversRouter.post('/:id/bedrock/broadcast', async (req, res) => {
   const server = load(req);
-  const result = req.body?.enabled
-    ? await bedrock.enableBroadcast(server.id)
-    : bedrock.disableBroadcast(server.id, { forgetAccount: Boolean(req.body?.forgetAccount) });
+  const result = req.body?.enabled ? await bedrock.enableBroadcast(server.id) : bedrock.disableBroadcast(server.id, { forgetAccount: Boolean(req.body?.forgetAccount) });
   res.json({ broadcast: result, restartRequired: isRunning(server.id) });
 });
 

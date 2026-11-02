@@ -30,8 +30,12 @@ export default function LogsTab({ server }) {
   const base = `/servers/${server.id}/logs`;
 
   useEffect(() => {
-    api(base).then(setList).catch(() => {});
-    api(`${base}/diagnose`).then((d) => setDiagnosis(d.findings)).catch(() => {});
+    api(base)
+      .then(setList)
+      .catch(() => {});
+    api(`${base}/diagnose`)
+      .then((d) => setDiagnosis(d.findings))
+      .catch(() => {});
   }, [base]);
 
   useEffect(() => {
@@ -44,13 +48,8 @@ export default function LogsTab({ server }) {
     if (!view.file) return undefined;
     // Ignora respuestas de un archivo anterior si el usuario ya eligió otro.
     let current = true;
-    const req =
-      view.kind === 'crash'
-        ? api(`${base}/crash/${encodeURIComponent(view.file)}`)
-        : api(`${base}/file/${encodeURIComponent(view.file)}?${qs({ q: debounced })}`);
-    req
-      .then((c) => current && setContent({ ...c, kind: view.kind }))
-      .catch((err) => current && setContent({ error: err.message, kind: view.kind }));
+    const req = view.kind === 'crash' ? api(`${base}/crash/${encodeURIComponent(view.file)}`) : api(`${base}/file/${encodeURIComponent(view.file)}?${qs({ q: debounced })}`);
+    req.then((c) => current && setContent({ ...c, kind: view.kind })).catch((err) => current && setContent({ error: err.message, kind: view.kind }));
     return () => {
       current = false;
     };
@@ -145,15 +144,7 @@ export default function LogsTab({ server }) {
               <strong className="grow mono small" style={{ overflowWrap: 'anywhere' }}>
                 {view.file}
               </strong>
-              {view.kind === 'logs' && (
-                <input
-                  style={{ width: 240 }}
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  placeholder="Filtrar este archivo"
-                  aria-label="Filtrar este archivo"
-                />
-              )}
+              {view.kind === 'logs' && <input style={{ width: 240 }} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filtrar este archivo" aria-label="Filtrar este archivo" />}
               <a className="btn btn-sm" href={`/api${base}/raw/${view.kind}/${encodeURIComponent(view.file)}`}>
                 Descargar
               </a>

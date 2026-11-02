@@ -77,15 +77,21 @@ describe('Actualizar el panel', () => {
       const r = await panel.client.ok('POST', '/api/system/update/check');
       assert.equal(r.lastCheck.available, true);
       assert.equal(r.lastCheck.behind, 2);
-      assert.deepEqual(r.lastCheck.changes.map((c) => c.subject), ['Novedad: pregenerar el mundo', 'Arreglo: el mapa se ve bien']);
+      assert.deepEqual(
+        r.lastCheck.changes.map((c) => c.subject),
+        ['Novedad: pregenerar el mundo', 'Arreglo: el mapa se ve bien']
+      );
       assert.equal(r.lastCheck.dirty, false);
 
       const started = await panel.client.post('/api/system/update');
       assert.equal(started.status, 202);
-      const done = await waitFor(async () => {
-        const st = await panel.client.ok('GET', '/api/system/update');
-        return !st.running && st.done ? st : null;
-      }, { message: 'que termine de actualizar' });
+      const done = await waitFor(
+        async () => {
+          const st = await panel.client.ok('GET', '/api/system/update');
+          return !st.running && st.done ? st : null;
+        },
+        { message: 'que termine de actualizar' }
+      );
       assert.equal(done.error, null);
       assert.equal(git(repo.app, 'rev-parse', 'HEAD'), head);
       assert.ok(fs.existsSync(path.join(repo.app, 'nuevo.txt')));

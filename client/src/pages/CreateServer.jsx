@@ -92,14 +92,7 @@ export default function CreateServer() {
           <h2>Tipo de servidor</h2>
           <div className="type-grid" role="radiogroup">
             {TYPES.map((t) => (
-              <button
-                type="button"
-                key={t.id}
-                role="radio"
-                aria-checked={type === t.id}
-                className={`type-option${type === t.id ? ' on' : ''}`}
-                onClick={() => setType(t.id)}
-              >
+              <button type="button" key={t.id} role="radio" aria-checked={type === t.id} className={`type-option${type === t.id ? ' on' : ''}`} onClick={() => setType(t.id)}>
                 <strong>{t.label}</strong>
                 <span>{t.text}</span>
               </button>
@@ -141,19 +134,8 @@ export default function CreateServer() {
           )}
           <label className="field">
             <span>Memoria RAM: {memoryGb} GB</span>
-            <input
-              type="range"
-              min={1}
-              max={Math.max(2, totalGb - 2)}
-              step={0.5}
-              value={memoryGb}
-              onChange={(e) => setMemoryGb(Number(e.target.value))}
-              style={{ padding: 0, minHeight: 28 }}
-            />
-            <span>
-              {type === 'paper' || type === 'vanilla' ? '2–4 GB alcanzan para unos 10 jugadores.' : 'Con mods se recomiendan 6 GB o más.'} Deja
-              memoria libre para Windows.
-            </span>
+            <input type="range" min={1} max={Math.max(2, totalGb - 2)} step={0.5} value={memoryGb} onChange={(e) => setMemoryGb(Number(e.target.value))} style={{ padding: 0, minHeight: 28 }} />
+            <span>{type === 'paper' || type === 'vanilla' ? '2–4 GB alcanzan para unos 10 jugadores.' : 'Con mods se recomiendan 6 GB o más.'} Deja memoria libre para Windows.</span>
           </label>
           <label className="field">
             <span>Puerto (opcional)</span>

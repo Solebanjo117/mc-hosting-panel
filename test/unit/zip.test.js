@@ -35,7 +35,7 @@ describe('Extracción segura de .zip', () => {
   });
 
   it('rechaza enlaces simbólicos dentro del zip', () => {
-    const zip = rawZip({ 'normal.txt': 'ok', 'enlace': { data: '/etc/passwd', mode: 0o120777 } });
+    const zip = rawZip({ 'normal.txt': 'ok', enlace: { data: '/etc/passwd', mode: 0o120777 } });
     assert.equal(openZip(zip).entry('enlace').isSymlink, true);
     assert.equal(openZip(zip).entry('normal.txt').isSymlink, false);
     assert.throws(() => extractZip(zip, dir), /enlace simbólico/);
@@ -51,7 +51,10 @@ describe('Extracción segura de .zip', () => {
 
   it('no empieza si el total declarado no cabe en el disco', () => {
     const zip = rawZip({ 'a.txt': 'x'.repeat(1000) });
-    assert.throws(() => extractZip(zip, dir, { minFree: () => 1500, freeSpace: 1000 }), (err) => err.status === 507 && /espacio/.test(err.message));
+    assert.throws(
+      () => extractZip(zip, dir, { minFree: () => 1500, freeSpace: 1000 }),
+      (err) => err.status === 507 && /espacio/.test(err.message)
+    );
     assert.deepEqual(extractZip(zip, dir, { minFree: () => 3000, freeSpace: 1000 }), ['a.txt']);
   });
 
@@ -68,6 +71,9 @@ describe('Extracción segura de .zip', () => {
     assert.equal(zip.read('manifest.json').toString(), '{"a":1}');
     assert.equal(zip.read('no-existe'), null);
     assert.deepEqual(zip.names(), ['manifest.json']);
-    assert.throws(() => openZip(Buffer.from('esto no es un zip')), (err) => err.status === 400);
+    assert.throws(
+      () => openZip(Buffer.from('esto no es un zip')),
+      (err) => err.status === 400
+    );
   });
 });

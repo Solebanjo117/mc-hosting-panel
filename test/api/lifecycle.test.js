@@ -67,10 +67,13 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
   it('reinicia: se apaga y vuelve a encender solo', async () => {
     const before = (await panel.status(s.id)).pid;
     await c.ok('POST', `/api/servers/${s.id}/restart`);
-    await waitFor(async () => {
-      const rt = await panel.status(s.id);
-      return rt.status === 'running' && rt.pid !== before;
-    }, { timeout: 30000, message: 'que vuelva a encender' });
+    await waitFor(
+      async () => {
+        const rt = await panel.status(s.id);
+        return rt.status === 'running' && rt.pid !== before;
+      },
+      { timeout: 30000, message: 'que vuelva a encender' }
+    );
     assert.deepEqual((await panel.status(s.id)).players, [], 'al reiniciar no queda nadie conectado');
   });
 
@@ -128,7 +131,9 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
     fs.writeFileSync(path.join(dir, 'usercache.json'), JSON.stringify([{ name: 'Ana', uuid }]));
     fs.writeFileSync(
       path.join(dir, 'world', 'stats', `${uuid}.json`),
-      JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:play_time': 72000, 'minecraft:deaths': 3, 'minecraft:walk_one_cm': 50000 }, 'minecraft:mined': { 'minecraft:stone': 40, 'minecraft:dirt': 2 } } })
+      JSON.stringify({
+        stats: { 'minecraft:custom': { 'minecraft:play_time': 72000, 'minecraft:deaths': 3, 'minecraft:walk_one_cm': 50000 }, 'minecraft:mined': { 'minecraft:stone': 40, 'minecraft:dirt': 2 } },
+      })
     );
     const st = await c.ok('GET', `/api/servers/${s.id}/stats`);
     const ana = st.players.find((p) => p.uuid === uuid);

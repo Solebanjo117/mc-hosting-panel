@@ -21,8 +21,8 @@ export default function BackupMirror() {
     <section className="panel stack">
       <h2 style={{ margin: 0 }}>Copia de respaldos en la nube</h2>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Cada respaldo se copia también a la carpeta que elijas. Si es la de OneDrive, Google Drive, Dropbox o iCloud, su programa la sube solo y tus mundos
-        quedan a salvo fuera de esta PC. La Revisión de cada servidor avisa si la copia se queda atrás.
+        Cada respaldo se copia también a la carpeta que elijas. Si es la de OneDrive, Google Drive, Dropbox o iCloud, su programa la sube solo y tus mundos quedan a salvo fuera de esta PC. La Revisión
+        de cada servidor avisa si la copia se queda atrás.
       </p>
       {cfg.suggestions.length > 0 && (
         <div className="row" style={{ gap: '0.4rem' }}>

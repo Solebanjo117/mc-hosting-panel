@@ -99,9 +99,7 @@ export async function ensureJava(major, report = () => {}) {
     const ext = IS_WINDOWS ? 'zip' : 'tar.gz';
     const archive = path.join(TMP_DIR, `java-${major}-${Date.now()}.${ext}`);
     try {
-      await download(adoptiumUrl(major), archive, (p) =>
-        report({ message: `Descargando Java ${major}…`, progress: p })
-      );
+      await download(adoptiumUrl(major), archive, (p) => report({ message: `Descargando Java ${major}…`, progress: p }));
       report({ message: `Instalando Java ${major}…`, progress: null });
       fs.mkdirSync(target, { recursive: true });
       if (ext === 'zip') {

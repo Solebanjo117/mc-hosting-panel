@@ -132,9 +132,7 @@ export function worldFolders(id, name) {
 export function importWorld(id, zipPath, wantedName) {
   requireStopped(id);
   const zip = openZip(zipPath);
-  const levelDats = zip.entries
-    .filter((e) => !e.isDirectory && /(^|\/)level\.dat$/.test(e.name))
-    .sort((a, b) => a.name.split('/').length - b.name.split('/').length);
+  const levelDats = zip.entries.filter((e) => !e.isDirectory && /(^|\/)level\.dat$/.test(e.name)).sort((a, b) => a.name.split('/').length - b.name.split('/').length);
   if (!levelDats.length) throw new HttpError(400, 'El .zip no contiene un mundo de Minecraft (falta level.dat)');
   const prefix = levelDats[0].name.replace(/level\.dat$/, '');
   const base = validName(wantedName || prefix.split('/').filter(Boolean).pop() || 'mundo-importado');

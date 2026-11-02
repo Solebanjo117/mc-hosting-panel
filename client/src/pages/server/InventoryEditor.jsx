@@ -26,7 +26,9 @@ const BASE_KEYS = new Set(['Slot', 'id', 'count', 'Count']);
 const entry = (compound, name) => compound?.value?.find((e) => e.name === name);
 
 function versionAtLeast(v, target) {
-  const a = String(v).split(/[.-]/).map((x) => parseInt(x, 10) || 0);
+  const a = String(v)
+    .split(/[.-]/)
+    .map((x) => parseInt(x, 10) || 0);
   const b = target.split('.').map(Number);
   for (let i = 0; i < 3; i++) if ((a[i] || 0) !== b[i]) return (a[i] || 0) > b[i];
   return true;
@@ -231,24 +233,14 @@ export default function InventoryEditor({ serverId, version, path, title, runnin
               {tab === 'inv' ? (
                 <>
                   <div className="inv-top">
-                    <div className="inv-armor">
-                      {ARMOR.map((a) => slotEl(a.slot, a.label))}
-                    </div>
-                    <div className="inv-offhand">
-                      {slotEl(OFFHAND.slot, 'Mano 2')}
-                    </div>
+                    <div className="inv-armor">{ARMOR.map((a) => slotEl(a.slot, a.label))}</div>
+                    <div className="inv-offhand">{slotEl(OFFHAND.slot, 'Mano 2')}</div>
                   </div>
-                  <div className="inv-grid">
-                    {Array.from({ length: 27 }, (_, i) => slotEl(i + 9))}
-                  </div>
-                  <div className="inv-grid inv-hotbar">
-                    {Array.from({ length: 9 }, (_, i) => slotEl(i))}
-                  </div>
+                  <div className="inv-grid">{Array.from({ length: 27 }, (_, i) => slotEl(i + 9))}</div>
+                  <div className="inv-grid inv-hotbar">{Array.from({ length: 9 }, (_, i) => slotEl(i))}</div>
                 </>
               ) : (
-                <div className="inv-grid">
-                  {Array.from({ length: 27 }, (_, i) => slotEl(i))}
-                </div>
+                <div className="inv-grid">{Array.from({ length: 27 }, (_, i) => slotEl(i))}</div>
               )}
               <p className="faint small" style={{ marginTop: '0.6rem' }}>
                 Arrastra para mover. Toca una casilla para cambiarla.
@@ -266,9 +258,7 @@ export default function InventoryEditor({ serverId, version, path, title, runnin
                       <div className="mono faint small">{sel.id}</div>
                     </div>
                   </div>
-                  {sel.extra.length > 0 && (
-                    <p className="faint small">Tiene datos extra (encantamientos, nombre, durabilidad…). Se conservan; edítalos con “Editar datos”.</p>
-                  )}
+                  {sel.extra.length > 0 && <p className="faint small">Tiene datos extra (encantamientos, nombre, durabilidad…). Se conservan; edítalos con “Editar datos”.</p>}
                   <label className="field">
                     <span>Cantidad</span>
                     <input

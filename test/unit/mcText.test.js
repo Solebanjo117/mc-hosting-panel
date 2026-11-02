@@ -6,7 +6,10 @@ import { parseMc, parseConsole, plainMc, scramble, segStyle } from '../../client
 describe('Colores de Minecraft', () => {
   it('separa tramos por color y formato; un color nuevo quita la negrita', () => {
     const s = parseMc('§6Hola §lmundo§a!');
-    assert.deepEqual(s.map((x) => x.text), ['Hola ', 'mundo', '!']);
+    assert.deepEqual(
+      s.map((x) => x.text),
+      ['Hola ', 'mundo', '!']
+    );
     assert.equal(s[0].color, '#FFAA00');
     assert.equal(s[1].bold, true);
     assert.equal(s[2].bold, undefined);
@@ -24,7 +27,10 @@ describe('Colores de Minecraft', () => {
 
   it('entiende colores ANSI de la consola, incluidos los de 24 bits', () => {
     const s = parseConsole('\x1b[33mAviso\x1b[0m normal \x1b[38;2;10;20;30mrgb\x1b[m');
-    assert.deepEqual(s.map((x) => x.text), ['Aviso', ' normal ', 'rgb']);
+    assert.deepEqual(
+      s.map((x) => x.text),
+      ['Aviso', ' normal ', 'rgb']
+    );
     assert.equal(s[0].color, '#FFFF55');
     assert.equal(s[1].color, undefined);
     assert.equal(s[2].color, 'rgb(10,20,30)');
@@ -37,7 +43,10 @@ describe('Colores de Minecraft', () => {
   it('el texto mágico (§k) cambia cada letra por una al azar, conserva los espacios y el largo', () => {
     const out = scramble('Iker se la come');
     assert.equal(out.length, 'Iker se la come'.length);
-    assert.deepEqual([...out].map((c, i) => (c === ' ') === ('Iker se la come'[i] === ' ')), Array(15).fill(true));
+    assert.deepEqual(
+      [...out].map((c, i) => (c === ' ') === ('Iker se la come'[i] === ' ')),
+      Array(15).fill(true)
+    );
     assert.notEqual(scramble('abcdefghijklmnop'), 'abcdefghijklmnop');
   });
 });

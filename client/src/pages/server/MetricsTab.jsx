@@ -83,10 +83,7 @@ function LineChart({ title, points, valueKey, max, unit, format, range, hoverInd
           {refLine != null && <line x1={PAD.left} x2={W - PAD.right} y1={y(refLine)} y2={y(refLine)} className="chart-ref" />}
           {segments.map((seg, i) => (
             <g key={i}>
-              <path
-                className="chart-area"
-                d={`M${seg[0][0]},${y(0)} ${seg.map(([a, b]) => `L${a},${b}`).join(' ')} L${seg.at(-1)[0]},${y(0)} Z`}
-              />
+              <path className="chart-area" d={`M${seg[0][0]},${y(0)} ${seg.map(([a, b]) => `L${a},${b}`).join(' ')} L${seg.at(-1)[0]},${y(0)} Z`} />
               {seg.length > 1 ? (
                 <path className="chart-line" d={seg.map(([a, b], j) => `${j ? 'L' : 'M'}${a},${b}`).join(' ')} />
               ) : (
@@ -181,18 +178,7 @@ export default function MetricsTab({ server, runtime }) {
         </div>
       ) : (
         <div className="charts">
-          <LineChart
-            title="TPS (20 es perfecto)"
-            points={points}
-            valueKey="tps"
-            max={20}
-            unit=""
-            format={(v) => `${v} TPS`}
-            range={range}
-            hoverIndex={hover}
-            onHover={setHover}
-            emptyText={tpsNote}
-          />
+          <LineChart title="TPS (20 es perfecto)" points={points} valueKey="tps" max={20} unit="" format={(v) => `${v} TPS`} range={range} hoverIndex={hover} onHover={setHover} emptyText={tpsNote} />
           <LineChart
             title="Jugadores"
             points={points}
@@ -218,23 +204,10 @@ export default function MetricsTab({ server, runtime }) {
             onHover={setHover}
             emptyText="Sin datos en este periodo."
           />
-          <LineChart
-            title="CPU"
-            points={points}
-            valueKey="cpu"
-            max={100}
-            unit="%"
-            format={(v) => `${v}%`}
-            range={range}
-            hoverIndex={hover}
-            onHover={setHover}
-            emptyText="Sin datos en este periodo."
-          />
+          <LineChart title="CPU" points={points} valueKey="cpu" max={100} unit="%" format={(v) => `${v}%`} range={range} hoverIndex={hover} onHover={setHover} emptyText="Sin datos en este periodo." />
         </div>
       )}
-      <p className="faint small">
-        {tpsNote} Si el TPS baja de 18 los jugadores notan lag; si la memoria toca el límite seguido, súbela en Ajustes. El historial se guarda 7 días.
-      </p>
+      <p className="faint small">{tpsNote} Si el TPS baja de 18 los jugadores notan lag; si la memoria toca el límite seguido, súbela en Ajustes. El historial se guarda 7 días.</p>
     </div>
   );
 }

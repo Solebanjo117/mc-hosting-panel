@@ -58,10 +58,13 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       assert.match(st.claim.url, /^https:\/\/playit\.gg\/claim\/[0-9a-f]{10}$/);
       await waitFor(async () => (await c.ok('GET', '/api/integrations/playit')).claim.state === 'visited', { message: 'esperando al usuario' });
       pl().claim.accepted = true;
-      const done = await waitFor(async () => {
-        const x = await c.ok('GET', '/api/integrations/playit');
-        return x.claim?.state === 'done' && x.claimed ? x : null;
-      }, { timeout: 20000, message: 'la vinculación' });
+      const done = await waitFor(
+        async () => {
+          const x = await c.ok('GET', '/api/integrations/playit');
+          return x.claim?.state === 'done' && x.claimed ? x : null;
+        },
+        { timeout: 20000, message: 'la vinculación' }
+      );
       assert.equal(done.enabled, true);
       assert.equal(done.installed, true, 'descargó el agente');
       assert.match(fs.readFileSync(path.join(panel.dataDir, 'playit', 'playit.toml'), 'utf8'), /secret_key = "abcdef/);
@@ -76,7 +79,10 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       assert.equal(localPort(t), s.port);
       assert.equal(r.java.address, t.display_address);
       // En Windows el agente de prueba no es un .exe real: el panel avisa pero crea el túnel igual.
-      assert.deepEqual(r.warnings.filter((w) => !/agente de playit/.test(w)), []);
+      assert.deepEqual(
+        r.warnings.filter((w) => !/agente de playit/.test(w)),
+        []
+      );
       const req = mocks.requests('/playit/v1/tunnels/create').at(-1);
       assert.match(req.headers.authorization, /^Agent-Key abcdef/);
     });
@@ -103,7 +109,10 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       } finally {
         pl().createError = null; // que un fallo aquí no arrastre a las demás pruebas
       }
-      assert.ok(b.warnings.some((w) => /No se pudo crear el túnel Bedrock: playit.gg no aceptó la petición: PortAllocationFailed/.test(w)), b.warnings.join(' | '));
+      assert.ok(
+        b.warnings.some((w) => /No se pudo crear el túnel Bedrock: playit.gg no aceptó la petición: PortAllocationFailed/.test(w)),
+        b.warnings.join(' | ')
+      );
       assert.ok(b.java && !b.bedrock);
       const ok = await c.ok('POST', `/api/servers/${s.id}/playit`, {});
       assert.equal(ok.bedrock.type, 'minecraft-bedrock');
@@ -111,7 +120,19 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
 
     it('usa un túnel que creaste a mano (lo vincula, ajusta el puerto y nunca lo borra)', async () => {
       const id = crypto.randomUUID();
-      pl().tunnels.push({ id, name: 'Mi tunel', display_address: mocks.state.addPlayitAddress('java'), tunnel_type: 'minecraft-java', port_type: 'tcp', agent_config: { fields: [{ name: 'local_ip', value: '127.0.0.1' }, { name: 'local_port', value: '25565' }] } });
+      pl().tunnels.push({
+        id,
+        name: 'Mi tunel',
+        display_address: mocks.state.addPlayitAddress('java'),
+        tunnel_type: 'minecraft-java',
+        port_type: 'tcp',
+        agent_config: {
+          fields: [
+            { name: 'local_ip', value: '127.0.0.1' },
+            { name: 'local_port', value: '25565' },
+          ],
+        },
+      });
       const list = await c.ok('GET', '/api/integrations/playit/tunnels');
       assert.equal(list.tunnels.find((t) => t.id === id).usedBy, null);
       assert.equal(list.tunnels.find((t) => t.id === pl().tunnels[0].id).usedBy, 'Túnel Ñandú');
@@ -128,7 +149,10 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       assert.equal(r.java.id, id);
       assert.equal(localPort(pl().tunnels.find((t) => t.id === id)), s2.port, 'apunta el túnel al puerto del servidor');
       await c.ok('POST', `/api/servers/${s2.id}/playit`, { enabled: false });
-      assert.ok(pl().tunnels.some((t) => t.id === id), 'desvincular no borra un túnel que no creó el panel');
+      assert.ok(
+        pl().tunnels.some((t) => t.id === id),
+        'desvincular no borra un túnel que no creó el panel'
+      );
     });
 
     it('al activar, reutiliza un túnel libre que ya apunta al puerto del servidor', async () => {
@@ -146,10 +170,13 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       const r = await c.post('/api/integrations/playit/enabled', { enabled: true });
       if (r.status === 502) assert.match(r.body.error, /dañado o bloqueado por el antivirus/);
       else assert.equal(r.status, 200);
-      const st = await waitFor(async () => {
-        const x = await c.ok('GET', '/api/integrations/playit');
-        return x.status === 'error' ? x : null;
-      }, { message: 'estado de error' });
+      const st = await waitFor(
+        async () => {
+          const x = await c.ok('GET', '/api/integrations/playit');
+          return x.status === 'error' ? x : null;
+        },
+        { message: 'estado de error' }
+      );
       assert.ok(st.logs.some((l) => /No se pudo iniciar el agente/.test(l)));
       // Crear o reparar túneles sigue funcionando (es la API de playit, no el agente).
       const t = await c.ok('POST', `/api/servers/${s2.id}/playit`, {});
@@ -181,7 +208,7 @@ describe('playit.gg y dominios', { skip: !hasJava() && 'Se necesita Java' }, () 
       assert.equal(st.name, 'mc', 'acepta el nombre completo');
       assert.equal(st.effectiveTarget, 'playit');
       assert.equal(st.applied.ok, true, st.applied.error);
-      const java = pl().tunnels.find((t) => t.id === (panel.readDb().servers.find((x) => x.id === s.id).playit.javaTunnelId));
+      const java = pl().tunnels.find((t) => t.id === panel.readDb().servers.find((x) => x.id === s.id).playit.javaTunnelId);
       const slug = java.display_address.split('.')[0];
       const n = Number(slug.split('-')[1]);
       const recs = desecRecords();

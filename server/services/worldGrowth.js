@@ -66,7 +66,16 @@ export async function growth(id) {
   const latest = points.at(-1);
   return {
     points,
-    summary: latest && first ? { days: Math.max(1, Math.round((latest.t - first.t) / DAY)), bytes: latest.bytes, grewBytes: latest.bytes - first.bytes, regions: latest.regions, grewRegions: latest.regions - first.regions } : null,
+    summary:
+      latest && first
+        ? {
+            days: Math.max(1, Math.round((latest.t - first.t) / DAY)),
+            bytes: latest.bytes,
+            grewBytes: latest.bytes - first.bytes,
+            regions: latest.regions,
+            grewRegions: latest.regions - first.regions,
+          }
+        : null,
   };
 }
 

@@ -124,8 +124,6 @@ setInterval(() => {
     if (Date.now() - last < sched.intervalHours * 3600_000) continue;
     server.lastAutoBackup = new Date().toISOString();
     db.save();
-    createBackup(server.id, sched.mode || 'mundo', 'auto').catch((err) =>
-      console.error(`[backup auto ${server.name}]`, err.message)
-    );
+    createBackup(server.id, sched.mode || 'mundo', 'auto').catch((err) => console.error(`[backup auto ${server.name}]`, err.message));
   }
 }, 60_000).unref();

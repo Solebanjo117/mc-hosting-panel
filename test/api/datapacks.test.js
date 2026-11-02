@@ -18,7 +18,7 @@ describe('Datapacks', { skip: !hasJava() && 'Se necesita Java' }, () => {
   let c;
   let paper;
   let dir;
-  const D = (s, extra = '') => `/api/servers/${s.id}/content`;
+  const D = (s) => `/api/servers/${s.id}/content`;
   const K = 'kind=datapack';
 
   before(async () => {
@@ -40,7 +40,10 @@ describe('Datapacks', { skip: !hasJava() && 'Se necesita Java' }, () => {
     const r = await c.ok('GET', `${D(paper)}/search?${K}`);
     assert.equal(r.kind, 'datapack');
     assert.deepEqual(r.sources, ['modrinth'], 'Hangar no tiene datapacks');
-    assert.deepEqual(r.results.map((x) => [x.title, x.worldgen]).sort(), [['Herramientas Extra', false], ['Terralith', true]]);
+    assert.deepEqual(r.results.map((x) => [x.title, x.worldgen]).sort(), [
+      ['Herramientas Extra', false],
+      ['Terralith', true],
+    ]);
     const req = mocks.state.requests.findLast((x) => x.path === '/modrinth/search');
     assert.deepEqual(JSON.parse(new URLSearchParams(req.query).get('facets'))[0], ['project_type:datapack']);
     const plugins = await c.ok('GET', `${D(paper)}/search`);
@@ -55,7 +58,13 @@ describe('Datapacks', { skip: !hasJava() && 'Se necesita Java' }, () => {
     assert.deepEqual(fs.readdirSync(path.join(dir, 'world', 'datapacks')).sort(), ['herramientas-pack-1.0.0.zip', 'terralith-pack-1.0.0.zip']);
     const list = await c.ok('GET', `${D(paper)}/installed?${K}`);
     assert.equal(list.folder, 'world/datapacks');
-    assert.deepEqual(list.items.map((i) => [i.title, i.worldgen, i.source]), [['Herramientas Extra', false, 'modrinth'], ['Terralith', true, 'modrinth']]);
+    assert.deepEqual(
+      list.items.map((i) => [i.title, i.worldgen, i.source]),
+      [
+        ['Herramientas Extra', false, 'modrinth'],
+        ['Terralith', true, 'modrinth'],
+      ]
+    );
     const plugins = await c.ok('GET', `${D(paper)}/installed`);
     assert.ok(!plugins.items.some((i) => /pack/.test(i.filename)), 'no se mezclan con los plugins');
   });
@@ -105,11 +114,17 @@ describe('Datapacks', { skip: !hasJava() && 'Se necesita Java' }, () => {
     const file = path.join(dir, 'world', 'datapacks', 'herramientas-pack-1.0.0.zip');
     mocks.state.modrinthUpdates[sha1(fs.readFileSync(file))] = { project: 'herramientas-pack' };
     const ups = await c.ok('GET', `${D(paper)}/updates?${K}`);
-    assert.deepEqual(ups.map((u) => [u.filename, u.newVersion]), [['herramientas-pack-1.0.0.zip', '2.0.0']]);
+    assert.deepEqual(
+      ups.map((u) => [u.filename, u.newVersion]),
+      [['herramientas-pack-1.0.0.zip', '2.0.0']]
+    );
     const req = mocks.state.requests.findLast((x) => x.path === '/modrinth/version_files/update');
     assert.deepEqual(JSON.parse(req.body).loaders, ['datapack']);
     await c.ok('POST', `${D(paper)}/update?${K}`, ups[0]);
-    const files = fs.readdirSync(path.join(dir, 'world', 'datapacks')).filter((f) => f.endsWith('.zip')).sort();
+    const files = fs
+      .readdirSync(path.join(dir, 'world', 'datapacks'))
+      .filter((f) => f.endsWith('.zip'))
+      .sort();
     assert.deepEqual(files, ['herramientas-pack-2.0.0.zip', 'terralith-pack-1.0.0.zip']);
   });
 
@@ -119,7 +134,10 @@ describe('Datapacks', { skip: !hasJava() && 'Se necesita Java' }, () => {
     mocks.state.cf.files[8001] = cfFile(8001, 4001, 'datapack-cf.zip');
     await c.ok('PUT', '/api/integrations/curseforge', { apiKey: 'cf-key-123' });
     const r = await c.ok('GET', `${D(paper)}/search?${K}&source=curseforge`);
-    assert.deepEqual(r.results.map((x) => x.title), ['Datapack de CurseForge']);
+    assert.deepEqual(
+      r.results.map((x) => x.title),
+      ['Datapack de CurseForge']
+    );
     const req = mocks.state.requests.findLast((x) => x.path === '/curseforge/mods/search');
     assert.equal(new URLSearchParams(req.query).get('classId'), '6945');
     await c.ok('POST', `${D(paper)}/install?${K}`, { source: 'curseforge', projectId: '4001' });

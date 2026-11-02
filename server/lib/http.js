@@ -1,3 +1,4 @@
+// @ts-check
 import fs from 'node:fs';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -21,10 +22,17 @@ export function rewriteUrl(url) {
   return url;
 }
 
+/** @typedef {Omit<RequestInit, 'headers'> & { timeout?: number, headers?: Record<string, string> }} RequestOptions */
+
+/** @param {Record<string, string>} [extra] */
 function headers(extra = {}) {
   return { 'User-Agent': USER_AGENT, ...extra };
 }
 
+/**
+ * @param {string} rawUrl
+ * @param {RequestOptions} [options]
+ */
 async function request(rawUrl, { timeout = 20000, ...opts } = {}) {
   const url = rewriteUrl(rawUrl);
   let res;
@@ -49,11 +57,20 @@ async function request(rawUrl, { timeout = 20000, ...opts } = {}) {
   return res;
 }
 
+/**
+ * @param {string} url
+ * @param {RequestOptions} [opts]
+ * @returns {Promise<any>}
+ */
 export async function getJson(url, opts = {}) {
   const res = await request(url, { ...opts, headers: { Accept: 'application/json', ...opts.headers } });
   return res.json();
 }
 
+/**
+ * @param {string} url
+ * @param {RequestOptions} [opts]
+ */
 export async function getText(url, opts = {}) {
   const res = await request(url, opts);
   return res.text();
@@ -62,6 +79,9 @@ export async function getText(url, opts = {}) {
 /**
  * Descarga un archivo a disco reportando progreso (0-1).
  * Escribe primero a .part para no dejar archivos a medias.
+ * @param {string} url
+ * @param {string} dest
+ * @param {(progress: number | null, received: number, total: number) => void} [onProgress]
  */
 export async function download(url, dest, onProgress = () => {}) {
   const res = await request(url, { timeout: 30 * 60 * 1000 });

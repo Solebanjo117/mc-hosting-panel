@@ -92,9 +92,7 @@ export function getMetrics(id, range = '6h') {
   for (let t = Math.floor(start / bucketMs) * bucketMs; t <= end; t += bucketMs) {
     const list = buckets.get(t);
     out.push(
-      list
-        ? { t, cpu: avg(list, 'cpu'), mem: avg(list, 'mem'), tps: avg(list, 'tps'), players: Math.max(...list.map((p) => p.players)) }
-        : { t, cpu: null, mem: null, tps: null, players: null }
+      list ? { t, cpu: avg(list, 'cpu'), mem: avg(list, 'mem'), tps: avg(list, 'tps'), players: Math.max(...list.map((p) => p.players)) } : { t, cpu: null, mem: null, tps: null, players: null }
     );
   }
   const server = db.data.servers.find((s) => s.id === id);

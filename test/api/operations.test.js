@@ -82,7 +82,10 @@ describe('Horario de energía, mantenimiento, simulacro y copia en la nube', { s
     const again = await panel.waitStatus(s.id, 'running', 40000);
     assert.equal(again.status, 'running');
     const act = await c.ok('GET', `/api/servers/${s.id}/activity?filter=server`);
-    assert.ok(act.events.some((e) => e.type === 'drill'), 'queda en la línea de tiempo');
+    assert.ok(
+      act.events.some((e) => e.type === 'drill'),
+      'queda en la línea de tiempo'
+    );
     await panel.stop(s.id);
   });
 

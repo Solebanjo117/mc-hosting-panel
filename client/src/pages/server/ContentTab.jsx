@@ -107,14 +107,15 @@ function DatapackNotes({ server, pending, onApplied }) {
   return (
     <div className="stack" style={{ gap: '0.6rem' }}>
       <p className="muted small" style={{ margin: 0, maxWidth: '80ch' }}>
-        Los datapacks van en el mundo activo{world && (
+        Los datapacks van en el mundo activo
+        {world && (
           <>
             {' '}
             (<span className="mono">{world}</span>)
           </>
         )}
-        . Si creas otro mundo en <Link to={`/servidor/${server.id}/mundos`}>Mundos</Link>, puedes copiarle estos datapacks. Los que cambian la generación del mundo (biomas,
-        estructuras) solo afectan las zonas que todavía no se exploran.
+        . Si creas otro mundo en <Link to={`/servidor/${server.id}/mundos`}>Mundos</Link>, puedes copiarle estos datapacks. Los que cambian la generación del mundo (biomas, estructuras) solo afectan
+        las zonas que todavía no se exploran.
       </p>
       {pending && (
         <div className="note row" style={{ margin: 0, alignItems: 'center' }} role="status">
@@ -236,7 +237,11 @@ function Explore({ server, label, kind, onInstalled }) {
         </select>
       </div>
 
-      {error && <div className="error-box">No se pudo buscar en {SOURCE_LABEL[source]}: {error}</div>}
+      {error && (
+        <div className="error-box">
+          No se pudo buscar en {SOURCE_LABEL[source]}: {error}
+        </div>
+      )}
       {data && !sources.includes('curseforge') && page === 0 && !debounced && (
         <p className="faint small" style={{ margin: 0 }}>
           ¿Buscas algo que solo está en CurseForge? Agrega tu clave gratis en <Link to="/ajustes">Ajustes del panel</Link> y aparecerá como otra fuente.
@@ -252,11 +257,7 @@ function Explore({ server, label, kind, onInstalled }) {
               className="mcard-banner"
               onClick={() => setDetails(item)}
               aria-label={`Ver detalles de ${item.title}`}
-              style={
-                item.banner
-                  ? { backgroundImage: `url("${item.banner}")` }
-                  : { background: `linear-gradient(135deg, ${item.color || 'var(--slate-3)'}55, var(--slate-2))` }
-              }
+              style={item.banner ? { backgroundImage: `url("${item.banner}")` } : { background: `linear-gradient(135deg, ${item.color || 'var(--slate-3)'}55, var(--slate-2))` }}
             />
             <div className="mcard-body">
               <div className="mcard-head">
@@ -284,9 +285,21 @@ function Explore({ server, label, kind, onInstalled }) {
                 {item.follows != null && <span title="Seguidores">♥ {formatNumber(item.follows)}</span>}
                 {item.updated && <span title={formatDate(item.updated)}>Actualizado {ago(item.updated)}</span>}
               </div>
-              {item.clientOnly && <div className="small" style={{ color: 'var(--gold)' }}>Solo funciona en el cliente, no en el servidor</div>}
-              {item.worldgen && kind === 'datapack' && <div className="small" style={{ color: 'var(--gold)' }}>Cambia la generación del mundo: mejor antes de explorar</div>}
-              {item.blocked && <div className="small" style={{ color: 'var(--gold)' }}>El autor solo permite bajarlo desde CurseForge: se instala a mano</div>}
+              {item.clientOnly && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  Solo funciona en el cliente, no en el servidor
+                </div>
+              )}
+              {item.worldgen && kind === 'datapack' && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  Cambia la generación del mundo: mejor antes de explorar
+                </div>
+              )}
+              {item.blocked && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  El autor solo permite bajarlo desde CurseForge: se instala a mano
+                </div>
+              )}
             </div>
             <footer className="mcard-foot">
               <button className="btn-sm btn-ghost" onClick={() => setDetails(item)}>
@@ -377,39 +390,39 @@ function VersionPicker({ server, item, kind, onClose, onPick }) {
             <tbody>
               {versions.map((v) => (
                 <Fragment key={v.id}>
-                <tr>
-                  <td>
-                    {v.number}
-                    {v.changelog ? (
-                      <button type="button" className="btn-sm btn-ghost" style={{ marginLeft: '0.3rem' }} onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
-                        {open === v.id ? 'Ocultar cambios' : 'Qué cambió'}
-                      </button>
-                    ) : null}
-                  </td>
-                  <td className="muted">{v.type}</td>
-                  <td className="muted">{formatDate(v.date)}</td>
-                  <td className="muted">{v.file ? `${v.file.name} ${v.file.size ? `(${formatBytes(v.file.size)})` : ''}` : 'Descarga externa'}</td>
-                  <td className="actions">
-                    {v.file ? (
-                      <button className="btn-sm btn-go" onClick={() => onPick(v.id)}>
-                        Instalar
-                      </button>
-                    ) : (
-                      v.externalUrl && (
-                        <a className="btn btn-sm" href={v.externalUrl} target="_blank" rel="noreferrer">
-                          Abrir sitio
-                        </a>
-                      )
-                    )}
-                  </td>
-                </tr>
-                {open === v.id && (
                   <tr>
-                    <td colSpan={5}>
-                      <Changelog text={v.changelog} compact />
+                    <td>
+                      {v.number}
+                      {v.changelog ? (
+                        <button type="button" className="btn-sm btn-ghost" style={{ marginLeft: '0.3rem' }} onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
+                          {open === v.id ? 'Ocultar cambios' : 'Qué cambió'}
+                        </button>
+                      ) : null}
+                    </td>
+                    <td className="muted">{v.type}</td>
+                    <td className="muted">{formatDate(v.date)}</td>
+                    <td className="muted">{v.file ? `${v.file.name} ${v.file.size ? `(${formatBytes(v.file.size)})` : ''}` : 'Descarga externa'}</td>
+                    <td className="actions">
+                      {v.file ? (
+                        <button className="btn-sm btn-go" onClick={() => onPick(v.id)}>
+                          Instalar
+                        </button>
+                      ) : (
+                        v.externalUrl && (
+                          <a className="btn btn-sm" href={v.externalUrl} target="_blank" rel="noreferrer">
+                            Abrir sitio
+                          </a>
+                        )
+                      )}
                     </td>
                   </tr>
-                )}
+                  {open === v.id && (
+                    <tr>
+                      <td colSpan={5}>
+                        <Changelog text={v.changelog} compact />
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
               ))}
             </tbody>
@@ -453,7 +466,11 @@ function Installed({ server, label, kind, onChanged }) {
           Buscar actualizaciones
         </button>
       </div>
-      {updates && updates.length === 0 && <p className="small" style={{ color: 'var(--prismarine)' }}>Todo está actualizado.</p>}
+      {updates && updates.length === 0 && (
+        <p className="small" style={{ color: 'var(--prismarine)' }}>
+          Todo está actualizado.
+        </p>
+      )}
 
       {data.items.length === 0 ? (
         <div className="empty">

@@ -45,7 +45,13 @@ function sections(contentLabel) {
       id: 'contenido',
       label: contentLabel,
       // Los datapacks funcionan en cualquier servidor; en Vanilla son lo único que hay.
-      items: contentLabel === 'Datapacks' ? [{ path: 'contenido', label: 'Datapacks' }] : [{ path: 'contenido', label: contentLabel }, { path: 'datapacks', label: 'Datapacks' }],
+      items:
+        contentLabel === 'Datapacks'
+          ? [{ path: 'contenido', label: 'Datapacks' }]
+          : [
+              { path: 'contenido', label: contentLabel },
+              { path: 'datapacks', label: 'Datapacks' },
+            ],
     },
     {
       id: 'mundo',
@@ -163,11 +169,7 @@ export default function ServerView() {
         <div className="stack" style={{ marginBottom: '1.5rem', gap: '0.6rem' }}>
           <div className="error-box">La instalación falló: {server.installError}</div>
           <div className="row">
-            <button
-              className="btn-go"
-              disabled={busy}
-              onClick={() => run(() => api(`/servers/${id}/reinstall`, { method: 'POST', body: {} }))}
-            >
+            <button className="btn-go" disabled={busy} onClick={() => run(() => api(`/servers/${id}/reinstall`, { method: 'POST', body: {} }))}>
               Reintentar instalación
             </button>
             <span className="muted small">Revisa tu conexión a internet. Si sigue fallando, prueba otra versión en Ajustes.</span>
@@ -178,25 +180,25 @@ export default function ServerView() {
       <ServerNav base={base} groups={sections(contentLabel)} pathname={location.pathname} />
 
       <Suspense fallback={<PageLoading inline />}>
-      <Routes>
-        <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
-        <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
-        <Route path="datapacks" element={<ContentTab key="datapacks" server={server} label="Datapacks" kind="datapack" />} />
-        <Route path="jugadores" element={<PlayersTab server={server} runtime={rt} />} />
-        <Route path="archivos" element={<FilesTab server={server} state={state} />} />
-        <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
-        <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
-        <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
-        <Route path="actividad" element={<ActivityTab server={server} state={state} />} />
-        <Route path="chat" element={<ChatTab server={server} runtime={rt} state={state} />} />
-        <Route path="mapa" element={<MapTab server={server} state={state} />} />
-        <Route path="tareas" element={<SchedulesTab server={server} />} />
-        <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
-        <Route path="logs" element={<LogsTab server={server} />} />
-        <Route path="seguridad" element={<SecurityTab server={server} />} />
-        <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
-        <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
-      </Routes>
+        <Routes>
+          <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
+          <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
+          <Route path="datapacks" element={<ContentTab key="datapacks" server={server} label="Datapacks" kind="datapack" />} />
+          <Route path="jugadores" element={<PlayersTab server={server} runtime={rt} />} />
+          <Route path="archivos" element={<FilesTab server={server} state={state} />} />
+          <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
+          <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
+          <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
+          <Route path="actividad" element={<ActivityTab server={server} state={state} />} />
+          <Route path="chat" element={<ChatTab server={server} runtime={rt} state={state} />} />
+          <Route path="mapa" element={<MapTab server={server} state={state} />} />
+          <Route path="tareas" element={<SchedulesTab server={server} />} />
+          <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
+          <Route path="logs" element={<LogsTab server={server} />} />
+          <Route path="seguridad" element={<SecurityTab server={server} />} />
+          <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
+          <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
+        </Routes>
       </Suspense>
     </div>
   );

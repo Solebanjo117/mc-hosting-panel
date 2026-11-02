@@ -35,7 +35,10 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
     const plugins = await c.ok('GET', `${C(paper)}/search?query=luck`);
     assert.equal(plugins.kind, 'plugin');
     assert.deepEqual(plugins.sources, ['modrinth', 'hangar']);
-    assert.deepEqual(plugins.results.map((r) => r.title), ['LuckPerms']);
+    assert.deepEqual(
+      plugins.results.map((r) => r.title),
+      ['LuckPerms']
+    );
     const req = mocks.state.requests.findLast((r) => r.path === '/modrinth/search');
     const facets = JSON.parse(new URLSearchParams(req.query).get('facets'));
     assert.deepEqual(facets, [['project_type:plugin'], ['categories:paper', 'categories:spigot', 'categories:bukkit', 'categories:purpur'], ['versions:1.21.4']]);
@@ -59,10 +62,16 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
 
   it('instala un plugin de Modrinth en plugins/ y lo recuerda', async () => {
     const r = await c.ok('POST', `${C(paper)}/install`, { projectId: 'luckperms' });
-    assert.deepEqual(r.installed.map((x) => [x.title, x.version, x.file]), [['LuckPerms', '1.0.0', 'luckperms-1.0.0.jar']]);
+    assert.deepEqual(
+      r.installed.map((x) => [x.title, x.version, x.file]),
+      [['LuckPerms', '1.0.0', 'luckperms-1.0.0.jar']]
+    );
     assert.ok(fs.existsSync(path.join(panel.serverDir(paper.id), 'plugins', 'luckperms-1.0.0.jar')));
     const list = await c.ok('GET', `${C(paper)}/installed`);
-    assert.deepEqual(list.items.map((i) => [i.title, i.source, i.enabled]), [['LuckPerms', 'modrinth', true]]);
+    assert.deepEqual(
+      list.items.map((i) => [i.title, i.source, i.enabled]),
+      [['LuckPerms', 'modrinth', true]]
+    );
   });
 
   it('instala de Hangar; si el autor solo da un enlace externo, explica cómo bajarlo', async () => {
@@ -104,7 +113,13 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
 
   it('instala mods con sus dependencias obligatorias (Fabric API)', async () => {
     const r = await c.ok('POST', `${C(fabric)}/install`, { projectId: 'needs-api' });
-    assert.deepEqual(r.installed.map((x) => [x.projectId, x.dependency]), [['needs-api', false], ['P7dR8mSH', true]]);
+    assert.deepEqual(
+      r.installed.map((x) => [x.projectId, x.dependency]),
+      [
+        ['needs-api', false],
+        ['P7dR8mSH', true],
+      ]
+    );
     const items = (await c.ok('GET', `${C(fabric)}/installed`)).items;
     assert.deepEqual(items.map((i) => i.title).sort(), ['Fabric API', 'Mod que necesita Fabric API']);
     const again = await c.ok('POST', `${C(fabric)}/install`, { projectId: 'needs-api' });
@@ -131,7 +146,13 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
     assert.deepEqual(await c.ok('PUT', '/api/integrations/curseforge', { apiKey: ' cf-key-123 ' }), { hasKey: true, hint: '…-123' });
     const res = await c.ok('GET', `${C(fabric)}/search?source=curseforge&query=jei`);
     assert.ok(res.sources.includes('curseforge'));
-    assert.deepEqual(res.results.map((r) => [r.id, r.blocked]), [['1001', false], ['1002', true]]);
+    assert.deepEqual(
+      res.results.map((r) => [r.id, r.blocked]),
+      [
+        ['1001', false],
+        ['1002', true],
+      ]
+    );
     const req = mocks.state.requests.findLast((r) => r.path === '/curseforge/mods/search');
     const q = new URLSearchParams(req.query);
     assert.equal(q.get('gameId'), '432');

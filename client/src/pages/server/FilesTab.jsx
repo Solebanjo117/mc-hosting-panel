@@ -14,7 +14,11 @@ async function filesFromDrop(dataTransfer) {
   const readAll = (reader) =>
     new Promise((resolve) => {
       const all = [];
-      const next = () => reader.readEntries((batch) => (batch.length ? (all.push(...batch), next()) : resolve(all)), () => resolve(all));
+      const next = () =>
+        reader.readEntries(
+          (batch) => (batch.length ? (all.push(...batch), next()) : resolve(all)),
+          () => resolve(all)
+        );
       next();
     });
   async function walk(entry, prefix) {
@@ -127,8 +131,8 @@ export default function FilesTab({ server, state }) {
     >
       {running && data?.protected && (
         <p className="note">
-          El servidor está encendido y esta carpeta es del mundo: puedes ver, descargar y editar texto, pero no borrar, mover ni subir archivos aquí
-          (podría dañar el mundo). La carpeta datapacks sí se puede modificar.
+          El servidor está encendido y esta carpeta es del mundo: puedes ver, descargar y editar texto, pero no borrar, mover ni subir archivos aquí (podría dañar el mundo). La carpeta datapacks sí se
+          puede modificar.
         </p>
       )}
 
@@ -276,12 +280,7 @@ export default function FilesTab({ server, state }) {
               <thead>
                 <tr>
                   <th style={{ width: 34 }}>
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={(e) => setSelected(e.target.checked ? new Set(data.entries.map((x) => x.name)) : new Set())}
-                      aria-label="Seleccionar todo"
-                    />
+                    <input type="checkbox" checked={allSelected} onChange={(e) => setSelected(e.target.checked ? new Set(data.entries.map((x) => x.name)) : new Set())} aria-label="Seleccionar todo" />
                   </th>
                   <th>Nombre</th>
                   <th>Tamaño</th>
@@ -325,18 +324,18 @@ export default function FilesTab({ server, state }) {
                         ) : (
                           <span style={{ paddingLeft: '0.6rem' }}>{e.name}</span>
                         )}
-                        {isWorld && <span className="chip" style={{ marginLeft: '0.4rem' }}>mundo</span>}
+                        {isWorld && (
+                          <span className="chip" style={{ marginLeft: '0.4rem' }}>
+                            mundo
+                          </span>
+                        )}
                         {e.nbt && <span className="faint small"> datos NBT</span>}
                       </td>
                       <td className="muted">{e.type === 'dir' ? '' : formatBytes(e.size)}</td>
                       <td className="muted">{formatDate(e.mtime)}</td>
                       <td className="actions">
                         {e.name.toLowerCase().endsWith('.zip') && (
-                          <button
-                            className="btn-sm"
-                            disabled={busy}
-                            onClick={() => run(() => api(`${base}/extract`, { method: 'POST', body: { path: p } }).then(load), 'Archivo extraído')}
-                          >
+                          <button className="btn-sm" disabled={busy} onClick={() => run(() => api(`${base}/extract`, { method: 'POST', body: { path: p } }).then(load), 'Archivo extraído')}>
                             Extraer
                           </button>
                         )}{' '}
@@ -396,12 +395,15 @@ export default function FilesTab({ server, state }) {
           confirmLabel={picker === 'move' ? 'Mover aquí' : 'Copiar aquí'}
           onClose={() => setPicker(null)}
           onPick={(dest) =>
-            run(async () => {
-              const r = await api(`${base}/${picker}`, { method: 'POST', body: { paths: paths(selectedList), dest } });
-              setPicker(null);
-              await load();
-              return r;
-            }, picker === 'move' ? 'Movido' : 'Copiado')
+            run(
+              async () => {
+                const r = await api(`${base}/${picker}`, { method: 'POST', body: { paths: paths(selectedList), dest } });
+                setPicker(null);
+                await load();
+                return r;
+              },
+              picker === 'move' ? 'Movido' : 'Copiado'
+            )
           }
         />
       )}

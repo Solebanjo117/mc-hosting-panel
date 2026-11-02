@@ -1,3 +1,4 @@
+// @ts-check
 import zlib from 'node:zlib';
 
 /**
@@ -18,7 +19,7 @@ const ID = Object.fromEntries(TYPES.map((t, i) => [t, i]));
 
 function decodeMutf8(buf) {
   let out = '';
-  for (let i = 0; i < buf.length; ) {
+  for (let i = 0; i < buf.length;) {
     const a = buf[i++];
     if (a < 0x80) out += String.fromCharCode(a);
     else if ((a & 0xe0) === 0xc0) out += String.fromCharCode(((a & 0x1f) << 6) | (buf[i++] & 0x3f));

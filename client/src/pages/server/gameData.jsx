@@ -78,13 +78,7 @@ export function GamePicker({ serverId, kind, value, onChange }) {
 
   return (
     <div className="stack" style={{ gap: '0.4rem' }}>
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder={kind === 'item' ? 'Busca: diamante, espada, cama…' : 'Escribe para buscar…'}
-        autoComplete="off"
-        spellCheck={false}
-      />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={kind === 'item' ? 'Busca: diamante, espada, cama…' : 'Escribe para buscar…'} autoComplete="off" spellCheck={false} />
       {value && (
         <div className="small">
           Elegido: <strong>{selected?.name || value}</strong> <span className="mono faint">{value}</span>
@@ -99,14 +93,7 @@ export function GamePicker({ serverId, kind, value, onChange }) {
       {(data || error) && (
         <div className="picker-list" role="listbox">
           {results.map((x) => (
-            <button
-              type="button"
-              key={x.id}
-              role="option"
-              aria-selected={x.id === value}
-              className={`picker-item${x.id === value ? ' on' : ''}`}
-              onClick={() => onChange(x.id)}
-            >
+            <button type="button" key={x.id} role="option" aria-selected={x.id === value} className={`picker-item${x.id === value ? ' on' : ''}`} onClick={() => onChange(x.id)}>
               {kind === 'item' && <ItemIcon version={data.version} id={x.id} />}
               <span className="grow">{x.name || x.id}</span>
               <span className="mono faint small">{x.id}</span>
@@ -120,10 +107,13 @@ export function GamePicker({ serverId, kind, value, onChange }) {
               <span className="faint small">para mods: modid:objeto</span>
             </button>
           )}
-          {data && !results.length && !raw && <p className="faint small" style={{ padding: '0.5rem' }}>Sin resultados.</p>}
+          {data && !results.length && !raw && (
+            <p className="faint small" style={{ padding: '0.5rem' }}>
+              Sin resultados.
+            </p>
+          )}
         </div>
       )}
     </div>
   );
 }
-

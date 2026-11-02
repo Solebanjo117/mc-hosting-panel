@@ -42,7 +42,20 @@ describe('Formatos de modpack', () => {
   it('reconoce un modpack de CurseForge y su loader', () => {
     const f = write(
       'cf.zip',
-      rawZip({ 'manifest.json': '﻿' + JSON.stringify({ minecraft: { version: '1.20.1', modLoaders: [{ id: 'forge-47.3.0', primary: true }] }, name: 'ATM', version: '2.1', author: 'x', files: [{ projectID: 1, fileID: 2 }, { projectID: 3, fileID: 4, required: false }] }) })
+      rawZip({
+        'manifest.json':
+          '﻿' +
+          JSON.stringify({
+            minecraft: { version: '1.20.1', modLoaders: [{ id: 'forge-47.3.0', primary: true }] },
+            name: 'ATM',
+            version: '2.1',
+            author: 'x',
+            files: [
+              { projectID: 1, fileID: 2 },
+              { projectID: 3, fileID: 4, required: false },
+            ],
+          }),
+      })
     );
     assert.deepEqual(planFromPack(readPack(f)), {
       format: 'curseforge',

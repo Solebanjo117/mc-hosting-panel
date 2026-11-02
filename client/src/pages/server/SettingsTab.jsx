@@ -11,8 +11,28 @@ import MaintenanceSection from './MaintenanceSection.jsx';
 // Ajustes de server.properties que la gente cambia más seguido.
 const COMMON = [
   { key: 'max-players', label: 'Máximo de jugadores', type: 'number' },
-  { key: 'gamemode', label: 'Modo de juego', type: 'select', options: [['survival', 'Supervivencia'], ['creative', 'Creativo'], ['adventure', 'Aventura'], ['spectator', 'Espectador']] },
-  { key: 'difficulty', label: 'Dificultad', type: 'select', options: [['peaceful', 'Pacífico'], ['easy', 'Fácil'], ['normal', 'Normal'], ['hard', 'Difícil']] },
+  {
+    key: 'gamemode',
+    label: 'Modo de juego',
+    type: 'select',
+    options: [
+      ['survival', 'Supervivencia'],
+      ['creative', 'Creativo'],
+      ['adventure', 'Aventura'],
+      ['spectator', 'Espectador'],
+    ],
+  },
+  {
+    key: 'difficulty',
+    label: 'Dificultad',
+    type: 'select',
+    options: [
+      ['peaceful', 'Pacífico'],
+      ['easy', 'Fácil'],
+      ['normal', 'Normal'],
+      ['hard', 'Difícil'],
+    ],
+  },
   { key: 'pvp', label: 'PvP entre jugadores', type: 'bool' },
   { key: 'white-list', label: 'Lista blanca (solo jugadores aprobados)', type: 'bool' },
   { key: 'online-mode', label: 'Verificar cuentas de Minecraft (online-mode)', type: 'bool', hint: 'Desactívalo solo si sabes lo que haces: cualquiera podría entrar con cualquier nombre.' },
@@ -107,12 +127,15 @@ export default function SettingsTab({ server, state }) {
             className="btn-go"
             disabled={busy || !Object.keys(changed).length}
             onClick={() =>
-              run(async () => {
-                const r = await api(`/servers/${server.id}/properties`, { method: 'PUT', body: changed });
-                setProps(r.properties);
-                setOriginal(r.properties);
-                await refresh();
-              }, on ? 'Guardado. Reinicia el servidor para aplicar los cambios.' : 'Ajustes guardados')
+              run(
+                async () => {
+                  const r = await api(`/servers/${server.id}/properties`, { method: 'PUT', body: changed });
+                  setProps(r.properties);
+                  setOriginal(r.properties);
+                  await refresh();
+                },
+                on ? 'Guardado. Reinicia el servidor para aplicar los cambios.' : 'Ajustes guardados'
+              )
             }
           >
             Guardar ajustes del juego
@@ -181,8 +204,8 @@ export default function SettingsTab({ server, state }) {
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Clonar servidor</h2>
         <p className="muted small">
-          Crea una copia exacta (mundos, mods, plugins y configuración) con otro nombre y puerto. Úsala para probar mods o una versión nueva sin
-          arriesgar el original. Se puede clonar con el servidor encendido.
+          Crea una copia exacta (mundos, mods, plugins y configuración) con otro nombre y puerto. Úsala para probar mods o una versión nueva sin arriesgar el original. Se puede clonar con el servidor
+          encendido.
         </p>
         <div className="row">
           <input style={{ maxWidth: 320 }} value={cloneName} onChange={(e) => setCloneName(e.target.value)} maxLength={40} aria-label="Nombre de la copia" />
@@ -206,8 +229,8 @@ export default function SettingsTab({ server, state }) {
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Versión</h2>
         <p className="muted small">
-          Cambia de versión o reinstala el servidor. Tus mundos, configuración, mods y plugins se conservan, pero haz un respaldo antes: bajar de
-          versión puede dañar el mundo y los mods deben coincidir con la nueva versión.
+          Cambia de versión o reinstala el servidor. Tus mundos, configuración, mods y plugins se conservan, pero haz un respaldo antes: bajar de versión puede dañar el mundo y los mods deben
+          coincidir con la nueva versión.
         </p>
         <div>
           <button disabled={on || busy} onClick={() => setVersionModal(true)}>
@@ -254,7 +277,11 @@ function PropField({ field, value = '', onChange }) {
         <input type="checkbox" checked={value === 'true'} onChange={(e) => onChange(e.target.checked ? 'true' : 'false')} />
         <span>
           {field.label}
-          {field.hint && <span className="faint" style={{ display: 'block' }}>{field.hint}</span>}
+          {field.hint && (
+            <span className="faint" style={{ display: 'block' }}>
+              {field.hint}
+            </span>
+          )}
         </span>
       </label>
     );
@@ -327,10 +354,7 @@ function VersionModal({ server, onClose }) {
           className="btn-go"
           disabled={busy || !versions}
           onClick={() =>
-            run(
-              () => api(`/servers/${server.id}/reinstall`, { method: 'POST', body: { mcVersion: mc, loaderVersion: needsLoader ? loader : null } }),
-              'Instalación iniciada'
-            ).then(onClose)
+            run(() => api(`/servers/${server.id}/reinstall`, { method: 'POST', body: { mcVersion: mc, loaderVersion: needsLoader ? loader : null } }), 'Instalación iniciada').then(onClose)
           }
         >
           {mc === server.mcVersion ? 'Reinstalar' : `Cambiar a ${mc}`}

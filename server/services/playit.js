@@ -69,7 +69,9 @@ function readSecret() {
 }
 
 function log(line) {
-  const clean = String(line).replace(/\x1b\[[0-9;]*m/g, '').trim();
+  const clean = String(line)
+    .replace(/\x1b\[[0-9;]*m/g, '')
+    .trim();
   if (!clean) return;
   state.logs.push(`${new Date().toTimeString().slice(0, 8)} ${clean}`);
   if (state.logs.length > 300) state.logs.splice(0, state.logs.length - 300);
@@ -168,8 +170,7 @@ export async function installAgent() {
   return status();
 }
 
-const AGENT_BROKEN =
-  'No se pudo abrir el agente de playit: el archivo puede estar dañado o bloqueado por el antivirus. Reinstálalo en Ajustes del panel → Túneles de playit.gg.';
+const AGENT_BROKEN = 'No se pudo abrir el agente de playit: el archivo puede estar dañado o bloqueado por el antivirus. Reinstálalo en Ajustes del panel → Túneles de playit.gg.';
 
 export async function startAgent() {
   if (state.proc) return status();
@@ -381,12 +382,14 @@ async function agentId(refresh = false) {
 // --- Túneles por servidor ------------------------------------------------------
 
 function asciiName(text) {
-  return String(text)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\x20-\x7e]/g, '')
-    .trim()
-    .slice(0, 40) || 'Minecraft';
+  return (
+    String(text)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\x20-\x7e]/g, '')
+      .trim()
+      .slice(0, 40) || 'Minecraft'
+  );
 }
 
 async function createTunnel(server, kind, port) {
@@ -396,7 +399,12 @@ async function createTunnel(server, kind, port) {
       type: 'agent',
       data: {
         agent_id: await agentId(),
-        config: { fields: [{ name: 'local_ip', value: '127.0.0.1' }, { name: 'local_port', value: String(port) }] },
+        config: {
+          fields: [
+            { name: 'local_ip', value: '127.0.0.1' },
+            { name: 'local_port', value: String(port) },
+          ],
+        },
       },
     },
     enabled: true,
@@ -425,7 +433,12 @@ async function setLocalPort(tunnelId, port) {
   await call('/v1/tunnels/config', {
     tunnel_id: tunnelId,
     new_agent_id: null,
-    new_config: { fields: [{ name: 'local_ip', value: '127.0.0.1' }, { name: 'local_port', value: String(port) }] },
+    new_config: {
+      fields: [
+        { name: 'local_ip', value: '127.0.0.1' },
+        { name: 'local_port', value: String(port) },
+      ],
+    },
   });
 }
 

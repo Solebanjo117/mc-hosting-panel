@@ -20,7 +20,10 @@ describe('server.properties', () => {
     const out = serializeProperties(parseProperties(text));
     assert.ok(out.startsWith('#Minecraft server properties\n#Mon Oct 13\n'));
     assert.match(out, /motd=\\u00a76Hola \\u00f1\\nSegunda/);
-    assert.deepEqual(parseProperties(out).filter((e) => e.key), parseProperties(text).filter((e) => e.key));
+    assert.deepEqual(
+      parseProperties(out).filter((e) => e.key),
+      parseProperties(text).filter((e) => e.key)
+    );
   });
 
   it('escribe los caracteres especiales como \\uXXXX (Java lee el archivo como ISO-8859-1)', () => {

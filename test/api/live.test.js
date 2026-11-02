@@ -106,15 +106,18 @@ describe('Límites del WebSocket', () => {
     const code = closed(open[0]);
     open[0].close();
     await code;
-    await waitFor(async () => {
-      try {
-        const ws = await connect(panel);
-        open.push(ws);
-        return true;
-      } catch {
-        return false;
-      }
-    }, { message: 'que se libere el lugar' });
+    await waitFor(
+      async () => {
+        try {
+          const ws = await connect(panel);
+          open.push(ws);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+      { message: 'que se libere el lugar' }
+    );
     for (const ws of open) ws.close();
   });
 

@@ -74,9 +74,7 @@ export default function SchedulesTab({ server }) {
 
       {data.tasks.length === 0 ? (
         <div className="empty">
-          <p className="muted">
-            No hay tareas. Un reinicio diario con aviso y respaldo previo mantiene el servidor ligero y tus mundos a salvo.
-          </p>
+          <p className="muted">No hay tareas. Un reinicio diario con aviso y respaldo previo mantiene el servidor ligero y tus mundos a salvo.</p>
         </div>
       ) : (
         <div className="table-wrap">
@@ -108,11 +106,7 @@ export default function SchedulesTab({ server }) {
                   <td className="muted">{describeWhen(t.when)}</td>
                   <td className="muted">{t.running ? 'En curso…' : t.nextRun ? formatDate(t.nextRun) : '—'}</td>
                   <td className="actions">
-                    <button
-                      className="btn-sm"
-                      disabled={busy || t.running}
-                      onClick={() => run(() => api(`${base}/${t.id}/run`, { method: 'POST' }).then(load), 'Tarea iniciada')}
-                    >
+                    <button className="btn-sm" disabled={busy || t.running} onClick={() => run(() => api(`${base}/${t.id}/run`, { method: 'POST' }).then(load), 'Tarea iniciada')}>
                       Ejecutar ahora
                     </button>{' '}
                     <button className="btn-sm" onClick={() => setEditing(t)}>
@@ -255,11 +249,7 @@ function TaskEditor({ task, onClose, onSave }) {
             <div className="row" role="group" aria-label="Días">
               {DAYS.map((d, i) => (
                 <label key={d} className="check">
-                  <input
-                    type="checkbox"
-                    checked={form.days.includes(i)}
-                    onChange={(e) => set('days', e.target.checked ? [...form.days, i].sort() : form.days.filter((x) => x !== i))}
-                  />
+                  <input type="checkbox" checked={form.days.includes(i)} onChange={(e) => set('days', e.target.checked ? [...form.days, i].sort() : form.days.filter((x) => x !== i))} />
                   <span>{d}</span>
                 </label>
               ))}
@@ -286,7 +276,9 @@ function TaskEditor({ task, onClose, onSave }) {
           </label>
         )}
         {warn && form.whenType === 'daily' && Number(form.warnMinutes) > 0 && (
-          <p className="faint small">El servidor se {form.action === 'restart' ? 'reinicia' : 'apaga'} justo a las {form.time}; los avisos empiezan antes.</p>
+          <p className="faint small">
+            El servidor se {form.action === 'restart' ? 'reinicia' : 'apaga'} justo a las {form.time}; los avisos empiezan antes.
+          </p>
         )}
 
         {error && <div className="error-box">{error}</div>}

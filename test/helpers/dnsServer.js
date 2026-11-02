@@ -18,7 +18,14 @@ export async function startDnsServer(records) {
     }
     return { name: labels.join('.').toLowerCase(), end: p + 1 };
   };
-  const encodeName = (name) => Buffer.concat([...name.replace(/\.$/, '').split('.').map((l) => Buffer.concat([Buffer.from([l.length]), Buffer.from(l, 'ascii')])), Buffer.from([0])]);
+  const encodeName = (name) =>
+    Buffer.concat([
+      ...name
+        .replace(/\.$/, '')
+        .split('.')
+        .map((l) => Buffer.concat([Buffer.from([l.length]), Buffer.from(l, 'ascii')])),
+      Buffer.from([0]),
+    ]);
 
   sock.on('message', (msg, rinfo) => {
     try {

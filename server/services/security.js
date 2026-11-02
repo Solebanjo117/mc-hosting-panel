@@ -39,7 +39,9 @@ export function audit(id) {
 
   if (!has) {
     return {
-      findings: [{ id: 'not-generated', level: 'info', title: 'Enciende el servidor una vez', detail: 'Todavía no existe server.properties; la revisión estará disponible después del primer arranque.' }],
+      findings: [
+        { id: 'not-generated', level: 'info', title: 'Enciende el servidor una vez', detail: 'Todavía no existe server.properties; la revisión estará disponible después del primer arranque.' },
+      ],
       score: null,
     };
   }
@@ -65,7 +67,8 @@ export function audit(id) {
       id: 'whitelist',
       level: 'warning',
       title: 'Cualquier persona con la dirección puede entrar',
-      detail: 'La lista blanca está desactivada. Hay programas que recorren internet buscando servidores abiertos para destruir construcciones. Si el servidor es solo para amigos, actívala y agrégalos en Jugadores.',
+      detail:
+        'La lista blanca está desactivada. Hay programas que recorren internet buscando servidores abiertos para destruir construcciones. Si el servidor es solo para amigos, actívala y agrégalos en Jugadores.',
       fix: 'Activar lista blanca',
     });
   } else if (!enforce) {
@@ -171,7 +174,8 @@ export function audit(id) {
           id: 'ip',
           level: 'info',
           title: 'Tus jugadores ven la IP de tu casa',
-          detail: 'Si alguien quiere atacar tu internet (DDoS), necesita tu IP. Con un túnel de playit.gg tus amigos se conectan a playit y tu IP no se ve. Comparte la dirección solo con gente de confianza.',
+          detail:
+            'Si alguien quiere atacar tu internet (DDoS), necesita tu IP. Con un túnel de playit.gg tus amigos se conectan a playit y tu IP no se ve. Comparte la dirección solo con gente de confianza.',
         }
       : { id: 'ip', level: 'ok', title: 'Tu IP está oculta detrás de playit.gg', detail: 'Tus amigos se conectan al túnel, no a tu casa.' }
   );

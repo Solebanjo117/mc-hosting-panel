@@ -73,8 +73,7 @@ export default function WorldsTab({ server, state }) {
             {data.worlds.map((w) => (
               <tr key={w.name}>
                 <td>
-                  <span style={{ fontWeight: w.active ? 600 : 400 }}>{w.name}</span>{' '}
-                  {w.active && <span className="chip">En uso</span>}
+                  <span style={{ fontWeight: w.active ? 600 : 400 }}>{w.name}</span> {w.active && <span className="chip">En uso</span>}
                   {!w.generated && <span className="faint small"> Se genera al encender{data.seed ? ` (semilla ${data.seed})` : ''}</span>}
                   {w.datapacks > 0 && <span className="faint small"> · {w.datapacks === 1 ? '1 datapack' : `${w.datapacks} datapacks`}</span>}
                 </td>
@@ -117,8 +116,7 @@ export default function WorldsTab({ server, state }) {
         </table>
       </div>
       <p className="faint small">
-        Para regenerar el mundo con otra semilla sin perder el actual, crea un mundo nuevo: el anterior se conserva y puedes volver a él cuando quieras.
-        Haz un respaldo antes de borrar.
+        Para regenerar el mundo con otra semilla sin perder el actual, crea un mundo nuevo: el anterior se conserva y puedes volver a él cuando quieras. Haz un respaldo antes de borrar.
       </p>
 
       <WorldGrowth server={server} />
@@ -141,25 +139,9 @@ export default function WorldsTab({ server, state }) {
           }}
         />
       )}
-      {inventory && (
-        <InventoryEditor
-          serverId={server.id}
-          version={server.mcVersion}
-          path={inventory.path}
-          title={inventory.title}
-          running={on}
-          onClose={() => setInventory(null)}
-        />
-      )}
+      {inventory && <InventoryEditor serverId={server.id} version={server.mcVersion} path={inventory.path} title={inventory.title} running={on} onClose={() => setInventory(null)} />}
       {creating && (
-        <CreateWorld
-          base={base}
-          seed={data.seed}
-          activeDatapacks={data.worlds.find((w) => w.active)?.datapacks || 0}
-          activeName={data.active}
-          onClose={() => setCreating(false)}
-          onDone={setData}
-        />
+        <CreateWorld base={base} seed={data.seed} activeDatapacks={data.worlds.find((w) => w.active)?.datapacks || 0} activeName={data.active} onClose={() => setCreating(false)} onDone={setData} />
       )}
       {confirm && (
         <Confirm
@@ -204,8 +186,8 @@ function CreateWorld({ base, activeDatapacks, activeName, onClose, onDone }) {
         <label className="check">
           <input type="checkbox" checked={copyDatapacks} onChange={(e) => setCopyDatapacks(e.target.checked)} />
           <span>
-            Copiar los {activeDatapacks === 1 ? 'datapack' : `${activeDatapacks} datapacks`} de <span className="mono">{activeName}</span>. Así también se aplican los que
-            cambian la generación del mundo.
+            Copiar los {activeDatapacks === 1 ? 'datapack' : `${activeDatapacks} datapacks`} de <span className="mono">{activeName}</span>. Así también se aplican los que cambian la generación del
+            mundo.
           </span>
         </label>
       )}
@@ -216,12 +198,15 @@ function CreateWorld({ base, activeDatapacks, activeName, onClose, onDone }) {
           className="btn-go"
           disabled={busy || !name.trim()}
           onClick={() =>
-            run(async () => {
-              const r = await api(base, { method: 'POST', body: { name, seed, levelType, copyDatapacks } });
-              onDone(r);
-              onClose();
-              return r;
-            }, `Mundo preparado${copyDatapacks && activeDatapacks ? ' con sus datapacks' : ''}. Enciende el servidor para generarlo.`)
+            run(
+              async () => {
+                const r = await api(base, { method: 'POST', body: { name, seed, levelType, copyDatapacks } });
+                onDone(r);
+                onClose();
+                return r;
+              },
+              `Mundo preparado${copyDatapacks && activeDatapacks ? ' con sus datapacks' : ''}. Enciende el servidor para generarlo.`
+            )
           }
         >
           Crear mundo
@@ -242,8 +227,7 @@ function PlayerData({ serverId, world, onClose, onOpen, onInventory }) {
   return (
     <Modal title={`Datos de jugadores en ${world}`} onClose={onClose}>
       <p className="muted small">
-        Inventario, posición, vida, experiencia y modo de juego de cada jugador. Edítalos con el servidor apagado; si el jugador está conectado, el
-        servidor sobrescribe los cambios.
+        Inventario, posición, vida, experiencia y modo de juego de cada jugador. Edítalos con el servidor apagado; si el jugador está conectado, el servidor sobrescribe los cambios.
       </p>
       {error && <div className="error-box">{error}</div>}
       {!list && !error && <p className="muted">Cargando…</p>}

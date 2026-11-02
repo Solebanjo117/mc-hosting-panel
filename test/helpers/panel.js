@@ -33,7 +33,12 @@ export function findJava() {
   if (process.env.JAVA_HOME) candidates.push(path.join(process.env.JAVA_HOME, 'bin', exe));
   try {
     const out = execFileSync(process.platform === 'win32' ? 'where' : 'which', ['java'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    candidates.push(...out.split(/\r?\n/).map((s) => s.trim()).filter(Boolean));
+    candidates.push(
+      ...out
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
   } catch {
     /* sin java en el PATH */
   }

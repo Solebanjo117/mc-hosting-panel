@@ -47,7 +47,9 @@ function migrateDuckDns() {
   const dns = db.data.settings.dns;
   dns.duckdns = { token: old.token };
   if (old.enabled) dns.provider = 'duckdns';
-  const first = String(old.domains || '').split(',')[0]?.trim();
+  const first = String(old.domains || '')
+    .split(',')[0]
+    ?.trim();
   if (old.enabled && first) {
     for (const server of db.data.servers) {
       if (!server.dns) server.dns = { enabled: true, name: first, bedrockName: '', target: 'home' };
@@ -82,7 +84,12 @@ function zoneOf(s = settings()) {
 const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 
 function cleanDomain(value) {
-  return String(value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/\.$/, '');
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/\.$/, '');
 }
 
 /** Guarda el proveedor y comprueba que el token funcione antes de usarlo. */
@@ -209,7 +216,15 @@ const desec = {
     if (res.status === 401 || res.status === 403) return 'deSEC no aceptó el token. Crea uno nuevo en desec.io > Token Management.';
     if (res.status === 404) return 'Ese dominio no está en tu cuenta de deSEC. Revisa que esté bien escrito (por ejemplo tunombre.dedyn.io).';
     if (res.status === 429) return 'deSEC pidió esperar un poco (límite de peticiones). El panel lo vuelve a intentar en unos minutos.';
-    const detail = json?.detail || (Array.isArray(json) ? json.map((e) => (e && typeof e === 'object' ? Object.values(e).flat().join(' ') : '')).filter(Boolean).join('; ') : '') || text.slice(0, 200);
+    const detail =
+      json?.detail ||
+      (Array.isArray(json)
+        ? json
+            .map((e) => (e && typeof e === 'object' ? Object.values(e).flat().join(' ') : ''))
+            .filter(Boolean)
+            .join('; ')
+        : '') ||
+      text.slice(0, 200);
     return `deSEC respondió ${res.status}: ${detail}`;
   },
   async domainInfo(cfg) {
@@ -245,8 +260,7 @@ const cloudflare = {
   headers: (cfg) => ({ Authorization: `Bearer ${cfg.token}` }),
   explain(res, json) {
     const errors = (json?.errors || []).map((e) => `${e.message}${e.code ? ` (${e.code})` : ''}`).join('; ');
-    if (res.status === 401 || res.status === 403)
-      return `Cloudflare no aceptó el token${errors ? `: ${errors}` : ''}. Crea uno con la plantilla "Edit zone DNS" para tu dominio.`;
+    if (res.status === 401 || res.status === 403) return `Cloudflare no aceptó el token${errors ? `: ${errors}` : ''}. Crea uno con la plantilla "Edit zone DNS" para tu dominio.`;
     return `Cloudflare respondió ${res.status}${errors ? `: ${errors}` : ''}`;
   },
   async call(cfg, path, opts = {}) {
@@ -304,7 +318,11 @@ async function pushRecords(cfgAll, provider, records, previous = []) {
 async function removeRecords(server, cfgAll = settings()) {
   const applied = server.dns?.applied;
   if (!applied?.records?.length || applied.provider === 'duckdns') return;
-  if (applied.provider === 'desec') await desec.patch(cfgAll.desec, applied.records.map((r) => ({ ...r, delete: true })));
+  if (applied.provider === 'desec')
+    await desec.patch(
+      cfgAll.desec,
+      applied.records.map((r) => ({ ...r, delete: true }))
+    );
   if (applied.provider === 'cloudflare') for (const r of applied.records) await cloudflare.remove(cfgAll.cloudflare, r);
 }
 
@@ -312,7 +330,10 @@ async function removeRecords(server, cfgAll = settings()) {
 
 function makeResolver() {
   const resolver = new Resolver({ timeout: 5000, tries: 2 });
-  const servers = (process.env.MCP_DNS_SERVERS || '1.1.1.1,8.8.8.8').split(',').map((x) => x.trim()).filter(Boolean);
+  const servers = (process.env.MCP_DNS_SERVERS || '1.1.1.1,8.8.8.8')
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean);
   try {
     resolver.setServers(servers);
   } catch {
@@ -330,7 +351,7 @@ export async function resolveEndpoint(address, kind, resolver = makeResolver()) 
   const text = String(address || '').trim();
   if (!text) throw new HttpError(409, 'El túnel todavía no tiene dirección');
   const m = text.match(/^(.*?)(?::(\d{1,5}))?$/);
-  let host = m[1];
+  const host = m[1];
   let port = m[2] ? Number(m[2]) : null;
   let target = host;
   if (!port && kind === 'java') {
@@ -390,7 +411,10 @@ async function endpoints(server) {
 const LABEL_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 function cleanName(value, cfg = settings()) {
-  let name = String(value || '').trim().toLowerCase().replace(/\.$/, '');
+  let name = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, '');
   const zone = zoneOf(cfg);
   if (zone && (name === zone || name.endsWith(`.${zone}`))) name = name.slice(0, -zone.length).replace(/\.$/, '');
   return name;

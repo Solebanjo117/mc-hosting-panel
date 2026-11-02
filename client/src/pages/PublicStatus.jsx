@@ -39,7 +39,12 @@ export default function PublicStatus() {
       </div>
     );
   }
-  if (!data) return <div className="loading" aria-busy="true"><GrassBlock /></div>;
+  if (!data)
+    return (
+      <div className="loading" aria-busy="true">
+        <GrassBlock />
+      </div>
+    );
 
   const on = data.status === 'running';
   const motd = data.motd.split('\n');
@@ -52,7 +57,9 @@ export default function PublicStatus() {
         <div className="row" style={{ gap: '1rem', alignItems: 'flex-start' }}>
           {data.icon ? <img className="server-icon" src={`/api/public/${data.id}/icon?v=${data.icon}`} width={64} height={64} alt="" /> : <GrassBlock size={56} />}
           <div className="grow" style={{ minWidth: 0 }}>
-            <h1 className="nameplate" style={{ overflowWrap: 'anywhere' }}>{data.name}</h1>
+            <h1 className="nameplate" style={{ overflowWrap: 'anywhere' }}>
+              {data.name}
+            </h1>
             <div className="mc-list" style={{ marginTop: '0.5rem', maxWidth: 'none', padding: '6px 10px' }}>
               <div className="mc-list-text">
                 {motd.map((line, i) => (
@@ -119,7 +126,9 @@ export default function PublicStatus() {
                   <CopyButton text={java} label="Copiar dirección" />
                 </span>
                 <ol className="small muted" style={{ margin: 0, paddingLeft: '1.2rem' }}>
-                  <li>Abre Minecraft {data.mcVersion} (en el launcher elige esa versión{data.modpack ? ` con el modpack ${data.modpack.name}` : ''}).</li>
+                  <li>
+                    Abre Minecraft {data.mcVersion} (en el launcher elige esa versión{data.modpack ? ` con el modpack ${data.modpack.name}` : ''}).
+                  </li>
                   <li>Multijugador → Agregar servidor → pega la dirección.</li>
                   <li>Entra. {data.maxPlayers} lugares.</li>
                 </ol>
@@ -134,7 +143,9 @@ export default function PublicStatus() {
                   </span>
                   <CopyButton text={bedrock.host} label="Copiar dirección" />
                 </span>
-                <p className="small muted">Jugar → Servidores → Agregar servidor: dirección {bedrock.host} y puerto {bedrock.port}.</p>
+                <p className="small muted">
+                  Jugar → Servidores → Agregar servidor: dirección {bedrock.host} y puerto {bedrock.port}.
+                </p>
               </div>
             )}
           </section>
