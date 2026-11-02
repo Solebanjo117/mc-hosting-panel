@@ -24,6 +24,7 @@ export const db = new JsonStore(
       javaPaths: {}, // { "21": "C:\\ruta\\java.exe" } para usar un Java propio
     },
     servers: [],
+    users: [], // moderadores y observadores; el dueño es `admin`
   },
   { toDisk: (data) => sealPaths(data, SECRET_PATHS), fromDisk: (data) => unsealPaths(data, SECRET_PATHS) }
 );

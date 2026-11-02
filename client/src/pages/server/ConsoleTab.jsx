@@ -1,5 +1,6 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../auth.jsx';
 import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { Confirm, CopyButton, PlayerHead, useToast } from '../../ui.jsx';
@@ -28,6 +29,7 @@ function lineClass(line) {
 }
 
 export default function ConsoleTab({ server, runtime, state }) {
+  const { readOnly, isOwner } = useAuth();
   const { subscribeConsole } = useLive();
   const toast = useToast();
   const [lines, setLines] = useState([]);
@@ -46,12 +48,14 @@ export default function ConsoleTab({ server, runtime, state }) {
 
   useEffect(() => subscribeConsole(server.id, (l) => setLines(l)), [server.id, subscribeConsole]);
   useEffect(() => {
-    api('/system/network')
-      .then((n) => setLanIp(n.localIps.find((i) => !i.virtual)?.address || n.localIps[0]?.address))
-      .catch(() => {});
+    if (isOwner) {
+      api('/system/network')
+        .then((n) => setLanIp(n.localIps.find((i) => !i.virtual)?.address || n.localIps[0]?.address))
+        .catch(() => {});
+    }
     const t = setInterval(() => tick((n) => n + 1), 30_000);
     return () => clearInterval(t);
-  }, []);
+  }, [isOwner]);
 
   useLayoutEffect(() => {
     const el = outRef.current;
@@ -171,28 +175,34 @@ export default function ConsoleTab({ server, runtime, state }) {
             )}
             {lines.length > 0 && shown.length === 0 && <span className="faint">Ninguna línea coincide con el filtro.</span>}
             {shown.map((l) => (
-              <ConsoleLine key={l.n} text={l.text} nameRe={nameRe} onName={onName} />
+              <ConsoleLine key={l.n} text={l.text} nameRe={readOnly ? null : nameRe} onName={onName} />
             ))}
           </div>
-          <form
-            className="terminal-in"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(cmd);
-            }}
-          >
-            <span aria-hidden="true">&gt;</span>
-            <input
-              value={cmd}
-              onChange={(e) => setCmd(e.target.value)}
-              onKeyDown={onKey}
-              placeholder={running ? 'Escribe un comando (sin /) y presiona Enter' : 'Enciende el servidor para enviar comandos'}
-              disabled={!running}
-              aria-label="Comando"
-              spellCheck={false}
-              autoComplete="off"
-            />
-          </form>
+          {readOnly ? (
+            <p className="faint small" style={{ margin: '0.4rem 0 0' }}>
+              Tu cuenta solo puede mirar la consola.
+            </p>
+          ) : (
+            <form
+              className="terminal-in"
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(cmd);
+              }}
+            >
+              <span aria-hidden="true">&gt;</span>
+              <input
+                value={cmd}
+                onChange={(e) => setCmd(e.target.value)}
+                onKeyDown={onKey}
+                placeholder={running ? 'Escribe un comando (sin /) y presiona Enter' : 'Enciende el servidor para enviar comandos'}
+                disabled={!running}
+                aria-label="Comando"
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </form>
+          )}
         </section>
 
         <aside className="stack" style={{ alignContent: 'start' }}>
@@ -233,30 +243,32 @@ export default function ConsoleTab({ server, runtime, state }) {
               <dt>Tiempo encendido</dt>
               <dd>{runtime?.startedAt ? uptime(runtime.startedAt) : '—'}</dd>
             </div>
-            <div className="stat">
-              <dt>Dirección en tu casa</dt>
-              <dd>
-                {lanIp && (
-                  <span className="address">
-                    <span>
-                      {lanIp}:{server.port}
+            {isOwner && (
+              <div className="stat">
+                <dt>Dirección en tu casa</dt>
+                <dd>
+                  {lanIp && (
+                    <span className="address">
+                      <span>
+                        {lanIp}:{server.port}
+                      </span>
+                      <CopyButton text={`${lanIp}:${server.port}`} />
                     </span>
-                    <CopyButton text={`${lanIp}:${server.port}`} />
-                  </span>
-                )}
-                {lanIp && server.bedrock?.enabled && (
+                  )}
+                  {lanIp && server.bedrock?.enabled && (
+                    <span className="small muted stat-note">
+                      Bedrock: {lanIp}, puerto {server.bedrock.port}
+                    </span>
+                  )}
                   <span className="small muted stat-note">
-                    Bedrock: {lanIp}, puerto {server.bedrock.port}
+                    Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
                   </span>
-                )}
-                <span className="small muted stat-note">
-                  Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
-                </span>
-              </dd>
-            </div>
+                </dd>
+              </div>
+            )}
           </dl>
 
-          <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} />
+          {!readOnly && <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} canEdit={isOwner} />}
         </aside>
       </div>
       {menu && (

@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
-import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
 import { ServerIcon } from './Home.jsx';
 import { PageLoading, Progress, Status, useAction, usePageTitle } from '../ui.jsx';
 import ConsoleTab from './server/ConsoleTab.jsx';
+import { TABS_BY_ROLE, useAuth } from '../auth.jsx';
 
 // Cada pestaña se descarga la primera vez que se abre; la consola viene con el panel.
 const SettingsTab = lazy(() => import('./server/SettingsTab.jsx'));
@@ -91,6 +92,20 @@ function sections(contentLabel) {
   ];
 }
 
+/** Las pestañas que ve cada rol; el dueño las ve todas. */
+function visibleSections(groups, role) {
+  const allowed = TABS_BY_ROLE[role];
+  if (!allowed) return groups;
+  return groups.map((g) => ({ ...g, items: g.items.filter((i) => allowed.has(i.path)) })).filter((g) => g.items.length);
+}
+
+/** Una pestaña que la cuenta no puede abrir vuelve a la consola. */
+function Guard({ path, role, base, children }) {
+  const allowed = TABS_BY_ROLE[role];
+  if (allowed && !allowed.has(path)) return <Navigate to={base} replace />;
+  return children;
+}
+
 export default function ServerView() {
   const { id } = useParams();
   const { servers, runtime, installs, loaded } = useLive();
@@ -99,6 +114,7 @@ export default function ServerView() {
   const state = serverState(server, rt);
   const [run, busy] = useAction();
   const location = useLocation();
+  const { role, isOwner, canOperate } = useAuth();
   usePageTitle(server?.name);
 
   if (!server) {
@@ -131,7 +147,7 @@ export default function ServerView() {
             <span>{(server.memoryMb / 1024).toFixed(1).replace('.0', '')} GB de RAM</span>
           </div>
         </div>
-        {ready && (
+        {ready && canOperate && (
           <div className="row">
             {!on && (
               <button className="btn-go" disabled={busy} onClick={() => power('start')}>
@@ -169,35 +185,114 @@ export default function ServerView() {
         <div className="stack" style={{ marginBottom: '1.5rem', gap: '0.6rem' }}>
           <div className="error-box">La instalación falló: {server.installError}</div>
           <div className="row">
-            <button className="btn-go" disabled={busy} onClick={() => run(() => api(`/servers/${id}/reinstall`, { method: 'POST', body: {} }))}>
-              Reintentar instalación
-            </button>
+            {isOwner && (
+              <button className="btn-go" disabled={busy} onClick={() => run(() => api(`/servers/${id}/reinstall`, { method: 'POST', body: {} }))}>
+                Reintentar instalación
+              </button>
+            )}
             <span className="muted small">Revisa tu conexión a internet. Si sigue fallando, prueba otra versión en Ajustes.</span>
           </div>
         </div>
       )}
 
-      <ServerNav base={base} groups={sections(contentLabel)} pathname={location.pathname} />
+      <ServerNav base={base} groups={visibleSections(sections(contentLabel), role)} pathname={location.pathname} />
 
       <Suspense fallback={<PageLoading inline />}>
         <Routes>
           <Route index element={<ConsoleTab server={server} runtime={rt} state={state} />} />
-          <Route path="contenido" element={<ContentTab server={server} label={contentLabel} />} />
-          <Route path="datapacks" element={<ContentTab key="datapacks" server={server} label="Datapacks" kind="datapack" />} />
+          <Route
+            path="contenido"
+            element={
+              <Guard path="contenido" role={role} base={base}>
+                <ContentTab server={server} label={contentLabel} />
+              </Guard>
+            }
+          />
+          <Route
+            path="datapacks"
+            element={
+              <Guard path="datapacks" role={role} base={base}>
+                <ContentTab key="datapacks" server={server} label="Datapacks" kind="datapack" />
+              </Guard>
+            }
+          />
           <Route path="jugadores" element={<PlayersTab server={server} runtime={rt} />} />
-          <Route path="archivos" element={<FilesTab server={server} state={state} />} />
-          <Route path="respaldos" element={<BackupsTab server={server} state={state} />} />
-          <Route path="conexion" element={<NetworkTab server={server} state={state} />} />
-          <Route path="mundos" element={<WorldsTab server={server} state={state} />} />
+          <Route
+            path="archivos"
+            element={
+              <Guard path="archivos" role={role} base={base}>
+                <FilesTab server={server} state={state} />
+              </Guard>
+            }
+          />
+          <Route
+            path="respaldos"
+            element={
+              <Guard path="respaldos" role={role} base={base}>
+                <BackupsTab server={server} state={state} />
+              </Guard>
+            }
+          />
+          <Route
+            path="conexion"
+            element={
+              <Guard path="conexion" role={role} base={base}>
+                <NetworkTab server={server} state={state} />
+              </Guard>
+            }
+          />
+          <Route
+            path="mundos"
+            element={
+              <Guard path="mundos" role={role} base={base}>
+                <WorldsTab server={server} state={state} />
+              </Guard>
+            }
+          />
           <Route path="actividad" element={<ActivityTab server={server} state={state} />} />
           <Route path="chat" element={<ChatTab server={server} runtime={rt} state={state} />} />
-          <Route path="mapa" element={<MapTab server={server} state={state} />} />
-          <Route path="tareas" element={<SchedulesTab server={server} />} />
+          <Route
+            path="mapa"
+            element={
+              <Guard path="mapa" role={role} base={base}>
+                <MapTab server={server} state={state} />
+              </Guard>
+            }
+          />
+          <Route
+            path="tareas"
+            element={
+              <Guard path="tareas" role={role} base={base}>
+                <SchedulesTab server={server} />
+              </Guard>
+            }
+          />
           <Route path="rendimiento" element={<MetricsTab server={server} runtime={rt} />} />
           <Route path="logs" element={<LogsTab server={server} />} />
-          <Route path="seguridad" element={<SecurityTab server={server} />} />
-          <Route path="bedrock" element={<BedrockTab server={server} state={state} />} />
-          <Route path="ajustes" element={<SettingsTab server={server} state={state} />} />
+          <Route
+            path="seguridad"
+            element={
+              <Guard path="seguridad" role={role} base={base}>
+                <SecurityTab server={server} />
+              </Guard>
+            }
+          />
+          <Route
+            path="bedrock"
+            element={
+              <Guard path="bedrock" role={role} base={base}>
+                <BedrockTab server={server} state={state} />
+              </Guard>
+            }
+          />
+          <Route
+            path="ajustes"
+            element={
+              <Guard path="ajustes" role={role} base={base}>
+                <SettingsTab server={server} state={state} />
+              </Guard>
+            }
+          />
         </Routes>
       </Suspense>
     </div>

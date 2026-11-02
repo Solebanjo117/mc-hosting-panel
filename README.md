@@ -142,6 +142,7 @@ En la PC donde corre el panel abre **Restablecer contraseña**: en el menú Inic
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
 - Los tokens de DuckDNS, deSEC, Cloudflare y CurseForge se guardan cifrados (AES-256-GCM) en `db.json`; la clave está aparte, en `data/panel.key`. La llave de playit vive en `data/playit/playit.toml`. Aun así, no compartas la carpeta `data/`.
 - Los .zip que llegan de fuera (modpacks, mundos, archivos subidos, Java) se extraen con protección contra rutas `../`, enlaces simbólicos y "bombas zip" que declaran más de lo que cabe en el disco.
+- **Varias cuentas con roles**: el dueño (la cuenta que se crea al instalar) puede invitar desde **Ajustes del panel → Usuarios** a **moderadores** (en los servidores que les asignes: consola, jugadores, chat, respaldos, encender y apagar; sin archivos ni ajustes) y **observadores** (solo miran). Cada cuenta ve únicamente sus servidores, también en el WebSocket y el Rendimiento general; lo demás responde 404 o 403.
 - La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly` (con `Secure` cuando entras por HTTPS con Caddy o Tailscale). Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
 - Deja `online-mode=true` y usa la lista blanca si tu servidor es solo para amigos.
 

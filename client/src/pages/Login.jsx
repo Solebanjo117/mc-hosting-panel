@@ -34,7 +34,7 @@ export default function Login({ setup, onDone }) {
         </span>
         <div className="stack" style={{ gap: '0.4rem' }}>
           <h1>{setup ? 'Bienvenido' : 'MC Hosting Panel'}</h1>
-          <p className="muted">{setup ? 'Crea la cuenta de administrador. Solo tú podrás entrar al panel con ella.' : 'Entra para administrar tus servidores.'}</p>
+          <p className="muted">{setup ? 'Crea la cuenta del dueño del panel. Después podrás invitar a moderadores y observadores desde Ajustes.' : 'Entra para administrar tus servidores.'}</p>
         </div>
         <label className="field">
           <span>Usuario</span>

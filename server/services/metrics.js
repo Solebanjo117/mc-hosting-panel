@@ -175,15 +175,17 @@ export function getMetrics(id, range = '6h', end = Date.now()) {
 }
 
 /** Todos los servidores y la PC sobre la misma cuadrícula de tiempo, más los totales por intervalo. */
-export function getAllMetrics(range = '6h', end = Date.now()) {
+export function getAllMetrics(range = '6h', end = Date.now(), allow = () => true) {
   const g = grid(range, end);
-  const servers = db.data.servers.map((s) => ({
-    id: s.id,
-    name: s.name,
-    memoryLimitMb: s.memoryMb || null,
-    tpsAvailable: instance(s.id).tpsSupported,
-    points: bucketize(load(s.id), g, SERVER_KEYS),
-  }));
+  const servers = db.data.servers
+    .filter((s) => allow(s.id))
+    .map((s) => ({
+      id: s.id,
+      name: s.name,
+      memoryLimitMb: s.memoryMb || null,
+      tpsAvailable: instance(s.id).tpsSupported,
+      points: bucketize(load(s.id), g, SERVER_KEYS),
+    }));
   const host = { cores: os.cpus().length, totalMemMb: toMb(os.totalmem()), points: bucketize(load(HOST_ID), g, HOST_KEYS) };
   // Totales: suma de jugadores, RAM y CPU de los servidores; el peor TPS.
   const totals = host.points.map((hp, i) => {

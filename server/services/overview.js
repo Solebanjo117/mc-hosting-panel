@@ -21,32 +21,34 @@ async function worldBytes(id) {
   }
 }
 
-export async function overview(range = '6h') {
-  const metrics = getAllMetrics(range);
+export async function overview(range = '6h', allow = () => true) {
+  const metrics = getAllMetrics(range, Date.now(), allow);
   const since = Date.now() - DAY;
   const servers = await Promise.all(
-    db.data.servers.map(async (s) => {
-      const inst = instance(s.id);
-      const snap = inst.snapshot();
-      const events = eventsOf(s.id);
-      const backup = listBackups(s.id)[0] || null;
-      return {
-        id: s.id,
-        name: s.name,
-        type: s.type,
-        mcVersion: s.mcVersion,
-        memoryLimitMb: s.memoryMb || null,
-        status: s.installState === 'ready' ? snap.status : s.installState,
-        players: snap.players.length,
-        startedAt: snap.startedAt,
-        cpu: snap.stats?.cpu ?? null,
-        memMb: snap.stats?.memoryMb ?? null,
-        tps: snap.tps,
-        crashes24h: events.filter((e) => e.type === 'crash' && e.t >= since).length,
-        lastBackupAt: backup?.createdAt || null,
-        worldBytes: await worldBytes(s.id),
-      };
-    })
+    db.data.servers
+      .filter((s) => allow(s.id))
+      .map(async (s) => {
+        const inst = instance(s.id);
+        const snap = inst.snapshot();
+        const events = eventsOf(s.id);
+        const backup = listBackups(s.id)[0] || null;
+        return {
+          id: s.id,
+          name: s.name,
+          type: s.type,
+          mcVersion: s.mcVersion,
+          memoryLimitMb: s.memoryMb || null,
+          status: s.installState === 'ready' ? snap.status : s.installState,
+          players: snap.players.length,
+          startedAt: snap.startedAt,
+          cpu: snap.stats?.cpu ?? null,
+          memMb: snap.stats?.memoryMb ?? null,
+          tps: snap.tps,
+          crashes24h: events.filter((e) => e.type === 'crash' && e.t >= since).length,
+          lastBackupAt: backup?.createdAt || null,
+          worldBytes: await worldBytes(s.id),
+        };
+      })
   );
   const running = servers.filter((s) => s.status === 'running');
   return {

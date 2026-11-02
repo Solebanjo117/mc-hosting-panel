@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import { DIST_DIR, VERSION } from './config.js';
 import { db } from './db.js';
 import { authRouter, requireAuth } from './auth.js';
+import { authorize } from './lib/access.js';
 import { serversRouter } from './routes/servers.js';
 import { filesRouter } from './routes/files.js';
 import { backupsRouter } from './routes/backups.js';
@@ -51,7 +52,7 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, version: VERSION, upt
 app.use('/api/auth', authRouter);
 app.use('/api/appearance', appearancePublic);
 app.use('/api/public', publicRouter);
-app.use('/api', requireAuth);
+app.use('/api', requireAuth, authorize);
 app.use('/api/system', systemRouter);
 app.use('/api/servers', serversRouter);
 app.use('/api/servers/:id/files', filesRouter);

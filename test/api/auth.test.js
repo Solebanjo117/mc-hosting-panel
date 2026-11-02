@@ -19,11 +19,11 @@ describe('Cuenta y sesión', () => {
 
   it('la primera vez pide crear la cuenta, valida usuario y contraseña, y solo deja hacerlo una vez', async () => {
     const c = new Client(panel.base);
-    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: true, authenticated: false, username: null });
+    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: true, authenticated: false, username: null, role: null, servers: null });
     assert.equal((await c.post('/api/auth/setup', { username: 'a', password: 'clave-segura-123' })).status, 400);
     assert.equal((await c.post('/api/auth/setup', { username: 'admin', password: 'corta' })).status, 400);
     assert.equal((await c.post('/api/auth/setup', ADMIN)).status, 200);
-    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: false, authenticated: true, username: 'admin' });
+    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: false, authenticated: true, username: 'admin', role: 'owner', servers: '*' });
     const other = new Client(panel.base);
     assert.equal((await other.post('/api/auth/setup', { username: 'intruso', password: 'otra-clave-123' })).status, 409);
     panel.client = c;

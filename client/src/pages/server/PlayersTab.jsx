@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import { PlayerHead, useAction } from '../../ui.jsx';
+import { useAuth } from '../../auth.jsx';
 import ZonesSection from './ZonesSection.jsx';
 
 export default function PlayersTab({ server, runtime }) {
   const [data, setData] = useState(null);
   const [run, busy] = useAction();
   const [name, setName] = useState('');
+  const { readOnly, isOwner } = useAuth();
 
   const load = useCallback(() => api(`/servers/${server.id}/players`).then(setData), [server.id]);
   useEffect(() => {
@@ -51,15 +53,19 @@ export default function PlayersTab({ server, runtime }) {
                     )}
                   </td>
                   <td className="actions">
-                    <button className="btn-sm" disabled={busy} onClick={() => act('op', p, '', `${p} ahora es operador`)}>
-                      Hacer operador
-                    </button>{' '}
-                    <button className="btn-sm" disabled={busy} onClick={() => act('kick', p, 'Expulsado desde el panel', `${p} expulsado`)}>
-                      Expulsar
-                    </button>{' '}
-                    <button className="btn-sm btn-stop" disabled={busy} onClick={() => act('ban', p, '', `${p} baneado`)}>
-                      Banear
-                    </button>
+                    {!readOnly && (
+                      <>
+                        <button className="btn-sm" disabled={busy} onClick={() => act('op', p, '', `${p} ahora es operador`)}>
+                          Hacer operador
+                        </button>{' '}
+                        <button className="btn-sm" disabled={busy} onClick={() => act('kick', p, 'Expulsado desde el panel', `${p} expulsado`)}>
+                          Expulsar
+                        </button>{' '}
+                        <button className="btn-sm btn-stop" disabled={busy} onClick={() => act('ban', p, '', `${p} baneado`)}>
+                          Banear
+                        </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -68,33 +74,35 @@ export default function PlayersTab({ server, runtime }) {
         )}
       </section>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (name.trim()) act('whitelist-add', name.trim(), '', `${name.trim()} agregado a la lista blanca`).then(() => setName(''));
-        }}
-      >
-        <input
-          className="grow"
-          style={{ width: 'auto', maxWidth: 320 }}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={server.bedrock?.enabled ? 'Nombre (Bedrock: .Gamertag)' : 'Nombre de jugador'}
-          aria-label="Nombre de jugador"
-          title="Para jugadores de Bedrock pon un punto antes del gamertag, por ejemplo .Steve"
-          pattern="\.?[A-Za-z0-9_]{1,16}"
-        />
-        <button className="btn-go" disabled={busy || !name.trim()}>
-          Agregar a la lista blanca
-        </button>
-        <button type="button" disabled={busy || !name.trim()} onClick={() => act('op', name.trim(), '', `${name.trim()} ahora es operador`)}>
-          Hacer operador
-        </button>
-        <button type="button" className="btn-stop" disabled={busy || !name.trim()} onClick={() => act('ban', name.trim(), '', `${name.trim()} baneado`)}>
-          Banear
-        </button>
-      </form>
+      {!readOnly && (
+        <form
+          className="row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (name.trim()) act('whitelist-add', name.trim(), '', `${name.trim()} agregado a la lista blanca`).then(() => setName(''));
+          }}
+        >
+          <input
+            className="grow"
+            style={{ width: 'auto', maxWidth: 320 }}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={server.bedrock?.enabled ? 'Nombre (Bedrock: .Gamertag)' : 'Nombre de jugador'}
+            aria-label="Nombre de jugador"
+            title="Para jugadores de Bedrock pon un punto antes del gamertag, por ejemplo .Steve"
+            pattern="\.?[A-Za-z0-9_]{1,16}"
+          />
+          <button className="btn-go" disabled={busy || !name.trim()}>
+            Agregar a la lista blanca
+          </button>
+          <button type="button" disabled={busy || !name.trim()} onClick={() => act('op', name.trim(), '', `${name.trim()} ahora es operador`)}>
+            Hacer operador
+          </button>
+          <button type="button" className="btn-stop" disabled={busy || !name.trim()} onClick={() => act('ban', name.trim(), '', `${name.trim()} baneado`)}>
+            Banear
+          </button>
+        </form>
+      )}
 
       <div className="grid-2">
         <List
@@ -131,7 +139,7 @@ export default function PlayersTab({ server, runtime }) {
           busy={busy}
         />
       </div>
-      <ZonesSection server={server} />
+      {isOwner && <ZonesSection server={server} />}
     </div>
   );
 }
@@ -146,6 +154,7 @@ function Player({ name, noAvatar }) {
 }
 
 function List({ title, hint, items, actionLabel, onAction, busy, detail, noAvatar }) {
+  const { readOnly } = useAuth();
   return (
     <section className="panel">
       <h2 style={{ marginBottom: hint ? '0.2rem' : '0.9rem' }}>{title}</h2>
@@ -166,9 +175,11 @@ function List({ title, hint, items, actionLabel, onAction, busy, detail, noAvata
                   {detail?.(e) && <div className="faint small">{detail(e)}</div>}
                 </td>
                 <td className="actions">
-                  <button className="btn-sm" disabled={busy} onClick={() => onAction(e)}>
-                    {actionLabel}
-                  </button>
+                  {!readOnly && (
+                    <button className="btn-sm" disabled={busy} onClick={() => onAction(e)}>
+                      {actionLabel}
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

@@ -38,7 +38,7 @@ export const placeholders = (template) => [...new Set([...String(template).match
 
 const fill = (template, values) => template.replace(PLACEHOLDER, (_, name) => (values[name] ?? '').toString().trim() || `{${name}}`);
 
-export default function QuickCommands({ server, running, players, onSend }) {
+export default function QuickCommands({ server, running, players, onSend, canEdit = true }) {
   const [data, setData] = useState(null);
   const [runCmd, setRunCmd] = useState(null);
   const [confirmCmd, setConfirmCmd] = useState(null);
@@ -64,9 +64,11 @@ export default function QuickCommands({ server, running, players, onSend }) {
         <h3 className="muted grow" style={{ fontWeight: 500 }}>
           Comandos rápidos
         </h3>
-        <button className="btn-ghost btn-sm" onClick={() => setEditing(true)}>
-          Editar
-        </button>
+        {canEdit && (
+          <button className="btn-ghost btn-sm" onClick={() => setEditing(true)}>
+            Editar
+          </button>
+        )}
       </div>
       <div className="row" style={{ gap: '0.4rem' }}>
         {data.commands.map((c) => (
@@ -75,7 +77,7 @@ export default function QuickCommands({ server, running, players, onSend }) {
             {c.params.length ? '…' : ''}
           </button>
         ))}
-        {!data.commands.length && <span className="faint small">No hay comandos. Pulsa Editar para agregar.</span>}
+        {!data.commands.length && <span className="faint small">{canEdit ? 'No hay comandos. Pulsa Editar para agregar.' : 'No hay comandos rápidos.'}</span>}
       </div>
 
       {runCmd && <RunCommand server={server} cmd={runCmd} players={players} onClose={() => setRunCmd(null)} onSend={onSend} />}

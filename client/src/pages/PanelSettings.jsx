@@ -5,6 +5,8 @@ import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 import BackupMirror from './BackupMirror.jsx';
+import { useLive } from '../live.jsx';
+import { ROLE_LABEL } from '../auth.jsx';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -40,6 +42,7 @@ export default function PanelSettings() {
       </p>
 
       <PanelUpdate />
+      <UsersSection />
 
       <BackupMirror />
       <PlayitSettings />
@@ -406,5 +409,192 @@ function StartWithWindows() {
         </span>
       </label>
     </section>
+  );
+}
+
+const ROLE_HINT = {
+  moderator: 'En sus servidores: consola, jugadores, chat, respaldos, encender y apagar. No ve archivos ni cambia ajustes.',
+  viewer: 'En sus servidores solo mira: consola, jugadores, chat, actividad, rendimiento y logs.',
+};
+
+/** Cuentas de otras personas (moderadores y observadores) y a qué servidores entran. */
+function UsersSection() {
+  const { servers } = useLive();
+  const [users, setUsers] = useState(null);
+  const [editing, setEditing] = useState(null); // null | 'new' | usuario
+  const [confirm, setConfirm] = useState(null);
+  const [run, busy] = useAction();
+  const load = () =>
+    api('/auth/users')
+      .then(setUsers)
+      .catch(() => setUsers([]));
+  useEffect(() => {
+    load();
+  }, []);
+  if (!users) return null;
+  const nameOf = (id) => servers.find((s) => s.id === id)?.name || 'servidor borrado';
+
+  return (
+    <section className="panel stack" aria-labelledby="users-title">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h2 id="users-title" style={{ margin: 0 }}>
+          Usuarios
+        </h2>
+        <button className="btn-sm" onClick={() => setEditing('new')} disabled={busy}>
+          Invitar a alguien
+        </button>
+      </div>
+      <p className="muted small">
+        Cada cuenta entra con su usuario y contraseña y ve solo los servidores que le asignes. <strong>Moderador:</strong> {ROLE_HINT.moderator} <strong>Observador:</strong> {ROLE_HINT.viewer}
+      </p>
+      {users.length === 0 ? (
+        <p className="faint small">Solo tú entras al panel por ahora.</p>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Servidores</th>
+                <th>Última entrada</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.username}</td>
+                  <td>{ROLE_LABEL[u.role] || u.role}</td>
+                  <td className="small">{u.servers === '*' ? 'Todos (también los nuevos)' : u.servers.length ? u.servers.map(nameOf).join(', ') : 'Ninguno'}</td>
+                  <td className="muted small">{u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Todavía no entra'}</td>
+                  <td className="actions">
+                    <button className="btn-sm" disabled={busy} onClick={() => setEditing(u)}>
+                      Editar
+                    </button>{' '}
+                    <button className="btn-sm btn-stop" disabled={busy} onClick={() => setConfirm(u)}>
+                      Quitar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {editing && (
+        <UserForm
+          user={editing === 'new' ? null : editing}
+          servers={servers}
+          busy={busy}
+          onClose={() => setEditing(null)}
+          onSave={(body) =>
+            run(
+              () =>
+                api(editing === 'new' ? '/auth/users' : `/auth/users/${editing.id}`, { method: editing === 'new' ? 'POST' : 'PUT', body })
+                  .then(() => load())
+                  .then(() => setEditing(null)),
+              editing === 'new' ? 'Cuenta creada' : 'Cuenta guardada'
+            )
+          }
+        />
+      )}
+      {confirm && (
+        <Confirm
+          title={`Quitar a ${confirm.username}`}
+          message="Dejará de poder entrar al panel al momento. Sus servidores no se tocan."
+          confirmLabel="Quitar"
+          danger
+          onClose={() => setConfirm(null)}
+          onConfirm={() =>
+            run(
+              () =>
+                api(`/auth/users/${confirm.id}`, { method: 'DELETE' })
+                  .then(load)
+                  .then(() => setConfirm(null)),
+              'Cuenta quitada'
+            )
+          }
+        />
+      )}
+    </section>
+  );
+}
+
+function UserForm({ user, servers, busy, onClose, onSave }) {
+  const [username, setUsername] = useState(user?.username || '');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState(user?.role || 'moderator');
+  const [all, setAll] = useState(user ? user.servers === '*' : true);
+  const [chosen, setChosen] = useState(new Set(user && user.servers !== '*' ? user.servers : []));
+  const toggle = (id) =>
+    setChosen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  return (
+    <form
+      className="stack"
+      style={{ gap: '0.8rem', borderTop: '1px solid var(--line)', paddingTop: '0.9rem' }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const body = { username, role, servers: all ? '*' : [...chosen] };
+        if (!user || password) body.password = password;
+        onSave(body);
+      }}
+    >
+      <h3 style={{ margin: 0 }}>{user ? `Editar a ${user.username}` : 'Nueva cuenta'}</h3>
+      <div className="grid-2">
+        <label className="field">
+          <span>Usuario</span>
+          <input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} maxLength={32} pattern="[A-Za-z0-9_.\-]{3,32}" autoComplete="off" />
+        </label>
+        <label className="field">
+          <span>{user ? 'Nueva contraseña (vacío para dejarla igual)' : 'Contraseña'}</span>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required={!user} minLength={8} autoComplete="new-password" />
+          <span>Mínimo 8 caracteres. Pásasela por un medio seguro; puede cambiarla al entrar.</span>
+        </label>
+      </div>
+      <div className="stack" style={{ gap: '0.4rem' }} role="radiogroup" aria-label="Rol">
+        {['moderator', 'viewer'].map((r) => (
+          <label key={r} className="check">
+            <input type="radio" name="role" checked={role === r} onChange={() => setRole(r)} style={{ width: 18, minHeight: 18, height: 18, margin: '2px 0 0' }} />
+            <span>
+              {ROLE_LABEL[r]}
+              <span className="faint" style={{ display: 'block' }}>
+                {ROLE_HINT[r]}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <fieldset className="stack" style={{ gap: '0.4rem', border: 0, padding: 0, margin: 0 }}>
+        <legend className="small" style={{ marginBottom: '0.3rem' }}>
+          Servidores a los que entra
+        </legend>
+        <label className="check">
+          <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />
+          <span>Todos, también los que crees después</span>
+        </label>
+        {!all &&
+          servers.map((s) => (
+            <label key={s.id} className="check" style={{ marginLeft: '1.4rem' }}>
+              <input type="checkbox" checked={chosen.has(s.id)} onChange={() => toggle(s.id)} />
+              <span>{s.name}</span>
+            </label>
+          ))}
+        {!all && servers.length === 0 && <p className="faint small">Todavía no hay servidores que asignar.</p>}
+      </fieldset>
+      <div className="row">
+        <button className="btn-go" disabled={busy}>
+          {user ? 'Guardar' : 'Crear cuenta'}
+        </button>
+        <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }
