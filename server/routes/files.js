@@ -2,8 +2,8 @@ import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import multer from 'multer';
-import archiver from 'archiver';
-import AdmZip from 'adm-zip';
+import { ZipArchive } from 'archiver';
+import { extractZip } from '../lib/zip.js';
 import { serverDir, TMP_DIR } from '../config.js';
 import { getServer } from '../db.js';
 import { HttpError, safeJoin, relPath, moveFile, sanitizeFileName } from '../lib/util.js';
@@ -185,7 +185,7 @@ filesRouter.get('/download', (req, res) => {
   if (fs.statSync(target).isFile()) return res.download(target);
   // Una carpeta se descarga como .zip al vuelo.
   res.attachment(`${path.basename(target)}.zip`);
-  const zip = archiver('zip', { zlib: { level: 5 } });
+  const zip = new ZipArchive({ zlib: { level: 5 } });
   zip.on('error', (err) => res.destroy(err));
   zip.pipe(res);
   zip.directory(target, path.basename(target));
@@ -198,7 +198,7 @@ filesRouter.get('/download-many', (req, res) => {
   const list = parsePaths(req.query.paths).map((p) => safeJoin(root, p));
   for (const p of list) if (!fs.existsSync(p)) throw new HttpError(404, `No existe ${relPath(root, p)}`);
   res.attachment(`seleccion-${new Date().toISOString().slice(0, 10)}.zip`);
-  const zip = archiver('zip', { zlib: { level: 5 } });
+  const zip = new ZipArchive({ zlib: { level: 5 } });
   zip.on('error', (err) => res.destroy(err));
   zip.pipe(res);
   for (const p of list) {
@@ -283,11 +283,9 @@ filesRouter.post('/extract', async (req, res) => {
   if (!file.toLowerCase().endsWith('.zip')) throw new HttpError(400, 'Solo se pueden extraer archivos .zip');
   const dest = path.dirname(file);
   assertWritable(server, `${relPath(root, dest)}/x`, 'extraer archivos');
-  const zip = new AdmZip(file);
-  // Revisa que ningún archivo del zip intente salir de la carpeta (zip slip).
-  for (const entry of zip.getEntries()) safeJoin(dest, entry.entryName);
-  zip.extractAllTo(dest, true);
-  res.json({ ok: true, entries: zip.getEntries().length });
+  // extractZip rechaza rutas que salgan de la carpeta (zip slip), enlaces simbólicos y bombas zip.
+  const written = extractZip(file, dest);
+  res.json({ ok: true, entries: written.length });
 });
 
 /** Comprime una selección en un .zip dentro del servidor. */
@@ -298,7 +296,7 @@ filesRouter.post('/compress', async (req, res) => {
   const name = uniqueName(dir, `${sanitizeFileName(req.body?.name || (list.length === 1 ? path.basename(list[0]) : 'archivos'))}.zip`);
   await new Promise((resolve, reject) => {
     const out = fs.createWriteStream(path.join(dir, name));
-    const zip = archiver('zip', { zlib: { level: 6 } });
+    const zip = new ZipArchive({ zlib: { level: 6 } });
     out.on('close', resolve);
     zip.on('error', reject);
     zip.pipe(out);

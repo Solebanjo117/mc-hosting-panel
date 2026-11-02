@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import AdmZip from 'adm-zip';
+import { openZip, extractZip } from '../lib/zip.js';
 import { DATA_DIR, serverDir } from '../config.js';
 import { db, getServer, updateServer } from '../db.js';
 import { download, getJson } from '../lib/http.js';
@@ -39,15 +40,15 @@ const LOADER_NAME = { fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge', qu
 export function readPack(packPath) {
   let zip;
   try {
-    zip = new AdmZip(packPath);
+    zip = openZip(packPath);
   } catch {
     throw new HttpError(400, 'El archivo no es un modpack válido (no se pudo abrir como .zip)');
   }
   const json = (name) => {
-    const entry = zip.getEntry(name);
-    if (!entry) return null;
+    const data = zip.read(name);
+    if (!data) return null;
     try {
-      return JSON.parse(entry.getData().toString('utf8').replace(/^﻿/, ''));
+      return JSON.parse(data.toString('utf8').replace(/^﻿/, ''));
     } catch {
       throw new HttpError(400, `El archivo ${name} del modpack está dañado`);
     }
@@ -56,7 +57,7 @@ export function readPack(packPath) {
   if (mr) return { zip, format: 'mrpack', index: mr };
   const cf = json('manifest.json');
   if (cf?.minecraft) return { zip, format: 'curseforge', index: cf };
-  const names = zip.getEntries().map((e) => e.entryName);
+  const names = zip.names();
   if (names.some((n) => /^([^/]+\/)?mods\/[^/]+\.jar$/i.test(n))) {
     throw new HttpError(
       400,
@@ -243,22 +244,8 @@ async function pool(items, size, fn) {
 
 /** Copia una carpeta del zip; devuelve las rutas escritas. */
 function extractFolder(zip, prefix, dest) {
-  const written = [];
-  for (const entry of zip.getEntries()) {
-    if (entry.isDirectory || !entry.entryName.startsWith(prefix)) continue;
-    const rel = entry.entryName.slice(prefix.length);
-    if (!rel) continue;
-    let target;
-    try {
-      target = safeJoin(dest, rel);
-    } catch {
-      continue; // ruta que intenta salir de la carpeta: se ignora
-    }
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, entry.getData());
-    written.push(rel.replace(/\\/g, '/'));
-  }
-  return written;
+  // Una ruta que intente salir de la carpeta se ignora; el resto del modpack se instala igual.
+  return extractZip(zip, dest, { select: (e) => (e.name.startsWith(prefix) ? e.name.slice(prefix.length) : null), onBadPath: 'skip' });
 }
 
 // Dominios que permite el formato .mrpack de Modrinth: un modpack no puede hacer que el panel
@@ -300,11 +287,11 @@ const CLIENT_ONLY_IDS = new Set([
 export function isClientOnlyJar(file) {
   let zip;
   try {
-    zip = new AdmZip(file);
+    zip = openZip(file);
   } catch {
     return false;
   }
-  const text = (name) => zip.getEntry(name)?.getData().toString('utf8') || null;
+  const text = (name) => zip.read(name)?.toString('utf8') || null;
   const fabric = text('fabric.mod.json');
   if (fabric) {
     try {
@@ -734,12 +721,12 @@ export async function playersPack(id) {
     return true;
   };
   if (base) {
-    for (const e of base.zip.getEntries()) {
-      if (e.isDirectory || e.entryName === 'modrinth.index.json' || e.entryName === 'manifest.json') continue;
-      if (e.entryName.startsWith('server-overrides/')) continue; // solo para el servidor
+    for (const e of base.zip.entries) {
+      if (e.isDirectory || e.name === 'modrinth.index.json' || e.name === 'manifest.json') continue;
+      if (e.name.startsWith('server-overrides/')) continue; // solo para el servidor
       // Mods del modpack que se quitaron o desactivaron en el servidor tampoco van para los jugadores.
-      if (e.entryName.startsWith(`${overrides}/mods/`) && dropped(e.entryName.slice(overrides.length + 1))) continue;
-      out.addFile(e.entryName, e.getData());
+      if (e.name.startsWith(`${overrides}/mods/`) && dropped(e.name.slice(overrides.length + 1))) continue;
+      out.addFile(e.name, e.data());
     }
   }
 

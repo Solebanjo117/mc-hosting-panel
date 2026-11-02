@@ -50,6 +50,19 @@ describe('Cuenta y sesión', () => {
     assert.equal((await c.get('/api/servers')).status, 401);
   });
 
+  it('la cookie de sesión es HttpOnly y lleva Secure cuando se entra por HTTPS (Caddy, Tailscale)', async () => {
+    const login = (headers) =>
+      fetch(`${panel.base}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(ADMIN) });
+    const plain = (await login({})).headers.get('set-cookie');
+    assert.match(plain, /mcp_token=/);
+    assert.match(plain, /HttpOnly/);
+    assert.match(plain, /SameSite=Lax/);
+    assert.doesNotMatch(plain, /Secure/, 'en http://localhost la cookie debe funcionar');
+    // El proxy HTTPS corre en esta misma PC y avisa con X-Forwarded-Proto.
+    const https = (await login({ 'x-forwarded-proto': 'https' })).headers.get('set-cookie');
+    assert.match(https, /Secure/);
+  });
+
   it('bloquea un rato después de 8 intentos fallidos (aunque luego acierte)', async () => {
     const c = new Client(panel.base);
     let last;

@@ -4,15 +4,18 @@ import path from 'node:path';
 /**
  * Almacén JSON en disco. Sin dependencias nativas para que funcione en
  * cualquier Windows sin herramientas de compilación.
+ *  - toDisk(data): transforma una copia antes de escribirla (por ejemplo, cifrar tokens).
+ *  - fromDisk(data): deshace esa transformación al leer.
  */
 export class JsonStore {
-  constructor(file, defaults) {
+  constructor(file, defaults, { toDisk = (d) => d, fromDisk = (d) => d } = {}) {
     this.file = file;
     this.timer = null;
+    this.toDisk = toDisk;
     let data = {};
     if (fs.existsSync(file)) {
       try {
-        data = JSON.parse(fs.readFileSync(file, 'utf8'));
+        data = fromDisk(JSON.parse(fs.readFileSync(file, 'utf8')));
       } catch (err) {
         const broken = `${file}.corrupt-${Date.now()}`;
         fs.copyFileSync(file, broken);
@@ -32,7 +35,7 @@ export class JsonStore {
     clearTimeout(this.timer);
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
     const tmp = `${this.file}.tmp`;
-    fs.writeFileSync(tmp, JSON.stringify(this.data, null, 2));
+    fs.writeFileSync(tmp, JSON.stringify(this.toDisk(this.data), null, 2));
     fs.renameSync(tmp, this.file);
   }
 }

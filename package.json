@@ -18,14 +18,14 @@
     "test:e2e": "node test/run.js e2e"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16",
-    "archiver": "^7.0.1",
+    "adm-zip": "^0.6.1",
+    "archiver": "^8.0.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2",
+    "multer": "^2.5.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {

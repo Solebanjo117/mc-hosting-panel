@@ -5,7 +5,7 @@ import { serverDir, USER_AGENT } from '../config.js';
 import { db, getServer } from '../db.js';
 import { download, getJson, getText, rewriteUrl } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
-import AdmZip from 'adm-zip';
+import { openZip } from '../lib/zip.js';
 import { readProperties } from './properties.js';
 import * as curseforge from './curseforge.js';
 
@@ -377,7 +377,7 @@ export function datapackInfo(target) {
       };
       walk(target);
     } else {
-      names = new AdmZip(target).getEntries().map((e) => e.entryName);
+      names = openZip(target).names();
     }
   } catch {
     return { worldgen: false, valid: false };

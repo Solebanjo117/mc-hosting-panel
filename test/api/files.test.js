@@ -124,6 +124,14 @@ describe('Administrador de archivos', { skip: !hasJava() && 'Se necesita Java' }
     assert.ok(!fs.existsSync(path.resolve(dir, '..', 'malo.txt')));
   });
 
+  it('un zip con un enlace simbólico se rechaza', async () => {
+    fs.writeFileSync(path.join(dir, 'enlace.zip'), rawZip({ 'bien.txt': 'ok', 'enlace': { data: '../../db.json', mode: 0o120777 } }));
+    const r = await c.post(`${F}/extract`, { path: 'enlace.zip' });
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /enlace simbólico/);
+    assert.ok(!fs.existsSync(path.join(dir, 'enlace')));
+  });
+
   it('edita archivos NBT (level.dat) y guarda una copia del original', async () => {
     const levelDat = path.join(dir, 'world', 'level.dat');
     fs.mkdirSync(path.dirname(levelDat), { recursive: true });

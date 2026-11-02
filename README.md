@@ -111,7 +111,8 @@ Todo vive en la carpeta `data/` (no se sube a Git):
 
 ```
 data/
-  db.json          cuenta, ajustes, servidores, tareas programadas
+  db.json          cuenta, ajustes, servidores, tareas programadas (los tokens de otros servicios van cifrados)
+  panel.key        la clave que cifra esos tokens; sin ella hay que volver a escribirlos
   metrics/         historial de rendimiento (7 días)
   activity/        entradas, salidas y eventos de cada servidor (90 días)
   cache/gamedata/  listas de objetos y nombres en español por versión
@@ -133,8 +134,9 @@ En la PC donde corre el panel abre **Restablecer contraseña**: en el menú Inic
 - El panel solo acepta conexiones de esta PC, tu red y Tailscale (configurable en Ajustes). Si alguien abre el 8080 en el router, los de internet ven "Acceso bloqueado".
 - Bloquea peticiones enviadas desde otras páginas (CSRF), manda cabeceras de seguridad y guarda un historial de inicios de sesión.
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
-- La llave de playit (`data/playit/playit.toml`) y los tokens de DuckDNS, deSEC o Cloudflare se guardan en `data/`; no compartas esa carpeta.
-- La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly`. Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
+- Los tokens de DuckDNS, deSEC, Cloudflare y CurseForge se guardan cifrados (AES-256-GCM) en `db.json`; la clave está aparte, en `data/panel.key`. La llave de playit vive en `data/playit/playit.toml`. Aun así, no compartas la carpeta `data/`.
+- Los .zip que llegan de fuera (modpacks, mundos, archivos subidos, Java) se extraen con protección contra rutas `../`, enlaces simbólicos y "bombas zip" que declaran más de lo que cabe en el disco.
+- La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly` (con `Secure` cuando entras por HTTPS con Caddy o Tailscale). Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
 - Deja `online-mode=true` y usa la lista blanca si tu servidor es solo para amigos.
 
 ## Desarrollo

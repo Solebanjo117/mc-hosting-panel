@@ -20,9 +20,11 @@ export function verifyToken(token) {
   }
 }
 
-function issue(res) {
+function issue(req, res) {
   const token = jwt.sign({ sub: db.data.admin.username, v: db.data.admin.tokenVersion || 0 }, db.data.jwtSecret, { expiresIn: TOKEN_TTL });
-  res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 3600 * 1000, path: '/' });
+  // Detrás de Caddy/Nginx con HTTPS (X-Forwarded-Proto desde esta PC) o con Tailscale Serve, la cookie
+  // lleva Secure: el navegador no la manda por HTTP. En http://localhost no se pone, porque fallaría.
+  res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: req.secure, maxAge: 7 * 24 * 3600 * 1000, path: '/' });
 }
 
 export function requireAuth(req, _res, next) {
@@ -64,7 +66,7 @@ authRouter.post('/setup', async (req, res) => {
   validate(username, password);
   db.data.admin = { username, passwordHash: await bcrypt.hash(password, 12), tokenVersion: 0 };
   db.flush();
-  issue(res);
+  issue(req, res);
   res.json({ ok: true, username });
 });
 
@@ -91,7 +93,7 @@ authRouter.post('/login', async (req, res) => {
     throw new HttpError(401, 'Usuario o contraseña incorrectos');
   }
   attempts.delete(ip);
-  issue(res);
+  issue(req, res);
   res.json({ ok: true, username });
 });
 
@@ -142,6 +144,6 @@ authRouter.post('/password', requireAuth, async (req, res) => {
   admin.passwordHash = await bcrypt.hash(password, 12);
   admin.tokenVersion = (admin.tokenVersion || 0) + 1; // cierra las demás sesiones
   db.flush();
-  issue(res);
+  issue(req, res);
   res.json({ ok: true });
 });
