@@ -54,6 +54,7 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
   it('muestra el detalle de un proyecto (descripción, galería, enlaces)', async () => {
     const d = await c.ok('GET', `${C(paper)}/project?source=modrinth&projectId=luckperms`);
     assert.equal(d.title, 'LuckPerms');
+    assert.equal(d.author, 'Lucko', 'el dueño del equipo');
     assert.equal(d.gallery.length, 1);
     assert.deepEqual(d.links, [{ label: 'Código fuente', url: 'https://example.com/src' }]);
     const h = await c.ok('GET', `${C(paper)}/project?source=hangar&projectId=EssentialsX`);

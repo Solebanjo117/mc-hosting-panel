@@ -330,6 +330,12 @@ export async function startMocks() {
         },
       ]);
     }
+    m = p.match(/^\/modrinth\/project\/([^/]+)\/members$/);
+    if (m)
+      return send([
+        { role: 'Owner', user: { username: 'Lucko' } },
+        { role: 'Developer', user: { username: 'Otro' } },
+      ]);
     m = p.match(/^\/modrinth\/project\/([^/]+)$/);
     if (m) {
       const slug = resolveProject(decodeURIComponent(m[1]));

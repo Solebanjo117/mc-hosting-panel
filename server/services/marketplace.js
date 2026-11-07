@@ -151,6 +151,9 @@ export async function projectDetails(source, projectId) {
     };
   }
   const p = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}`);
+  // El autor no viene en el proyecto: es el dueño del equipo (si falla, la ficha sale sin autor).
+  const members = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}/members`).catch(() => []);
+  const owner = members.find((x) => x.role === 'Owner' || x.is_owner) || members[0];
   const links = [
     ['Código fuente', p.source_url],
     ['Reportar problemas', p.issues_url],
@@ -163,6 +166,7 @@ export async function projectDetails(source, projectId) {
     source,
     id: p.id,
     title: p.title,
+    author: owner?.user?.username || null,
     description: p.description,
     icon: p.icon_url || null,
     body: p.body || '',
