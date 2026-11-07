@@ -100,9 +100,7 @@ export default function SoftwareUpdate({ server, running }) {
         <div className="update-row">
           <div className="grow stack" style={{ gap: '0.35rem' }}>
             <strong>Minecraft {mc.latest}</strong>
-            <span className="faint small">
-              Los jugadores tendrán que entrar con la versión {mc.latest}. El mundo se convierte a la versión nueva: para volver atrás se usa el respaldo.
-            </span>
+            <span className="faint small">Los jugadores tendrán que entrar con la versión {mc.latest}. El mundo se convierte a la versión nueva: para volver atrás se usa el respaldo.</span>
             {content && content.total > 0 && (
               <div className="small">
                 {content.ready.length > 0 && (
@@ -185,7 +183,9 @@ export default function SoftwareUpdate({ server, running }) {
               {server.type !== 'vanilla' && (
                 <label className="check">
                   <input type="checkbox" checked={updateContent} onChange={(e) => setUpdateContent(e.target.checked)} />
-                  <span>Actualizar también los {contentWord} que tengan versión para {mc.latest}</span>
+                  <span>
+                    Actualizar también los {contentWord} que tengan versión para {mc.latest}
+                  </span>
                 </label>
               )}
             </div>

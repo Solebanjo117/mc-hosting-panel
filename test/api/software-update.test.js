@@ -65,8 +65,11 @@ describe('Actualizar Paper / Minecraft con un clic', { skip: !hasJava() && 'Se n
       assert.ok(job.log.some((l) => /Respaldo listo/.test(l)));
 
       const { backups } = await c.ok('GET', `/api/servers/${s.id}/backups`);
-      assert.ok(backups.some((b) => /antes-de-actualizar/.test(b.file)), 'hay respaldo de antes');
-      const after = (await c.ok('GET', `/api/servers/${s.id}`));
+      assert.ok(
+        backups.some((b) => /antes-de-actualizar/.test(b.file)),
+        'hay respaldo de antes'
+      );
+      const after = await c.ok('GET', `/api/servers/${s.id}`);
       assert.equal(after.loaderVersion, '125');
       await panel.waitStatus(s.id, 'running', 30_000);
       assert.equal(panel.readDb().servers.find((x) => x.id === s.id).lastSoftwareUpdate.from.loaderVersion, '120');
@@ -101,8 +104,14 @@ describe('Actualizar Paper / Minecraft con un clic', { skip: !hasJava() && 'Se n
       assert.equal(st.minecraft.available, true);
       assert.equal(st.minecraft.latest, '1.21.4');
       assert.equal(st.minecraft.content.total, 2);
-      assert.deepEqual(st.minecraft.content.ready.map((r) => [r.title, r.newVersion]), [['LuckPerms', '2.0.0']]);
-      assert.deepEqual(st.minecraft.content.missing.map((r) => r.filename), ['MiPlugin.jar']);
+      assert.deepEqual(
+        st.minecraft.content.ready.map((r) => [r.title, r.newVersion]),
+        [['LuckPerms', '2.0.0']]
+      );
+      assert.deepEqual(
+        st.minecraft.content.missing.map((r) => r.filename),
+        ['MiPlugin.jar']
+      );
       const req = mocks.state.requests.findLast((x) => x.path === '/modrinth/version_files/update');
       assert.deepEqual(JSON.parse(req.body).game_versions, ['1.21.4']);
     });
@@ -114,7 +123,13 @@ describe('Actualizar Paper / Minecraft con un clic', { skip: !hasJava() && 'Se n
       const srv = await c.ok('GET', `/api/servers/${s.id}`);
       assert.equal(srv.mcVersion, '1.21.4');
       assert.equal(srv.loaderVersion, '130');
-      assert.deepEqual(fs.readdirSync(path.join(dir, 'plugins')).filter((f) => f.endsWith('.jar')).sort(), ['MiPlugin.jar', 'luckperms-2.0.0.jar']);
+      assert.deepEqual(
+        fs
+          .readdirSync(path.join(dir, 'plugins'))
+          .filter((f) => f.endsWith('.jar'))
+          .sort(),
+        ['MiPlugin.jar', 'luckperms-2.0.0.jar']
+      );
       assert.ok(job.log.some((l) => /Actualizados: luckperms-2.0.0.jar/.test(l)));
       const act = await c.ok('GET', `/api/servers/${s.id}/activity`).catch(() => null);
       if (act?.events) assert.ok(act.events.some((e) => e.type === 'update'));
@@ -128,7 +143,13 @@ describe('Actualizar Paper / Minecraft con un clic', { skip: !hasJava() && 'Se n
       const srv = await c.ok('GET', `/api/servers/${s.id}`);
       assert.equal(srv.mcVersion, '1.20.1');
       assert.equal(srv.loaderVersion, '118', 'el jar del respaldo es el de antes');
-      assert.deepEqual(fs.readdirSync(path.join(dir, 'plugins')).filter((f) => f.endsWith('.jar')).sort(), ['MiPlugin.jar', 'luckperms-1.0.0.jar']);
+      assert.deepEqual(
+        fs
+          .readdirSync(path.join(dir, 'plugins'))
+          .filter((f) => f.endsWith('.jar'))
+          .sort(),
+        ['MiPlugin.jar', 'luckperms-1.0.0.jar']
+      );
       assert.equal(fs.readFileSync(path.join(dir, 'world-marca.txt'), 'utf8'), 'antes');
       assert.equal((await c.post(`/api/servers/${s.id}/software/undo`)).status, 404, 'no hay nada más que deshacer');
     });

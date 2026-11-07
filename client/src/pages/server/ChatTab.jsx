@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '../../auth.jsx';
 import { api } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { PlayerHead, useToast } from '../../ui.jsx';
@@ -20,7 +21,9 @@ function parseChat(line) {
   if (m) return { kind: 'me', time, who: m[1], text: m[2] };
   m = p.match(/: ([A-Za-z0-9_.]{2,17}) (joined|left) the game/);
   if (m) return { kind: 'presence', time, who: m[1], text: m[2] === 'joined' ? 'entró' : 'salió' };
-  m = p.match(/: ([A-Za-z0-9_.]{2,17}) (was|died|drowned|blew up|fell|burned|starved|withered|hit the ground|went up in flames|tried to swim|experienced|walked into|discovered|froze|was squashed|suffocated)(.*)$/);
+  m = p.match(
+    /: ([A-Za-z0-9_.]{2,17}) (was|died|drowned|blew up|fell|burned|starved|withered|hit the ground|went up in flames|tried to swim|experienced|walked into|discovered|froze|was squashed|suffocated)(.*)$/
+  );
   if (m) return { kind: 'death', time, who: m[1], text: `${m[2]}${m[3]}` };
   return null;
 }
@@ -39,6 +42,7 @@ export default function ChatTab({ server, runtime, state }) {
   }, [messages.length]);
   const running = state === 'running';
   const players = runtime?.players || [];
+  const { readOnly } = useAuth();
 
   async function send(e) {
     e.preventDefault();
@@ -53,7 +57,15 @@ export default function ChatTab({ server, runtime, state }) {
   }
 
   const renderText = (t) =>
-    t.split(/(@[A-Za-z0-9_.]{2,17})/).map((part, i) => (part.startsWith('@') ? <mark key={i} className="mention">{part}</mark> : <span key={i}>{part}</span>));
+    t.split(/(@[A-Za-z0-9_.]{2,17})/).map((part, i) =>
+      part.startsWith('@') ? (
+        <mark key={i} className="mention">
+          {part}
+        </mark>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
 
   return (
     <div className="chat-layout">
@@ -74,10 +86,19 @@ export default function ChatTab({ server, runtime, state }) {
             </div>
           ))}
         </div>
-        <form className="terminal-in" onSubmit={send}>
-          <span aria-hidden="true">💬</span>
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={running ? 'Escribe como "Servidor"… (puedes mencionar con @nombre)' : 'Enciende el servidor para escribir'} disabled={!running} aria-label="Mensaje al chat" maxLength={256} />
-        </form>
+        {!readOnly && (
+          <form className="terminal-in" onSubmit={send}>
+            <span aria-hidden="true">💬</span>
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={running ? 'Escribe como "Servidor"… (puedes mencionar con @nombre)' : 'Enciende el servidor para escribir'}
+              disabled={!running}
+              aria-label="Mensaje al chat"
+              maxLength={256}
+            />
+          </form>
+        )}
       </section>
       <aside className="stack" style={{ alignContent: 'start' }}>
         <h3>Conectados ({players.length})</h3>

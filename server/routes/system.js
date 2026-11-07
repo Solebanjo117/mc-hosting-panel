@@ -11,6 +11,8 @@ import { localIps, publicIp } from '../services/network.js';
 import { systemInfo } from '../services/procstats.js';
 import { healthCheck } from '../services/health.js';
 import { getMetrics } from '../services/metrics.js';
+import { overview } from '../services/overview.js';
+import { canSeeServer } from '../lib/access.js';
 import { checkUpdate, startUpdate, updateStatus } from '../services/appUpdate.js';
 import { startupStatus, setStartup } from '../services/startup.js';
 import { DEFAULT_COMMANDS, PARAM_TYPES, listCommands, saveCommands } from '../services/quickCommands.js';
@@ -30,23 +32,28 @@ systemRouter.delete('/appearance/background', (_req, res) => res.json(removeImag
 
 // --- Tablero de inicio: salud y mini gráficas de cada servidor --------------------------
 
-systemRouter.get('/dashboard', async (_req, res) => {
+systemRouter.get('/dashboard', async (req, res) => {
   const out = await Promise.all(
-    db.data.servers.map(async (s) => {
-      let health = null;
-      try {
-        const h = await healthCheck(s.id);
-        health = { level: h.level, counts: h.counts, top: h.checks.filter((c) => c.level === 'bad' || c.level === 'warn').slice(0, 2) };
-      } catch {
-        /* sin revisión */
-      }
-      const m = getMetrics(s.id, '1h');
-      const pick = (k) => m.points.map((p) => p[k]);
-      return { id: s.id, health, spark: { players: pick('players'), mem: pick('mem'), cpu: pick('cpu'), tps: pick('tps'), memoryLimitMb: m.memoryLimitMb } };
-    })
+    db.data.servers
+      .filter((s) => canSeeServer(req.account, s.id))
+      .map(async (s) => {
+        let health = null;
+        try {
+          const h = await healthCheck(s.id);
+          health = { level: h.level, counts: h.counts, top: h.checks.filter((c) => c.level === 'bad' || c.level === 'warn').slice(0, 2) };
+        } catch {
+          /* sin revisión */
+        }
+        const m = getMetrics(s.id, '1h');
+        const pick = (k) => m.points.map((p) => p[k]);
+        return { id: s.id, health, spark: { players: pick('players'), mem: pick('mem'), cpu: pick('cpu'), tps: pick('tps'), memoryLimitMb: m.memoryLimitMb } };
+      })
   );
   res.json({ servers: out });
 });
+
+// Rendimiento general: la PC y todos los servidores sobre la misma línea de tiempo.
+systemRouter.get('/metrics', async (req, res) => res.json(await overview(String(req.query.range || '6h'), (id) => canSeeServer(req.account, id))));
 
 // --- Copia de respaldos en una carpeta sincronizada (OneDrive, Google Drive, Dropbox…) -----
 

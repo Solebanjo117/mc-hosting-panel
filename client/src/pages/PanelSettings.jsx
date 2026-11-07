@@ -5,6 +5,8 @@ import { Confirm, useAction, usePageTitle, useToast } from '../ui.jsx';
 import { AppSettings, CurseForgeSettings, DnsSettings, PlayitSettings } from './Integrations.jsx';
 import { formatDate } from '../api.js';
 import BackupMirror from './BackupMirror.jsx';
+import { useLive } from '../live.jsx';
+import { ROLE_LABEL } from '../auth.jsx';
 
 const JAVA_VERSIONS = [
   { major: 8, use: 'Minecraft 1.16.5 y anteriores' },
@@ -40,6 +42,7 @@ export default function PanelSettings() {
       </p>
 
       <PanelUpdate />
+      <UsersSection />
 
       <BackupMirror />
       <PlayitSettings />
@@ -54,10 +57,9 @@ export default function PanelSettings() {
           onSubmit={(e) => {
             e.preventDefault();
             if (pw.password !== pw.confirm) return toast('Las contraseñas no coinciden', 'error');
-            run(
-              () => api('/auth/password', { method: 'POST', body: { current: pw.current, password: pw.password } }),
-              'Contraseña cambiada. Las demás sesiones se cerraron.'
-            ).then(() => setPw({ current: '', password: '', confirm: '' }));
+            run(() => api('/auth/password', { method: 'POST', body: { current: pw.current, password: pw.password } }), 'Contraseña cambiada. Las demás sesiones se cerraron.').then(() =>
+              setPw({ current: '', password: '', confirm: '' })
+            );
           }}
         >
           <label className="field">
@@ -83,8 +85,7 @@ export default function PanelSettings() {
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Java</h2>
         <p className="muted small">
-          El panel descarga solo el Java que necesita cada versión de Minecraft (Eclipse Temurin) y lo guarda en <span className="mono">data\java</span>.
-          Puedes descargarlo por adelantado.
+          El panel descarga solo el Java que necesita cada versión de Minecraft (Eclipse Temurin) y lo guarda en <span className="mono">data\java</span>. Puedes descargarlo por adelantado.
         </p>
         <table className="table">
           <tbody>
@@ -128,10 +129,7 @@ export default function PanelSettings() {
 
       <section className="panel stack">
         <h2 style={{ margin: 0 }}>Puerto del panel</h2>
-        <p className="muted small">
-          Por dónde abres esta página (ahora {panelPort}). No lo abras en tu router: si quieres administrar desde fuera de casa usa Tailscale, como explica la
-          guía.
-        </p>
+        <p className="muted small">Por dónde abres esta página (ahora {panelPort}). No lo abras en tu router: si quieres administrar desde fuera de casa usa Tailscale, como explica la guía.</p>
         <div className="row">
           <input type="number" min={1024} max={65535} value={panelPort} onChange={(e) => setPanelPort(e.target.value)} style={{ width: 140 }} aria-label="Puerto del panel" />
           <button
@@ -145,8 +143,7 @@ export default function PanelSettings() {
 
       {info && (
         <p className="faint small">
-          MC Hosting Panel {info.version}, {info.system.cpuModel} ({info.system.cores} núcleos), {Math.round(info.system.totalMemMb / 1024)} GB de RAM,
-          equipo {info.system.hostname}.
+          MC Hosting Panel {info.version}, {info.system.cpuModel} ({info.system.cores} núcleos), {Math.round(info.system.totalMemMb / 1024)} GB de RAM, equipo {info.system.hostname}.
         </p>
       )}
     </div>
@@ -164,8 +161,12 @@ function PanelAccess() {
   const [log, setLog] = useState([]);
   const [run, busy] = useAction();
   useEffect(() => {
-    api('/system/network').then((n) => setMode(n.remoteAccess)).catch(() => {});
-    api('/auth/log').then(setLog).catch(() => {});
+    api('/system/network')
+      .then((n) => setMode(n.remoteAccess))
+      .catch(() => {});
+    api('/auth/log')
+      .then(setLog)
+      .catch(() => {});
   }, []);
   if (!mode) return null;
   const failed = log.filter((l) => !l.ok).length;
@@ -194,7 +195,11 @@ function PanelAccess() {
       </div>
       <div>
         <h3 style={{ marginBottom: '0.4rem' }}>Inicios de sesión recientes</h3>
-        {failed > 0 && <p className="note" style={{ marginBottom: '0.5rem' }}>{failed} intento(s) fallido(s). Si no fuiste tú, cambia la contraseña.</p>}
+        {failed > 0 && (
+          <p className="note" style={{ marginBottom: '0.5rem' }}>
+            {failed} intento(s) fallido(s). Si no fuiste tú, cambia la contraseña.
+          </p>
+        )}
         {log.length === 0 ? (
           <p className="faint small">Sin registros todavía.</p>
         ) : (
@@ -230,6 +235,8 @@ const MODE_HINT = {
   installer: 'Se descarga el instalador nuevo y se instala encima. Tus servidores, mundos y ajustes (carpeta data) no se tocan.',
   manual: '',
 };
+/** Modos en los que el panel puede instalarse la versión nueva él mismo. */
+const SELF_UPDATE = ['git', 'installer'];
 
 function PanelUpdate() {
   const [st, setSt] = useState(null);
@@ -240,7 +247,10 @@ function PanelUpdate() {
   const toast = useToast();
   const timer = useRef();
 
-  const load = () => api('/system/update').then(setSt).catch(() => {});
+  const load = () =>
+    api('/system/update')
+      .then(setSt)
+      .catch(() => {});
   useEffect(() => {
     load();
     return () => clearTimeout(timer.current);
@@ -290,10 +300,15 @@ function PanelUpdate() {
         </h2>
         <span className="muted small">Versión instalada: {st.current}</span>
       </div>
-      {st.mode === 'manual' ? (
+      {st.mode === 'docker' ? (
         <p className="muted small">
-          Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos
-          conservando la carpeta <span className="mono">data</span>.
+          El panel corre en Docker: se actualiza cambiando la imagen desde el equipo, con <span className="mono">docker compose pull && docker compose up -d</span> (o{' '}
+          <span className="mono">docker compose build --pull && docker compose up -d</span> si la construyes tú). El volumen <span className="mono">/data</span> no se toca.
+        </p>
+      ) : st.mode === 'manual' ? (
+        <p className="muted small">
+          Esta copia no se instaló con el instalador ni con git, así que no puede actualizarse sola. Descarga la versión nueva y reemplaza los archivos conservando la carpeta{' '}
+          <span className="mono">data</span>.
         </p>
       ) : (
         <p className="muted small">{MODE_HINT[st.mode]} Al terminar, los servidores encendidos se apagan con cuidado y el panel se vuelve a abrir solo.</p>
@@ -310,17 +325,23 @@ function PanelUpdate() {
               {c.changes.length > 12 && <li className="faint">y {c.changes.length - 12} cambios más</li>}
             </ul>
           )}
-          {c.notes && <p className="small" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{c.notes.slice(0, 800)}</p>}
-          {c.dirty && <p className="small" style={{ margin: 0 }}>Hay archivos del panel modificados a mano: si chocan con la versión nueva, git no actualizará.</p>}
+          {c.notes && (
+            <p className="small" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+              {c.notes.slice(0, 800)}
+            </p>
+          )}
+          {c.dirty && (
+            <p className="small" style={{ margin: 0 }}>
+              Hay archivos del panel modificados a mano: si chocan con la versión nueva, git no actualizará.
+            </p>
+          )}
         </div>
       )}
 
       {(st.running || st.log.length > 0) && (
         <div role="status" aria-live="polite" className="stack" style={{ gap: '0.3rem' }}>
           <strong className="small">{st.error ? 'No se pudo actualizar' : st.running ? st.step : restarting ? 'Reiniciando el panel…' : st.step}</strong>
-          <pre className="log-box">
-            {st.log.join('\n')}
-          </pre>
+          <pre className="log-box">{st.log.join('\n')}</pre>
         </div>
       )}
 
@@ -329,7 +350,7 @@ function PanelUpdate() {
           <button onClick={check} disabled={checking || updating}>
             {checking ? 'Buscando…' : 'Buscar actualizaciones'}
           </button>
-          {c?.available && (
+          {c?.available && SELF_UPDATE.includes(st.mode) && (
             <button className="btn-go" disabled={updating} onClick={() => setConfirm(true)}>
               {updating ? 'Actualizando…' : `Actualizar a ${c.latest}`}
             </button>
@@ -362,7 +383,9 @@ function StartWithWindows() {
   const [st, setSt] = useState(null);
   const [run, busy] = useAction();
   useEffect(() => {
-    api('/system/startup').then(setSt).catch(() => {});
+    api('/system/startup')
+      .then(setSt)
+      .catch(() => {});
   }, []);
   if (!st?.supported) return null;
   return (
@@ -386,5 +409,192 @@ function StartWithWindows() {
         </span>
       </label>
     </section>
+  );
+}
+
+const ROLE_HINT = {
+  moderator: 'En sus servidores: consola, jugadores, chat, respaldos, encender y apagar. No ve archivos ni cambia ajustes.',
+  viewer: 'En sus servidores solo mira: consola, jugadores, chat, actividad, rendimiento y logs.',
+};
+
+/** Cuentas de otras personas (moderadores y observadores) y a qué servidores entran. */
+function UsersSection() {
+  const { servers } = useLive();
+  const [users, setUsers] = useState(null);
+  const [editing, setEditing] = useState(null); // null | 'new' | usuario
+  const [confirm, setConfirm] = useState(null);
+  const [run, busy] = useAction();
+  const load = () =>
+    api('/auth/users')
+      .then(setUsers)
+      .catch(() => setUsers([]));
+  useEffect(() => {
+    load();
+  }, []);
+  if (!users) return null;
+  const nameOf = (id) => servers.find((s) => s.id === id)?.name || 'servidor borrado';
+
+  return (
+    <section className="panel stack" aria-labelledby="users-title">
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h2 id="users-title" style={{ margin: 0 }}>
+          Usuarios
+        </h2>
+        <button className="btn-sm" onClick={() => setEditing('new')} disabled={busy}>
+          Invitar a alguien
+        </button>
+      </div>
+      <p className="muted small">
+        Cada cuenta entra con su usuario y contraseña y ve solo los servidores que le asignes. <strong>Moderador:</strong> {ROLE_HINT.moderator} <strong>Observador:</strong> {ROLE_HINT.viewer}
+      </p>
+      {users.length === 0 ? (
+        <p className="faint small">Solo tú entras al panel por ahora.</p>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Servidores</th>
+                <th>Última entrada</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.username}</td>
+                  <td>{ROLE_LABEL[u.role] || u.role}</td>
+                  <td className="small">{u.servers === '*' ? 'Todos (también los nuevos)' : u.servers.length ? u.servers.map(nameOf).join(', ') : 'Ninguno'}</td>
+                  <td className="muted small">{u.lastLoginAt ? formatDate(u.lastLoginAt) : 'Todavía no entra'}</td>
+                  <td className="actions">
+                    <button className="btn-sm" disabled={busy} onClick={() => setEditing(u)}>
+                      Editar
+                    </button>{' '}
+                    <button className="btn-sm btn-stop" disabled={busy} onClick={() => setConfirm(u)}>
+                      Quitar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {editing && (
+        <UserForm
+          user={editing === 'new' ? null : editing}
+          servers={servers}
+          busy={busy}
+          onClose={() => setEditing(null)}
+          onSave={(body) =>
+            run(
+              () =>
+                api(editing === 'new' ? '/auth/users' : `/auth/users/${editing.id}`, { method: editing === 'new' ? 'POST' : 'PUT', body })
+                  .then(() => load())
+                  .then(() => setEditing(null)),
+              editing === 'new' ? 'Cuenta creada' : 'Cuenta guardada'
+            )
+          }
+        />
+      )}
+      {confirm && (
+        <Confirm
+          title={`Quitar a ${confirm.username}`}
+          message="Dejará de poder entrar al panel al momento. Sus servidores no se tocan."
+          confirmLabel="Quitar"
+          danger
+          onClose={() => setConfirm(null)}
+          onConfirm={() =>
+            run(
+              () =>
+                api(`/auth/users/${confirm.id}`, { method: 'DELETE' })
+                  .then(load)
+                  .then(() => setConfirm(null)),
+              'Cuenta quitada'
+            )
+          }
+        />
+      )}
+    </section>
+  );
+}
+
+function UserForm({ user, servers, busy, onClose, onSave }) {
+  const [username, setUsername] = useState(user?.username || '');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState(user?.role || 'moderator');
+  const [all, setAll] = useState(user ? user.servers === '*' : true);
+  const [chosen, setChosen] = useState(new Set(user && user.servers !== '*' ? user.servers : []));
+  const toggle = (id) =>
+    setChosen((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  return (
+    <form
+      className="stack"
+      style={{ gap: '0.8rem', borderTop: '1px solid var(--line)', paddingTop: '0.9rem' }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        const body = { username, role, servers: all ? '*' : [...chosen] };
+        if (!user || password) body.password = password;
+        onSave(body);
+      }}
+    >
+      <h3 style={{ margin: 0 }}>{user ? `Editar a ${user.username}` : 'Nueva cuenta'}</h3>
+      <div className="grid-2">
+        <label className="field">
+          <span>Usuario</span>
+          <input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} maxLength={32} pattern="[A-Za-z0-9_.\-]{3,32}" autoComplete="off" />
+        </label>
+        <label className="field">
+          <span>{user ? 'Nueva contraseña (vacío para dejarla igual)' : 'Contraseña'}</span>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required={!user} minLength={8} autoComplete="new-password" />
+          <span>Mínimo 8 caracteres. Pásasela por un medio seguro; puede cambiarla al entrar.</span>
+        </label>
+      </div>
+      <div className="stack" style={{ gap: '0.4rem' }} role="radiogroup" aria-label="Rol">
+        {['moderator', 'viewer'].map((r) => (
+          <label key={r} className="check">
+            <input type="radio" name="role" checked={role === r} onChange={() => setRole(r)} style={{ width: 18, minHeight: 18, height: 18, margin: '2px 0 0' }} />
+            <span>
+              {ROLE_LABEL[r]}
+              <span className="faint" style={{ display: 'block' }}>
+                {ROLE_HINT[r]}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <fieldset className="stack" style={{ gap: '0.4rem', border: 0, padding: 0, margin: 0 }}>
+        <legend className="small" style={{ marginBottom: '0.3rem' }}>
+          Servidores a los que entra
+        </legend>
+        <label className="check">
+          <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />
+          <span>Todos, también los que crees después</span>
+        </label>
+        {!all &&
+          servers.map((s) => (
+            <label key={s.id} className="check" style={{ marginLeft: '1.4rem' }}>
+              <input type="checkbox" checked={chosen.has(s.id)} onChange={() => toggle(s.id)} />
+              <span>{s.name}</span>
+            </label>
+          ))}
+        {!all && servers.length === 0 && <p className="faint small">Todavía no hay servidores que asignar.</p>}
+      </fieldset>
+      <div className="row">
+        <button className="btn-go" disabled={busy}>
+          {user ? 'Guardar' : 'Crear cuenta'}
+        </button>
+        <button type="button" className="btn-ghost" onClick={onClose} disabled={busy}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }

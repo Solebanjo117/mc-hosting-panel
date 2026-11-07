@@ -82,7 +82,11 @@ describe('El mapa sigue al mundo activo', () => {
   it('misma carpeta pero mundo regenerado (otra semilla): borra lo dibujado y avisa', () => {
     const server = setup('srv-g', { level: 'world' });
     const levelDat = (seed) =>
-      writeNbt({ compression: 'gzip', rootName: '', root: { type: 'compound', value: [{ name: 'Data', type: 'compound', value: [{ name: 'WorldGenSettings', type: 'compound', value: [{ name: 'seed', type: 'long', value: seed }] }] }] } });
+      writeNbt({
+        compression: 'gzip',
+        rootName: '',
+        root: { type: 'compound', value: [{ name: 'Data', type: 'compound', value: [{ name: 'WorldGenSettings', type: 'compound', value: [{ name: 'seed', type: 'long', value: seed }] }] }] },
+      });
     const file = path.join(serverDir('srv-g'), 'world', 'level.dat');
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, levelDat('111'));

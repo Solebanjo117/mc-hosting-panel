@@ -44,7 +44,12 @@ function ModpackCard({ server, data, running, onChanged }) {
         <div className="grow">
           <div className="faint small">Modpack</div>
           <h2 style={{ margin: 0 }}>
-            {mp.name} {mp.version && <span className="muted" style={{ fontWeight: 400 }}>{mp.version}</span>}
+            {mp.name}{' '}
+            {mp.version && (
+              <span className="muted" style={{ fontWeight: 400 }}>
+                {mp.version}
+              </span>
+            )}
           </h2>
           <div className="muted small">
             {mp.site ? `De ${SITE_LABEL[mp.site]}` : `Archivo ${mp.format === 'curseforge' ? 'de CurseForge' : '.mrpack'} subido`}
@@ -66,14 +71,26 @@ function ModpackCard({ server, data, running, onChanged }) {
         )}
       </div>
 
-      {mp.pending && <p className="note" style={{ margin: 0 }}>Instalando la versión del modpack…</p>}
-      {latest && running && <p className="note" style={{ margin: 0 }}>Hay una versión nueva. Apaga el servidor para actualizar.</p>}
+      {mp.pending && (
+        <p className="note" style={{ margin: 0 }}>
+          Instalando la versión del modpack…
+        </p>
+      )}
+      {latest && running && (
+        <p className="note" style={{ margin: 0 }}>
+          Hay una versión nueva. Apaga el servidor para actualizar.
+        </p>
+      )}
       {!latest && mp.site && !data.updatesError && (
         <p className="small" style={{ margin: 0, color: 'var(--prismarine)' }}>
           {data.updates.length ? 'Tienes la versión estable más reciente.' : 'Tienes la versión más reciente.'}
         </p>
       )}
-      {data.updatesError && <p className="faint small" style={{ margin: 0 }}>No se pudo buscar versiones nuevas: {data.updatesError}</p>}
+      {data.updatesError && (
+        <p className="faint small" style={{ margin: 0 }}>
+          No se pudo buscar versiones nuevas: {data.updatesError}
+        </p>
+      )}
 
       {data.updates.length > (latest ? 1 : 0) ? (
         <div>
@@ -134,8 +151,7 @@ function ModpackCard({ server, data, running, onChanged }) {
       {mp.clientOnly.length > 0 && (
         <details className="small">
           <summary className="muted">
-            {mp.clientOnly.length === 1 ? '1 mod se omitió en el servidor porque solo sirve' : `${mp.clientOnly.length} mods se omitieron en el servidor porque solo sirven`} en
-            el juego
+            {mp.clientOnly.length === 1 ? '1 mod se omitió en el servidor porque solo sirve' : `${mp.clientOnly.length} mods se omitieron en el servidor porque solo sirven`} en el juego
           </summary>
           <p className="faint" style={{ margin: '0.4rem 0' }}>
             Gráficos, minimapas, menús… El servidor fallaría con ellos. Tus jugadores sí los reciben en el archivo de abajo.
@@ -193,8 +209,8 @@ function UpdateConfirm({ server, mp, choice, onClose, onDone }) {
       </ul>
       {changesMc && (
         <p className="note">
-          Esta versión es para Minecraft {choice.gameVersions.join(', ')} (tu servidor está en {server.mcVersion}). El mundo se convierte al encender y no se
-          puede abrir en la versión anterior; para volver atrás tendrías que restaurar el respaldo.
+          Esta versión es para Minecraft {choice.gameVersions.join(', ')} (tu servidor está en {server.mcVersion}). El mundo se convierte al encender y no se puede abrir en la versión anterior; para
+          volver atrás tendrías que restaurar el respaldo.
         </p>
       )}
       <div className="row" style={{ justifyContent: 'flex-end' }}>

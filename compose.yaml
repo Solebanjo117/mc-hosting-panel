@@ -1,0 +1,42 @@
+# MC Hosting Panel con Docker Compose. Guía completa: docs/LINUX.md → "Con Docker".
+#
+#   docker compose up -d        # arranca (la primera vez construye la imagen)
+#   docker compose logs -f      # ver el panel
+#   docker compose down         # parar (apaga los servidores con cuidado y guarda los mundos)
+#
+# Después abre http://localhost:8080 (o por túnel SSH / Tailscale si está en un servidor).
+
+services:
+  panel:
+    build: .
+    # Si prefieres la imagen ya construida (GitHub Container Registry), quita "build:" y usa:
+    # image: ghcr.io/solebanjo117/mc-hosting-panel:latest
+    container_name: mc-hosting-panel
+    restart: unless-stopped
+    init: true # recoge procesos huérfanos (Java, playit) que el panel deje al cerrar
+    # Al parar, el panel manda "stop" a cada servidor y espera a que guarden: hay que darle tiempo.
+    stop_grace_period: 90s
+    ports:
+      - '8080:8080' # el panel. No lo abras a internet: entra por SSH o Tailscale.
+      - '25565:25565/tcp' # Minecraft Java (primer servidor)
+      - '19132:19132/udp' # Minecraft Bedrock / Geyser (primer servidor)
+      # Cada servidor nuevo usa otro puerto (25566, 25567…): añádelo aquí y vuelve a hacer `docker compose up -d`.
+      # Con varios servidores es más cómodo usar la red del equipo (solo Linux): borra "ports:" y pon
+      # network_mode: host
+    volumes:
+      - mc-data:/data # servidores, mundos, respaldos, Java, ajustes y la clave de los tokens
+      # O una carpeta tuya (debe pertenecer al usuario 1000: sudo chown -R 1000:1000 ./data):
+      # - ./data:/data
+    environment:
+      - TZ=America/Mexico_City # horarios de energía y tareas programadas en tu hora local
+      # - PORT=8080
+      # Quién puede abrir el panel: local | lan (por defecto) | any. Se cambia también desde Ajustes.
+      # - MCP_REMOTE_ACCESS=lan
+    # Memoria: la que sumen tus servidores (2-4 GB cada uno sin mods, 6+ con modpacks) más 300 MB del panel.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 8g
+
+volumes:
+  mc-data:

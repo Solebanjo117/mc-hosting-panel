@@ -43,7 +43,12 @@ async function axeViolations(page) {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
       resultTypes: ['violations'],
     });
-    return r.violations.map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.slice(0, 4).map((n) => `${n.target.join(' ')} → ${n.failureSummary.split('\n').slice(1, 2).join('')}`) }));
+    return r.violations.map((v) => ({
+      id: v.id,
+      impact: v.impact,
+      help: v.help,
+      nodes: v.nodes.slice(0, 4).map((n) => `${n.target.join(' ')} → ${n.failureSummary.split('\n').slice(1, 2).join('')}`),
+    }));
   });
 }
 const built = fs.existsSync(path.join(ROOT, 'dist', 'index.html'));
@@ -82,7 +87,10 @@ describe('Panel en el navegador', { skip }, () => {
     await page.getByText('Las contraseñas no coinciden').waitFor();
     await page.getByLabel('Repite la contraseña').fill(ADMIN.password);
     await page.getByRole('button', { name: 'Crear cuenta y entrar' }).click();
-    await page.getByRole('link', { name: /Crear servidor|Nuevo servidor/ }).first().waitFor();
+    await page
+      .getByRole('link', { name: /Crear servidor|Nuevo servidor/ })
+      .first()
+      .waitFor();
   });
 
   it('crea un servidor desde el formulario y lo deja instalado', async () => {
@@ -99,7 +107,10 @@ describe('Panel en el navegador', { skip }, () => {
     await page.getByRole('button', { name: 'Encender' }).click();
     await page.getByRole('button', { name: 'Apagar' }).waitFor({ timeout: 30000 });
     const input = page.getByLabel('Comando');
-    await page.locator('.terminal').getByText(/Done \(/).waitFor({ timeout: 30000 });
+    await page
+      .locator('.terminal')
+      .getByText(/Done \(/)
+      .waitFor({ timeout: 30000 });
     await input.fill('say hola desde el navegador');
     await input.press('Enter');
     await page.locator('.terminal').getByText('[Server] hola desde el navegador').waitFor();
@@ -107,12 +118,29 @@ describe('Panel en el navegador', { skip }, () => {
 
   it('todas las secciones abren sin errores', async () => {
     const base = page.url().replace(/\/$/, '');
-    for (const sub of ['jugadores', 'chat', 'actividad', 'contenido', 'datapacks', 'mundos', 'mapa', 'respaldos', 'archivos', 'conexion', 'bedrock', 'seguridad', 'rendimiento', 'logs', 'ajustes', 'tareas']) {
+    for (const sub of [
+      'jugadores',
+      'chat',
+      'actividad',
+      'contenido',
+      'datapacks',
+      'mundos',
+      'mapa',
+      'respaldos',
+      'archivos',
+      'conexion',
+      'bedrock',
+      'seguridad',
+      'rendimiento',
+      'logs',
+      'ajustes',
+      'tareas',
+    ]) {
       await page.goto(`${base}/${sub}`);
       await page.waitForLoadState('networkidle');
       assert.equal(await page.locator('.error-box').count(), 0, `error visible en ${sub}`);
     }
-    for (const p of ['/', '/ajustes', '/apariencia', '/guia', '/guia/linux', '/nuevo/modpack']) {
+    for (const p of ['/', '/rendimiento', '/ajustes', '/apariencia', '/guia', '/guia/linux', '/nuevo/modpack']) {
       await page.goto(`${panel.base}${p}`);
       await page.waitForLoadState('networkidle');
     }
@@ -127,7 +155,10 @@ describe('Panel en el navegador', { skip }, () => {
     await card.getByText('build #125').waitFor();
     await card.getByRole('button', { name: 'Actualizar', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Actualizar' }).click();
-    await card.getByText(/Listo: Paper build #125/).first().waitFor({ timeout: 60000 });
+    await card
+      .getByText(/Listo: Paper build #125/)
+      .first()
+      .waitFor({ timeout: 60000 });
     await card.getByRole('button', { name: 'Deshacer' }).waitFor();
     assert.deepEqual(errors, []);
   });
@@ -163,8 +194,27 @@ describe('Panel en el navegador', { skip }, () => {
     await tab.goto(panel.base);
     const list = await tab.evaluate(() => fetch('/api/servers').then((r) => r.json()));
     const sv = `/servidor/${list[0].id}`;
-    const pages = ['/', '/nuevo', '/nuevo/modpack', '/ajustes', '/apariencia', '/guia', '/guia/linux'];
-    for (const sub of ['', '/jugadores', '/chat', '/actividad', '/contenido', '/datapacks', '/mundos', '/mapa', '/respaldos', '/archivos', '/conexion', '/bedrock', '/seguridad', '/rendimiento', '/logs', '/ajustes', '/tareas']) pages.push(`${sv}${sub}`);
+    const pages = ['/', '/rendimiento', '/nuevo', '/nuevo/modpack', '/ajustes', '/apariencia', '/guia', '/guia/linux'];
+    for (const sub of [
+      '',
+      '/jugadores',
+      '/chat',
+      '/actividad',
+      '/contenido',
+      '/datapacks',
+      '/mundos',
+      '/mapa',
+      '/respaldos',
+      '/archivos',
+      '/conexion',
+      '/bedrock',
+      '/seguridad',
+      '/rendimiento',
+      '/logs',
+      '/ajustes',
+      '/tareas',
+    ])
+      pages.push(`${sv}${sub}`);
     const found = [];
     for (const p of pages) {
       await tab.goto(`${panel.base}${p}`);

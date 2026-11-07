@@ -2,7 +2,7 @@ import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
 import multer from 'multer';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { TMP_DIR, serverDir } from '../config.js';
 import { getServer } from '../db.js';
 import { HttpError } from '../lib/util.js';
@@ -61,7 +61,7 @@ manageRouter.post('/worlds/import', upload.single('file'), async (req, res) => {
 manageRouter.get('/worlds/:name/download', (req, res) => {
   const parts = worlds.worldFolders(req.params.id, req.params.name);
   res.attachment(`${req.params.name}.zip`);
-  const zip = archiver('zip', { zlib: { level: 5 } });
+  const zip = new ZipArchive({ zlib: { level: 5 } });
   zip.on('error', (err) => res.destroy(err));
   zip.pipe(res);
   for (const p of parts) zip.directory(p.path, p.name);

@@ -8,7 +8,10 @@ describe('Comandos rápidos', () => {
   it('trae comandos de fábrica, incluido /give con jugador, objeto y cantidad', () => {
     assert.equal(listCommands(), DEFAULT_COMMANDS);
     const give = DEFAULT_COMMANDS.find((c) => c.template.startsWith('give'));
-    assert.deepEqual(give.params.map((p) => p.type), ['player', 'item', 'number']);
+    assert.deepEqual(
+      give.params.map((p) => p.type),
+      ['player', 'item', 'number']
+    );
   });
 
   it('encuentra los huecos {…} sin repetir, con acentos y ñ', () => {
@@ -27,9 +30,7 @@ describe('Comandos rápidos', () => {
   });
 
   it('guarda comandos propios: quita la / inicial, arma los parámetros y respeta los tipos elegidos', () => {
-    const [c] = saveCommands([
-      { label: 'Bloque', template: '/setblock ~ ~ ~ {bloque}', params: [] },
-    ]);
+    const [c] = saveCommands([{ label: 'Bloque', template: '/setblock ~ ~ ~ {bloque}', params: [] }]);
     assert.equal(c.template, 'setblock ~ ~ ~ {bloque}');
     assert.deepEqual(c.params, [{ name: 'bloque', type: 'item', default: '', options: [] }]);
 

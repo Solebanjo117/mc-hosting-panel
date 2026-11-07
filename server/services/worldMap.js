@@ -369,7 +369,10 @@ export function followActiveWorld(server) {
     // Solo se cambian los mapas del mundo anterior; mundos extra (Multiverse, etc.) se respetan.
     const changed = maps.filter((x) => x.base === previous);
     for (const x of changed) {
-      fs.writeFileSync(x.file, x.text.replace(WORLD_LINE, (_all, pre, q, _v, post) => `${pre}${q || '"'}${active}${x.suffix}${q || '"'}${post}`));
+      fs.writeFileSync(
+        x.file,
+        x.text.replace(WORLD_LINE, (_all, pre, q, _v, post) => `${pre}${q || '"'}${active}${x.suffix}${q || '"'}${post}`)
+      );
       purgeRendered(server, x.id);
     }
     if (changed.length) message = `El mapa ahora muestra el mundo "${active}". BlueMap lo vuelve a dibujar desde cero (tarda unos minutos).`;

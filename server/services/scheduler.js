@@ -49,9 +49,22 @@ function validate(input) {
     enabled: input.enabled !== false,
     warnMinutes: ['restart', 'stop'].includes(action) ? Math.min(60, Math.max(0, Math.round(Number(input.warnMinutes) || 0))) : 0,
     backupBefore: action === 'restart' ? Boolean(input.backupBefore) : false,
-    command: action === 'command' ? String(input.command || '').replace(/^\//, '').trim().slice(0, 500) : '',
-    message: action === 'message' ? String(input.message || '').trim().slice(0, 250) : '',
-    label: String(input.label || '').trim().slice(0, 60),
+    command:
+      action === 'command'
+        ? String(input.command || '')
+            .replace(/^\//, '')
+            .trim()
+            .slice(0, 500)
+        : '',
+    message:
+      action === 'message'
+        ? String(input.message || '')
+            .trim()
+            .slice(0, 250)
+        : '',
+    label: String(input.label || '')
+      .trim()
+      .slice(0, 60),
   };
   if (action === 'command' && !task.command) throw new HttpError(400, 'Escribe el comando');
   if (action === 'message' && !task.message) throw new HttpError(400, 'Escribe el mensaje');

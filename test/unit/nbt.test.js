@@ -24,7 +24,15 @@ const sample = () => ({
         name: 'Inventory',
         type: 'list',
         listType: 'compound',
-        value: [{ type: 'compound', value: [{ name: 'Slot', type: 'byte', value: 0 }, { name: 'id', type: 'string', value: 'minecraft:diamond' }] }],
+        value: [
+          {
+            type: 'compound',
+            value: [
+              { name: 'Slot', type: 'byte', value: 0 },
+              { name: 'id', type: 'string', value: 'minecraft:diamond' },
+            ],
+          },
+        ],
       },
       { name: 'anidada', type: 'list', listType: 'list', value: [{ type: 'list', listType: 'int', value: [{ type: 'int', value: 7 }] }] },
     ],

@@ -13,7 +13,13 @@ const H = 3600_000;
 const DAY = 24 * H;
 
 export const DEFINITIONS = [
-  { id: 'primera-sesion', title: 'Primera noche', desc: 'Alguien jugó 20 minutos seguidos.', test: (f) => f.longestSession >= 20 * 60_000, progress: (f) => Math.min(1, f.longestSession / (20 * 60_000)) },
+  {
+    id: 'primera-sesion',
+    title: 'Primera noche',
+    desc: 'Alguien jugó 20 minutos seguidos.',
+    test: (f) => f.longestSession >= 20 * 60_000,
+    progress: (f) => Math.min(1, f.longestSession / (20 * 60_000)),
+  },
   { id: 'horas-10', title: 'Calentando motores', desc: '10 horas jugadas entre todos.', test: (f) => f.playerHours >= 10, progress: (f) => Math.min(1, f.playerHours / 10) },
   { id: 'horas-100', title: 'Cien horas', desc: '100 horas jugadas entre todos.', test: (f) => f.playerHours >= 100, progress: (f) => Math.min(1, f.playerHours / 100) },
   { id: 'horas-1000', title: 'Mil horas', desc: '1000 horas jugadas entre todos.', test: (f) => f.playerHours >= 1000, progress: (f) => Math.min(1, f.playerHours / 1000) },
@@ -42,7 +48,12 @@ export function facts(id) {
   const playerHours = sessions.reduce((n, s) => n + (s.end - s.start), 0) / H;
   const longestSession = sessions.reduce((m, s) => Math.max(m, s.end - s.start), 0);
   // Máximo de jugadores a la vez: se barren inicios y fines ordenados.
-  const marks = sessions.flatMap((s) => [[s.start, 1], [s.end, -1]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const marks = sessions
+    .flatMap((s) => [
+      [s.start, 1],
+      [s.end, -1],
+    ])
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   let cur = 0;
   let maxConcurrent = 0;
   for (const [, d] of marks) {

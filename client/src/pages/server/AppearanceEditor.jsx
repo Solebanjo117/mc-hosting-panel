@@ -126,7 +126,16 @@ export default function AppearanceEditor({ server, running }) {
       <div className="stack" style={{ gap: '0.5rem' }}>
         <div className="mc-toolbar" role="toolbar" aria-label="Colores y formato">
           {Object.entries(MC_COLORS).map(([code, c]) => (
-            <button key={code} type="button" className="mc-swatch" style={{ background: c.hex }} title={`${c.name} (§${code})`} aria-label={c.name} onMouseDown={(e) => e.preventDefault()} onClick={() => insert(code)} />
+            <button
+              key={code}
+              type="button"
+              className="mc-swatch"
+              style={{ background: c.hex }}
+              title={`${c.name} (§${code})`}
+              aria-label={c.name}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => insert(code)}
+            />
           ))}
           <span className="mc-sep" />
           {Object.entries(MC_FORMATS).map(([code, f]) => (
@@ -137,7 +146,17 @@ export default function AppearanceEditor({ server, running }) {
               title={`${f.name} (§${code})`}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => insert(code)}
-              style={code === 'l' ? { fontWeight: 700 } : code === 'o' ? { fontStyle: 'italic' } : code === 'n' ? { textDecoration: 'underline' } : code === 'm' ? { textDecoration: 'line-through' } : undefined}
+              style={
+                code === 'l'
+                  ? { fontWeight: 700 }
+                  : code === 'o'
+                    ? { fontStyle: 'italic' }
+                    : code === 'n'
+                      ? { textDecoration: 'underline' }
+                      : code === 'm'
+                        ? { textDecoration: 'line-through' }
+                        : undefined
+              }
             >
               {code === 'l' ? 'N' : code === 'o' ? 'C' : code === 'n' ? 'S' : code === 'm' ? 'T' : code === 'k' ? 'Mágico' : 'Normal'}
             </button>
@@ -174,10 +193,13 @@ export default function AppearanceEditor({ server, running }) {
           className="btn-go"
           disabled={busy || !dirty}
           onClick={() =>
-            run(async () => {
-              await api(`/servers/${server.id}/properties`, { method: 'PUT', body: { motd } });
-              setSaved(`${lines[0]}\n${lines[1]}`);
-            }, running ? 'Mensaje guardado. Se verá después de reiniciar el servidor.' : 'Mensaje guardado')
+            run(
+              async () => {
+                await api(`/servers/${server.id}/properties`, { method: 'PUT', body: { motd } });
+                setSaved(`${lines[0]}\n${lines[1]}`);
+              },
+              running ? 'Mensaje guardado. Se verá después de reiniciar el servidor.' : 'Mensaje guardado'
+            )
           }
         >
           Guardar mensaje
@@ -206,10 +228,13 @@ export default function AppearanceEditor({ server, running }) {
               className="btn-go"
               disabled={busy}
               onClick={() =>
-                run(async () => {
-                  await api(`/servers/${server.id}/icon`, { method: 'PUT', body: { png: preview } });
-                  setPreview(null);
-                }, running ? 'Ícono guardado. Se verá después de reiniciar el servidor.' : 'Ícono guardado')
+                run(
+                  async () => {
+                    await api(`/servers/${server.id}/icon`, { method: 'PUT', body: { png: preview } });
+                    setPreview(null);
+                  },
+                  running ? 'Ícono guardado. Se verá después de reiniciar el servidor.' : 'Ícono guardado'
+                )
               }
             >
               Guardar ícono
@@ -237,8 +262,7 @@ export default function AppearanceEditor({ server, running }) {
         />
       )}
       <p className="faint small" style={{ margin: 0 }}>
-        Eliges qué parte de la foto usar y el panel la ajusta a 64×64. Cualquier imagen sirve (PNG, JPG, GIF…). Los cambios se ven en Minecraft al reiniciar el
-        servidor.
+        Eliges qué parte de la foto usar y el panel la ajusta a 64×64. Cualquier imagen sirve (PNG, JPG, GIF…). Los cambios se ven en Minecraft al reiniciar el servidor.
       </p>
     </section>
   );

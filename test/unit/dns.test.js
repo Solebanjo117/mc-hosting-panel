@@ -42,7 +42,10 @@ describe('DNS: qué registros se crean', () => {
     assert.deepEqual(p.records[0], { type: 'SRV', host: '_minecraft._tcp.mc.prueba.dedyn.io', port: 4321, target: 'cairo-flap.gl.at.ply.gg' });
     assert.ok(!p.records.some((r) => r.type === 'A' && r.ip === '147.185.221.215'), 'nunca un A hacia la IP de playit para Java');
     assert.deepEqual(p.bedrock, { host: 'mc.prueba.dedyn.io', port: 5555 });
-    assert.ok(p.records.some((r) => r.type === 'A' && r.ip === '147.185.221.16'), 'Bedrock sí usa registro A');
+    assert.ok(
+      p.records.some((r) => r.type === 'A' && r.ip === '147.185.221.16'),
+      'Bedrock sí usa registro A'
+    );
   });
 
   it('playit + DuckDNS: Java no se puede (solo Bedrock) y lo explica', () => {

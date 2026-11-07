@@ -127,10 +127,7 @@ export async function info(modId) {
 }
 
 export async function details(modId) {
-  const [{ data: m }, desc] = await Promise.all([
-    call(`/mods/${encodeURIComponent(modId)}`),
-    call(`/mods/${encodeURIComponent(modId)}/description`).catch(() => ({ data: '' })),
-  ]);
+  const [{ data: m }, desc] = await Promise.all([call(`/mods/${encodeURIComponent(modId)}`), call(`/mods/${encodeURIComponent(modId)}/description`).catch(() => ({ data: '' }))]);
   const links = [
     ['Código fuente', m.links?.sourceUrl],
     ['Reportar problemas', m.links?.issuesUrl],
@@ -156,7 +153,6 @@ export async function details(modId) {
     blocked: m.allowModDistribution === false,
   };
 }
-
 
 // --- Modpacks ---------------------------------------------------------------------
 

@@ -1,6 +1,8 @@
 /**
  * Arma un .zip sin comprimir con los nombres tal cual (incluso "../malo.txt"),
  * para probar que el panel no se deja engañar. Las librerías normales limpian esos nombres.
+ * Cada entrada es el contenido (texto o Buffer) o { data, mode } para fijar los permisos Unix
+ * (por ejemplo mode: 0o120777 es un enlace simbólico; data es a dónde apunta).
  */
 const TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
@@ -18,7 +20,8 @@ export function rawZip(entries) {
   const centrals = [];
   let offset = 0;
   for (const [name, content] of Object.entries(entries)) {
-    const data = Buffer.from(content);
+    const spec = content && typeof content === 'object' && !Buffer.isBuffer(content) ? content : { data: content };
+    const data = Buffer.from(spec.data);
     const fname = Buffer.from(name, 'utf8');
     const crc = crc32(data);
     const local = Buffer.alloc(30);
@@ -33,13 +36,14 @@ export function rawZip(entries) {
     locals.push(local, fname, data);
     const central = Buffer.alloc(46);
     central.writeUInt32LE(0x02014b50, 0);
-    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(spec.mode ? 20 | (3 << 8) : 20, 4); // "hecho en Unix" cuando hay permisos
     central.writeUInt16LE(20, 6);
     central.writeUInt16LE(0x0800, 8);
     central.writeUInt32LE(crc, 16);
     central.writeUInt32LE(data.length, 20);
     central.writeUInt32LE(data.length, 24);
     central.writeUInt16LE(fname.length, 28);
+    if (spec.mode) central.writeUInt32LE((spec.mode << 16) >>> 0, 38); // atributos externos: permisos Unix
     central.writeUInt32LE(offset, 42);
     centrals.push(central, fname);
     offset += 30 + fname.length + data.length;

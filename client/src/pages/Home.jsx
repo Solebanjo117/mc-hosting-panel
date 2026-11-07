@@ -4,6 +4,7 @@ import { api, TYPE_LABEL } from '../api.js';
 import { useLive, serverState } from '../live.jsx';
 import { useAppearance } from '../appearance.js';
 import { Electric, ELECTRIC_STATES, PlayerHead, Status, useAction, usePageTitle } from '../ui.jsx';
+import { useAuth } from '../auth.jsx';
 
 const HEALTH = {
   ok: { label: 'Todo bien', cls: 'ok' },
@@ -16,10 +17,13 @@ export default function Home() {
   const { servers, runtime, loaded } = useLive();
   const [info, setInfo] = useState(null);
   const [dash, setDash] = useState({});
+  const { isOwner, canOperate } = useAuth();
   usePageTitle('Tus servidores');
 
   useEffect(() => {
-    api('/system/info').then(setInfo).catch(() => {});
+    api('/system/info')
+      .then(setInfo)
+      .catch(() => {});
     const load = () =>
       api('/system/dashboard')
         .then((d) => setDash(Object.fromEntries(d.servers.map((s) => [s.id, s]))))
@@ -40,12 +44,21 @@ export default function Home() {
           <h1>Tus servidores</h1>
         </div>
         <div className="row">
-          <Link to="/nuevo/modpack" className="btn">
-            Desde un modpack
-          </Link>
-          <Link to="/nuevo" className="btn btn-go">
-            Crear servidor
-          </Link>
+          {servers.length > 0 && (
+            <Link to="/rendimiento" className="btn">
+              Rendimiento
+            </Link>
+          )}
+          {isOwner && (
+            <Link to="/nuevo/modpack" className="btn">
+              Desde un modpack
+            </Link>
+          )}
+          {isOwner && (
+            <Link to="/nuevo" className="btn btn-go">
+              Crear servidor
+            </Link>
+          )}
         </div>
       </div>
 
@@ -83,27 +96,38 @@ export default function Home() {
 
       {loaded && servers.length === 0 ? (
         <div className="empty">
-          <h2>Crea tu primer servidor</h2>
-          <p className="muted" style={{ maxWidth: '60ch' }}>
-            Elige el tipo (Vanilla, Paper para plugins, o Fabric/Forge/NeoForge para mods) y la versión. El panel descarga todo, incluido
-            Java, y lo deja listo para encender.
-          </p>
-          <Link to="/nuevo" className="btn btn-go">
-            Crear servidor
-          </Link>
+          {isOwner ? (
+            <>
+              <h2>Crea tu primer servidor</h2>
+              <p className="muted" style={{ maxWidth: '60ch' }}>
+                Elige el tipo (Vanilla, Paper para plugins, o Fabric/Forge/NeoForge para mods) y la versión. El panel descarga todo, incluido Java, y lo deja listo para encender.
+              </p>
+              <Link to="/nuevo" className="btn btn-go">
+                Crear servidor
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2>No tienes servidores asignados</h2>
+              <p className="muted" style={{ maxWidth: '60ch' }}>
+                Pídele al dueño del panel que te dé acceso a alguno desde Ajustes del panel → Usuarios.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <ul className="rack" aria-label="Servidores">
           {servers.map((s) => (
-            <ServerCard key={s.id} server={s} rt={runtime[s.id]} dash={dash[s.id]} />
+            <ServerCard key={s.id} server={s} rt={runtime[s.id]} dash={dash[s.id]} canOperate={canOperate} />
           ))}
         </ul>
       )}
 
-      <div className="note" style={{ marginTop: '2rem', maxWidth: '75ch' }}>
-        Para que tus amigos entren desde fuera de tu casa abre el puerto en tu router o crea un túnel de playit.gg en la pestaña Conexión.{' '}
-        <Link to="/guia">Ver la guía paso a paso</Link>.
-      </div>
+      {isOwner && (
+        <div className="note" style={{ marginTop: '2rem', maxWidth: '75ch' }}>
+          Para que tus amigos entren desde fuera de tu casa abre el puerto en tu router o crea un túnel de playit.gg en la pestaña Conexión. <Link to="/guia">Ver la guía paso a paso</Link>.
+        </div>
+      )}
     </div>
   );
 }
@@ -118,19 +142,10 @@ export function ServerIcon({ server, size = 48 }) {
       </span>
     );
   }
-  return (
-    <img
-      className="server-icon"
-      src={`/api/servers/${server.id}/icon?v=${server.iconAt || 0}`}
-      width={size}
-      height={size}
-      alt=""
-      onError={() => setFailed(true)}
-    />
-  );
+  return <img className="server-icon" src={`/api/servers/${server.id}/icon?v=${server.iconAt || 0}`} width={size} height={size} alt="" onError={() => setFailed(true)} />;
 }
 
-function ServerCard({ server, rt, dash }) {
+function ServerCard({ server, rt, dash, canOperate }) {
   const state = serverState(server, rt);
   const on = ['starting', 'running', 'stopping'].includes(state);
   const players = rt?.players || [];
@@ -169,9 +184,7 @@ function ServerCard({ server, rt, dash }) {
                 ))}
                 {players.length > 6 && <span className="heads-more">+{players.length - 6}</span>}
               </div>
-              <span className="small">
-                {players.length} jugando
-              </span>
+              <span className="small">{players.length} jugando</span>
             </>
           ) : (
             <span className="small faint">Nadie conectado</span>
@@ -198,6 +211,7 @@ function ServerCard({ server, rt, dash }) {
         )}
         <div className="row" style={{ gap: '0.4rem' }}>
           {server.installState === 'ready' &&
+            canOperate &&
             (on ? (
               <button className="btn-sm" disabled={busy || state === 'stopping'} onClick={() => run(() => api(`/servers/${server.id}/stop`, { method: 'POST' }))}>
                 Apagar

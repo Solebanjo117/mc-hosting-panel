@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import AdmZip from 'adm-zip';
 import { JAVA_DIR, TMP_DIR, IS_WINDOWS } from '../config.js';
 import { db } from '../db.js';
 import { download } from '../lib/http.js';
 import { compareVersions, HttpError } from '../lib/util.js';
+import { extractZip } from '../lib/zip.js';
 import { mojangVersion } from './versions.js';
 
 /**
@@ -99,13 +99,11 @@ export async function ensureJava(major, report = () => {}) {
     const ext = IS_WINDOWS ? 'zip' : 'tar.gz';
     const archive = path.join(TMP_DIR, `java-${major}-${Date.now()}.${ext}`);
     try {
-      await download(adoptiumUrl(major), archive, (p) =>
-        report({ message: `Descargando Java ${major}…`, progress: p })
-      );
+      await download(adoptiumUrl(major), archive, (p) => report({ message: `Descargando Java ${major}…`, progress: p }));
       report({ message: `Instalando Java ${major}…`, progress: null });
       fs.mkdirSync(target, { recursive: true });
       if (ext === 'zip') {
-        new AdmZip(archive).extractAllTo(target, true);
+        extractZip(archive, target);
       } else {
         await run('tar', ['-xzf', archive, '-C', target]);
       }

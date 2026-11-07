@@ -191,16 +191,31 @@ export async function startMocks() {
     }
     if (p.startsWith('/mojang/assets/')) return send({ objects: { 'minecraft/lang/es_mx.json': { hash: 'ab0123456789abcdef0123456789abcdef012345' } } });
     if (p.startsWith('/resources/ab/')) {
-      return send({ 'item.minecraft.diamond_sword': 'Espada de diamante', 'item.minecraft.diamond': 'Diamante', 'block.minecraft.stone': 'Piedra', 'effect.minecraft.speed': 'Velocidad', 'entity.minecraft.zombie': 'Zombi', 'gui.ok': 'Aceptar' });
+      return send({
+        'item.minecraft.diamond_sword': 'Espada de diamante',
+        'item.minecraft.diamond': 'Diamante',
+        'block.minecraft.stone': 'Piedra',
+        'effect.minecraft.speed': 'Velocidad',
+        'entity.minecraft.zombie': 'Zombi',
+        'gui.ok': 'Aceptar',
+      });
     }
 
     // --- PaperMC (Fill v3) ---------------------------------------------------------------
-    if (p === '/paper') return send({ versions: { '1.21': ['1.21.4', '1.21.4-rc1'], '1.20': ['1.20.1'] } });
+    if (p === '/paper') return send({ versions: { 1.21: ['1.21.4', '1.21.4-rc1'], '1.20': ['1.20.1'] } });
     m = p.match(/^\/paper\/versions\/([^/]+)\/builds$/);
-    if (m) return send([{ id: state.paperBuild, channel: 'STABLE', downloads: { 'server:default': { url: `${base}/files/paper-${m[1]}-${state.paperBuild}.jar` } } }, { id: state.paperBuild + 1, channel: 'BETA', downloads: { 'server:default': { url: `${base}/files/paper-beta.jar` } } }]);
+    if (m)
+      return send([
+        { id: state.paperBuild, channel: 'STABLE', downloads: { 'server:default': { url: `${base}/files/paper-${m[1]}-${state.paperBuild}.jar` } } },
+        { id: state.paperBuild + 1, channel: 'BETA', downloads: { 'server:default': { url: `${base}/files/paper-beta.jar` } } },
+      ]);
 
     // --- Fabric ----------------------------------------------------------------------------
-    if (p === '/fabric/versions/game') return send([{ version: '1.21.4', stable: true }, { version: '25w01a', stable: false }]);
+    if (p === '/fabric/versions/game')
+      return send([
+        { version: '1.21.4', stable: true },
+        { version: '25w01a', stable: false },
+      ]);
     if (p === '/fabric/versions/installer') return send([{ version: '1.0.1', stable: true }]);
     m = p.match(/^\/fabric\/versions\/loader\/([^/]+)$/);
     if (m) return send([{ loader: { version: '0.16.10', stable: true } }, { loader: { version: '0.16.9', stable: true } }]);
@@ -265,7 +280,13 @@ export async function startMocks() {
       const out = {};
       for (const h of hashes || []) {
         const up = state.modrinthUpdates[h];
-        if (up) out[h] = { id: `v-${up.project}-2`, project_id: up.project, version_number: '2.0.0', files: [{ primary: true, url: `${base}/files/${up.project}-2.0.0.jar`, filename: `${up.project}-2.0.0.jar`, hashes: { sha1: 'nuevo' } }] };
+        if (up)
+          out[h] = {
+            id: `v-${up.project}-2`,
+            project_id: up.project,
+            version_number: '2.0.0',
+            files: [{ primary: true, url: `${base}/files/${up.project}-2.0.0.jar`, filename: `${up.project}-2.0.0.jar`, hashes: { sha1: 'nuevo' } }],
+          };
       }
       return send(out);
     }
@@ -278,7 +299,20 @@ export async function startMocks() {
       if (loaders.length && !loaders.some((l) => d.loaders.includes(l))) return send([]);
       const ext = d.type === 'datapack' ? 'zip' : d.type === 'modpack' ? 'mrpack' : 'jar';
       const newer = Object.values(state.modrinthUpdates).some((x) => x.project === (d.id || slug))
-        ? [{ id: `v-${d.id || slug}-2`, name: `${d.title} 2.0.0`, version_number: '2.0.0', version_type: 'release', date_published: new Date().toISOString(), downloads: 1, loaders: d.loaders, game_versions: ['1.21.4'], files: [{ primary: true, url: `${base}/files/${slug}-2.0.0.${ext}`, filename: `${slug}-2.0.0.${ext}`, size: 10, hashes: { sha1: 'nuevo' } }], dependencies: [] }]
+        ? [
+            {
+              id: `v-${d.id || slug}-2`,
+              name: `${d.title} 2.0.0`,
+              version_number: '2.0.0',
+              version_type: 'release',
+              date_published: new Date().toISOString(),
+              downloads: 1,
+              loaders: d.loaders,
+              game_versions: ['1.21.4'],
+              files: [{ primary: true, url: `${base}/files/${slug}-2.0.0.${ext}`, filename: `${slug}-2.0.0.${ext}`, size: 10, hashes: { sha1: 'nuevo' } }],
+              dependencies: [],
+            },
+          ]
         : [];
       return send([
         ...newer,
@@ -296,6 +330,12 @@ export async function startMocks() {
         },
       ]);
     }
+    m = p.match(/^\/modrinth\/project\/([^/]+)\/members$/);
+    if (m)
+      return send([
+        { role: 'Owner', user: { username: 'Lucko' } },
+        { role: 'Developer', user: { username: 'Otro' } },
+      ]);
     m = p.match(/^\/modrinth\/project\/([^/]+)$/);
     if (m) {
       const slug = resolveProject(decodeURIComponent(m[1]));
@@ -324,8 +364,24 @@ export async function startMocks() {
       return send({
         pagination: { count: 2 },
         result: [
-          { name: 'EssentialsX', description: 'Comandos básicos', namespace: { owner: 'Essentials', slug: 'EssentialsX' }, avatarUrl: null, stats: { downloads: 500 }, lastUpdated: new Date().toISOString(), category: 'admin_tools' },
-          { name: 'Externo', description: 'Solo enlace externo', namespace: { owner: 'Otro', slug: 'Externo' }, avatarUrl: null, stats: { downloads: 5 }, lastUpdated: new Date().toISOString(), category: 'misc' },
+          {
+            name: 'EssentialsX',
+            description: 'Comandos básicos',
+            namespace: { owner: 'Essentials', slug: 'EssentialsX' },
+            avatarUrl: null,
+            stats: { downloads: 500 },
+            lastUpdated: new Date().toISOString(),
+            category: 'admin_tools',
+          },
+          {
+            name: 'Externo',
+            description: 'Solo enlace externo',
+            namespace: { owner: 'Otro', slug: 'Externo' },
+            avatarUrl: null,
+            stats: { downloads: 5 },
+            lastUpdated: new Date().toISOString(),
+            category: 'misc',
+          },
         ],
       });
     }
@@ -339,7 +395,9 @@ export async function startMocks() {
             channel: { name: 'Release' },
             createdAt: new Date().toISOString(),
             stats: { totalDownloads: 10 },
-            downloads: { PAPER: external ? { externalUrl: 'https://example.com/plugin' } : { downloadUrl: `${base}/files/EssentialsX-2.21.0.jar`, fileInfo: { name: 'EssentialsX-2.21.0.jar', sizeBytes: 100 } } },
+            downloads: {
+              PAPER: external ? { externalUrl: 'https://example.com/plugin' } : { downloadUrl: `${base}/files/EssentialsX-2.21.0.jar`, fileInfo: { name: 'EssentialsX-2.21.0.jar', sizeBytes: 100 } },
+            },
             platformDependencies: { PAPER: ['1.21.4'] },
           },
         ],
@@ -470,7 +528,11 @@ export async function startMocks() {
       return reg[m[1]] ? send(reg[m[1]]) : text('404', 404);
     }
     if (p.startsWith('/mcsrvstat/')) {
-      return send(state.mcsrvstatOnline ? { online: true, ip: '203.0.113.7', port: 25565, players: { online: 0, max: 20 }, version: '1.21.4', motd: { clean: ['Prueba'] } } : { online: false, ip: '203.0.113.7', port: 25565 });
+      return send(
+        state.mcsrvstatOnline
+          ? { online: true, ip: '203.0.113.7', port: 25565, players: { online: 0, max: 20 }, version: '1.21.4', motd: { clean: ['Prueba'] } }
+          : { online: false, ip: '203.0.113.7', port: 25565 }
+      );
     }
     if (p.startsWith('/ipify')) return send({ ip: '203.0.113.7' });
     if (p.startsWith('/geysermc/')) return bin(FAKE_SERVER_JAR);

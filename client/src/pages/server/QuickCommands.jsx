@@ -38,7 +38,7 @@ export const placeholders = (template) => [...new Set([...String(template).match
 
 const fill = (template, values) => template.replace(PLACEHOLDER, (_, name) => (values[name] ?? '').toString().trim() || `{${name}}`);
 
-export default function QuickCommands({ server, running, players, onSend }) {
+export default function QuickCommands({ server, running, players, onSend, canEdit = true }) {
   const [data, setData] = useState(null);
   const [runCmd, setRunCmd] = useState(null);
   const [confirmCmd, setConfirmCmd] = useState(null);
@@ -64,9 +64,11 @@ export default function QuickCommands({ server, running, players, onSend }) {
         <h3 className="muted grow" style={{ fontWeight: 500 }}>
           Comandos rápidos
         </h3>
-        <button className="btn-ghost btn-sm" onClick={() => setEditing(true)}>
-          Editar
-        </button>
+        {canEdit && (
+          <button className="btn-ghost btn-sm" onClick={() => setEditing(true)}>
+            Editar
+          </button>
+        )}
       </div>
       <div className="row" style={{ gap: '0.4rem' }}>
         {data.commands.map((c) => (
@@ -75,18 +77,12 @@ export default function QuickCommands({ server, running, players, onSend }) {
             {c.params.length ? '…' : ''}
           </button>
         ))}
-        {!data.commands.length && <span className="faint small">No hay comandos. Pulsa Editar para agregar.</span>}
+        {!data.commands.length && <span className="faint small">{canEdit ? 'No hay comandos. Pulsa Editar para agregar.' : 'No hay comandos rápidos.'}</span>}
       </div>
 
       {runCmd && <RunCommand server={server} cmd={runCmd} players={players} onClose={() => setRunCmd(null)} onSend={onSend} />}
       {confirmCmd && (
-        <Confirm
-          title={confirmCmd.label}
-          message={`Se enviará: ${confirmCmd.template}`}
-          confirmLabel="Ejecutar"
-          onClose={() => setConfirmCmd(null)}
-          onConfirm={() => onSend(confirmCmd.template)}
-        />
+        <Confirm title={confirmCmd.label} message={`Se enviará: ${confirmCmd.template}`} confirmLabel="Ejecutar" onClose={() => setConfirmCmd(null)} onConfirm={() => onSend(confirmCmd.template)} />
       )}
       {editing && <EditCommands data={data} onClose={() => setEditing(false)} onSaved={setData} />}
     </div>
@@ -99,9 +95,7 @@ export function RunCommand({ server, cmd, players, onClose, onSend, player = nul
   // Si se abrió desde el nombre de un jugador en la consola, el primer hueco de jugador ya lo trae.
   const firstPlayer = cmd.params.find((p) => p.type === 'player')?.name;
   const [values, setValues] = useState(() =>
-    Object.fromEntries(
-      cmd.params.map((p) => [p.name, player && p.name === firstPlayer ? player : p.default || (p.type === 'player' && players.length === 1 ? players[0] : '')])
-    )
+    Object.fromEntries(cmd.params.map((p) => [p.name, player && p.name === firstPlayer ? player : p.default || (p.type === 'player' && players.length === 1 ? players[0] : '')]))
   );
   const set = (name, v) => setValues((x) => ({ ...x, [name]: v }));
   const final = fill(cmd.template, values);
@@ -242,8 +236,7 @@ function EditCommands({ data, onClose, onSaved }) {
   const [run, busy] = useAction();
 
   const update = (i, patch) => setList((l) => l.map((c, j) => (j === i ? syncParams({ ...c, ...patch }) : c)));
-  const updateParam = (i, name, patch) =>
-    setList((l) => l.map((c, j) => (j === i ? { ...c, params: c.params.map((p) => (p.name === name ? { ...p, ...patch } : p)) } : c)));
+  const updateParam = (i, name, patch) => setList((l) => l.map((c, j) => (j === i ? { ...c, params: c.params.map((p) => (p.name === name ? { ...p, ...patch } : p)) } : c)));
   const move = (i, d) =>
     setList((l) => {
       const n = [...l];
@@ -263,8 +256,10 @@ function EditCommands({ data, onClose, onSaved }) {
     <Modal title="Comandos rápidos" onClose={onClose} wide>
       <p className="muted small">
         Escribe el comando sin <span className="mono">/</span>. Para que el panel te pregunte un dato al usarlo, ponlo entre llaves: por ejemplo{' '}
-        <span className="mono">give {'{jugador}'} {'{objeto}'} {'{cantidad}'}</span>. Luego elige qué tipo de dato es cada uno: con “Objeto” aparece un
-        buscador con todos los objetos del juego; con “Jugador”, los que están conectados.
+        <span className="mono">
+          give {'{jugador}'} {'{objeto}'} {'{cantidad}'}
+        </span>
+        . Luego elige qué tipo de dato es cada uno: con “Objeto” aparece un buscador con todos los objetos del juego; con “Jugador”, los que están conectados.
       </p>
       <div className="stack" style={{ gap: '0.5rem' }}>
         {list.map((c, i) => (
@@ -353,7 +348,9 @@ function EditCommands({ data, onClose, onSaved }) {
           type="button"
           className="btn-go"
           disabled={busy}
-          onClick={() => save({ commands: list.map((c) => ({ ...c, params: c.params.map((p) => ({ ...p, options: Array.isArray(p.options) ? p.options.map((o) => o.trim()).filter(Boolean) : p.options })) })) })}
+          onClick={() =>
+            save({ commands: list.map((c) => ({ ...c, params: c.params.map((p) => ({ ...p, options: Array.isArray(p.options) ? p.options.map((o) => o.trim()).filter(Boolean) : p.options })) })) })
+          }
         >
           Guardar
         </button>

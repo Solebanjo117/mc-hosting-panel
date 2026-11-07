@@ -102,7 +102,12 @@ export function getYamlPath(text, keys) {
   const lines = text.split(/\r?\n/);
   const i = findYaml(lines, keys);
   if (i === -1) return undefined;
-  return lines[i].split(':').slice(1).join(':').trim().replace(/^['"]|['"]$/g, '');
+  return lines[i]
+    .split(':')
+    .slice(1)
+    .join(':')
+    .trim()
+    .replace(/^['"]|['"]$/g, '');
 }
 
 export function setYamlPath(text, keys, value) {
@@ -131,7 +136,13 @@ function propTweaks(server, props) {
   out.push({ id: 'view-distance', label: 'Distancia de visión', current: String(view), recommended: String(Math.min(view, 10)), note: 'Más de 10 chunks multiplica el trabajo del servidor.' });
   const sim = Number(props['simulation-distance'] || 10);
   if (compareVersions(server.mcVersion, '1.18') >= 0) {
-    out.push({ id: 'simulation-distance', label: 'Distancia de simulación', current: String(sim), recommended: String(Math.min(sim, 8)), note: 'Hasta dónde se mueven mobs y cultivos. 8 casi no se nota al jugar.' });
+    out.push({
+      id: 'simulation-distance',
+      label: 'Distancia de simulación',
+      current: String(sim),
+      recommended: String(Math.min(sim, 8)),
+      note: 'Hasta dónde se mueven mobs y cultivos. 8 casi no se nota al jugar.',
+    });
   }
   if (server.type === 'paper') {
     out.push({ id: 'sync-chunk-writes', label: 'Guardar chunks sin frenar el juego', current: props['sync-chunk-writes'] ?? 'true', recommended: 'false', note: 'Recomendado por Paper.' });
@@ -258,7 +269,11 @@ export function undo(id) {
   const prev = server.optimization?.previous;
   if (!prev) throw new HttpError(409, 'No hay nada que deshacer');
   server.aikarFlags = prev.aikar;
-  const props = Object.fromEntries(Object.entries(prev.props).map(([k, v]) => [k, v ?? PROP_DEFAULTS[k]]).filter(([, v]) => v != null));
+  const props = Object.fromEntries(
+    Object.entries(prev.props)
+      .map(([k, v]) => [k, v ?? PROP_DEFAULTS[k]])
+      .filter(([, v]) => v != null)
+  );
   if (Object.keys(props).length) writeProperties(id, props);
   const file = path.join(serverDir(id), PAPER_FILE);
   if (fs.existsSync(file) && Object.keys(prev.paper).length) {

@@ -106,7 +106,16 @@ function Node({ node, name, pathArr, depth, onEdit, onRemove, filter }) {
   const label = name ?? (pathArr.length ? `#${pathArr.at(-1)}` : 'raíz');
   const hint = typeof name === 'string' ? HINTS[name] : null;
 
-  if (filter && !container && !(String(name ?? '').toLowerCase().includes(filter) || String(node.value).toLowerCase().includes(filter))) return null;
+  if (
+    filter &&
+    !container &&
+    !(
+      String(name ?? '')
+        .toLowerCase()
+        .includes(filter) || String(node.value).toLowerCase().includes(filter)
+    )
+  )
+    return null;
 
   return (
     <li className="nbt-node">
@@ -141,16 +150,7 @@ function Node({ node, name, pathArr, depth, onEdit, onRemove, filter }) {
       {open && container && (
         <ul className="nbt-children">
           {children.map((child, i) => (
-            <Node
-              key={i}
-              node={child}
-              name={node.type === 'compound' ? child.name : undefined}
-              pathArr={[...pathArr, i]}
-              depth={depth + 1}
-              onEdit={onEdit}
-              onRemove={onRemove}
-              filter={filter}
-            />
+            <Node key={i} node={child} name={node.type === 'compound' ? child.name : undefined} pathArr={[...pathArr, i]} depth={depth + 1} onEdit={onEdit} onRemove={onRemove} filter={filter} />
           ))}
         </ul>
       )}
@@ -209,9 +209,7 @@ export default function NbtEditor({ serverId, path, title, running, onClose, onS
         <>
           <div className="row">
             <input className="grow" style={{ width: 'auto' }} value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filtrar por nombre o valor" aria-label="Filtrar" />
-            <span className="faint small">
-              Formato {doc.compression === 'none' ? 'sin comprimir' : doc.compression}
-            </span>
+            <span className="faint small">Formato {doc.compression === 'none' ? 'sin comprimir' : doc.compression}</span>
           </div>
           <ul className="nbt-tree">
             <Node node={tree} name={doc.rootName || undefined} pathArr={[]} depth={0} onEdit={edit} onRemove={remove} filter={f} />

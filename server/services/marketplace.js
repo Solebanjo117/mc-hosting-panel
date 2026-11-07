@@ -5,7 +5,7 @@ import { serverDir, USER_AGENT } from '../config.js';
 import { db, getServer } from '../db.js';
 import { download, getJson, getText, rewriteUrl } from '../lib/http.js';
 import { HttpError, safeJoin, sanitizeFileName } from '../lib/util.js';
-import AdmZip from 'adm-zip';
+import { openZip } from '../lib/zip.js';
 import { readProperties } from './properties.js';
 import * as curseforge from './curseforge.js';
 
@@ -58,14 +58,8 @@ const q = (obj) => new URLSearchParams(Object.entries(obj).filter(([, v]) => v !
 // --- Búsqueda ----------------------------------------------------------------
 
 async function searchModrinth(server, profile, { query, offset, limit, sort }) {
-  const facets = [
-    [`project_type:${profile.kind}`],
-    profile.loaders.map((l) => `categories:${l}`),
-    [`versions:${server.mcVersion}`],
-  ];
-  const data = await getJson(
-    `${MODRINTH}/search?${q({ query, offset, limit, index: sort || 'downloads', facets: JSON.stringify(facets) })}`
-  );
+  const facets = [[`project_type:${profile.kind}`], profile.loaders.map((l) => `categories:${l}`), [`versions:${server.mcVersion}`]];
+  const data = await getJson(`${MODRINTH}/search?${q({ query, offset, limit, index: sort || 'downloads', facets: JSON.stringify(facets) })}`);
   return {
     total: data.total_hits,
     results: data.hits.map((h) => ({
@@ -123,12 +117,7 @@ export async function search(id, { source = 'modrinth', query = '', offset = 0, 
   const profile = contentProfile(server, kind);
   if (!profile.sources.includes(source)) throw new HttpError(400, `${source} no aplica para servidores ${server.type}`);
   const opts = { query, offset: Number(offset) || 0, limit: Math.min(Number(limit) || 20, 50), sort };
-  const res =
-    source === 'hangar'
-      ? await searchHangar(server, opts)
-      : source === 'curseforge'
-        ? await curseforge.search(server, profile, opts)
-        : await searchModrinth(server, profile, opts);
+  const res = source === 'hangar' ? await searchHangar(server, opts) : source === 'curseforge' ? await curseforge.search(server, profile, opts) : await searchModrinth(server, profile, opts);
   return { ...res, kind: profile.kind, sources: profile.sources };
 }
 
@@ -162,6 +151,9 @@ export async function projectDetails(source, projectId) {
     };
   }
   const p = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}`);
+  // El autor no viene en el proyecto: es el dueño del equipo (si falla, la ficha sale sin autor).
+  const members = await getJson(`${MODRINTH}/project/${encodeURIComponent(projectId)}/members`).catch(() => []);
+  const owner = members.find((x) => x.role === 'Owner' || x.is_owner) || members[0];
   const links = [
     ['Código fuente', p.source_url],
     ['Reportar problemas', p.issues_url],
@@ -174,6 +166,7 @@ export async function projectDetails(source, projectId) {
     source,
     id: p.id,
     title: p.title,
+    author: owner?.user?.username || null,
     description: p.description,
     icon: p.icon_url || null,
     body: p.body || '',
@@ -212,9 +205,7 @@ async function modrinthVersions(server, profile, projectId) {
       downloads: v.downloads,
       changelog: v.changelog || '',
       file: file ? { url: file.url, name: file.filename, size: file.size, sha1: file.hashes?.sha1 } : null,
-      dependencies: (v.dependencies || [])
-        .filter((d) => d.dependency_type === 'required' && d.project_id)
-        .map((d) => ({ projectId: d.project_id, versionId: d.version_id })),
+      dependencies: (v.dependencies || []).filter((d) => d.dependency_type === 'required' && d.project_id).map((d) => ({ projectId: d.project_id, versionId: d.version_id })),
     };
   });
 }
@@ -377,7 +368,7 @@ export function datapackInfo(target) {
       };
       walk(target);
     } else {
-      names = new AdmZip(target).getEntries().map((e) => e.entryName);
+      names = openZip(target).names();
     }
   } catch {
     return { worldgen: false, valid: false };

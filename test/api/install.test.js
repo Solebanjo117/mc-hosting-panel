@@ -24,17 +24,27 @@ describe('Crear e instalar servidores', { skip: !hasJava() && 'Se necesita Java 
   it('lista las versiones de cada tipo de servidor', async () => {
     const c = panel.client;
     const vanilla = await c.ok('GET', '/api/system/versions/vanilla');
-    assert.deepEqual(vanilla.map((v) => v.id), ['1.21.4', '1.20.1', '1.16.5']);
+    assert.deepEqual(
+      vanilla.map((v) => v.id),
+      ['1.21.4', '1.20.1', '1.16.5']
+    );
     const paper = await c.ok('GET', '/api/system/versions/paper');
     assert.ok(paper.some((v) => v.id === '1.21.4'));
     assert.ok(!paper.some((v) => v.id.includes('rc')), 'no muestra versiones de prueba de Paper');
     const fabric = await c.ok('GET', '/api/system/versions/fabric');
-    assert.deepEqual(fabric.map((v) => v.id), ['1.21.4'], 'solo versiones estables de Fabric');
+    assert.deepEqual(
+      fabric.map((v) => v.id),
+      ['1.21.4'],
+      'solo versiones estables de Fabric'
+    );
     const forge = await c.ok('GET', '/api/system/versions/forge');
     assert.equal(forge[0].id, '1.20.1');
     assert.ok(forge[0].loaders.some((l) => /recomendada/.test(l.label)));
     const neo = await c.ok('GET', '/api/system/versions/neoforge');
-    assert.ok(neo.some((v) => v.id === '1.21.1'), 'NeoForge 21.1.x es Minecraft 1.21.1');
+    assert.ok(
+      neo.some((v) => v.id === '1.21.1'),
+      'NeoForge 21.1.x es Minecraft 1.21.1'
+    );
     assert.ok(!neo.some((v) => v.id.startsWith('0.')), 'ignora versiones de prueba antiguas');
   });
 

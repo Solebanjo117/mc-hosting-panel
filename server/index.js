@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import { DIST_DIR, VERSION } from './config.js';
 import { db } from './db.js';
 import { authRouter, requireAuth } from './auth.js';
+import { authorize } from './lib/access.js';
 import { serversRouter } from './routes/servers.js';
 import { filesRouter } from './routes/files.js';
 import { backupsRouter } from './routes/backups.js';
@@ -46,10 +47,12 @@ app.use(express.json({ limit: '5mb' }));
 app.use(cookieParser());
 
 app.use('/api', sameOrigin);
+// Para Docker, systemd o un monitor (Uptime Kuma): ¿el panel responde? Sin sesión y sin datos privados.
+app.get('/api/health', (_req, res) => res.json({ ok: true, version: VERSION, uptime: Math.round(process.uptime()) }));
 app.use('/api/auth', authRouter);
 app.use('/api/appearance', appearancePublic);
 app.use('/api/public', publicRouter);
-app.use('/api', requireAuth);
+app.use('/api', requireAuth, authorize);
 app.use('/api/system', systemRouter);
 app.use('/api/servers', serversRouter);
 app.use('/api/servers/:id/files', filesRouter);
@@ -66,12 +69,9 @@ if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR, { index: false, cacheControl: false, setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
   app.get('/{*splat}', (_req, res) => res.sendFile(path.join(DIST_DIR, 'index.html'), { cacheControl: false, headers: { 'Cache-Control': 'no-cache' } }));
 } else {
-  app.get('/', (_req, res) =>
-    res.type('text').send('Falta compilar la interfaz. Ejecuta "npm run build" o usa iniciar.bat.')
-  );
+  app.get('/', (_req, res) => res.type('text').send('Falta compilar la interfaz. Ejecuta "npm run build" o usa iniciar.bat.'));
 }
 
-// eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
   const status = err.status || err.statusCode || 500;
   if (status >= 500) console.error(err);

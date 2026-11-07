@@ -31,8 +31,7 @@ const FLOODGATE_SPIGOT_URL = 'https://download.geysermc.org/v2/projects/floodgat
 const FLOODGATE_SPIGOT_FILE = 'floodgate-spigot.jar';
 
 const UNSUPPORTED = {
-  vanilla:
-    'Vanilla no admite plugins ni mods, así que Geyser no se puede instalar dentro. Crea un servidor Paper: se juega igual que Vanilla y sí admite Bedrock.',
+  vanilla: 'Vanilla no admite plugins ni mods, así que Geyser no se puede instalar dentro. Crea un servidor Paper: se juega igual que Vanilla y sí admite Bedrock.',
   forge: 'Geyser no tiene versión para Forge. Usa NeoForge o Fabric (en la versión más reciente de Minecraft) o Paper.',
 };
 

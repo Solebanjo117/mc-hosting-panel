@@ -101,7 +101,12 @@ class Instance {
     // Respuesta al comando "list": "There are 2 of a max of 20 players online: Ana, Beto"
     m = line.match(/There are \d+ (?:of a max of|\/) ?\d+ players online:\s*(.*)$/);
     if (m) {
-      this.players = new Set(m[1].split(',').map((s) => s.trim()).filter(Boolean));
+      this.players = new Set(
+        m[1]
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      );
       bus.emit('status', this.id, this.snapshot());
     }
   }
@@ -369,7 +374,10 @@ class Instance {
 
   send(command) {
     if (!this.proc) throw new HttpError(409, 'El servidor está apagado');
-    const clean = String(command).replace(/^\//, '').replace(/[\r\n]+/g, ' ').trim();
+    const clean = String(command)
+      .replace(/^\//, '')
+      .replace(/[\r\n]+/g, ' ')
+      .trim();
     if (!clean) return;
     this.pushLine(`> ${clean}`);
     this.proc.stdin.write(`${clean}\n`);
@@ -389,10 +397,7 @@ class Instance {
     } catch {
       /* stdin cerrado */
     }
-    const exited = await Promise.race([
-      new Promise((r) => proc.once('exit', () => r(true))),
-      sleep(STOP_TIMEOUT_MS).then(() => false),
-    ]);
+    const exited = await Promise.race([new Promise((r) => proc.once('exit', () => r(true))), sleep(STOP_TIMEOUT_MS).then(() => false)]);
     if (!exited && this.proc === proc) {
       this.panelLine('No respondió a "stop"; forzando cierre.');
       proc.kill('SIGKILL');

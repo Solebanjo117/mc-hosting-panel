@@ -33,6 +33,9 @@ describe('Logros del servidor', { skip: !hasJava() && 'Se necesita Java' }, () =
     assert.equal(got.progress, 1);
     assert.equal(b.unlocked, 1);
     const act = await c.ok('GET', `/api/servers/${s.id}/activity?filter=server`);
-    assert.ok(act.events.some((e) => e.type === 'achievement' && e.detail === 'Previsor'), 'queda en la línea de tiempo');
+    assert.ok(
+      act.events.some((e) => e.type === 'achievement' && e.detail === 'Previsor'),
+      'queda en la línea de tiempo'
+    );
   });
 });

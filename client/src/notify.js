@@ -40,7 +40,7 @@ export async function notify(kind, title, body, url = '/') {
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
     if (reg) return reg.showNotification(title, options);
-    new Notification(title, options); // eslint-disable-line no-new
+    new Notification(title, options);
   } catch {
     /* el navegador no dejó mostrarla */
   }

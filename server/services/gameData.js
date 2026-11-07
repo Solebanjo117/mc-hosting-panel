@@ -87,7 +87,14 @@ export async function gameList(version, kind) {
   const [ids, lang] = await Promise.all([registry(version, def.registry), spanish(version)]);
   const list = ids
     .filter((id) => id !== 'air')
-    .map((id) => ({ id, name: def.lang(id).map((k) => lang[k]).find(Boolean) || null }))
+    .map((id) => ({
+      id,
+      name:
+        def
+          .lang(id)
+          .map((k) => lang[k])
+          .find(Boolean) || null,
+    }))
     .sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id, 'es'));
   memory.set(key, list);
   return list;

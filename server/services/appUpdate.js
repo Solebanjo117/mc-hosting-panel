@@ -33,7 +33,11 @@ function run(cmd, args, { timeout = 10 * 60_000 } = {}) {
     const shell = IS_WINDOWS && cmd === 'npm';
     execFile(cmd, args, { cwd: APP_ROOT, timeout, windowsHide: true, shell, maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
       if (err) {
-        const detail = String(stderr || stdout || err.message).trim().split(/\r?\n/).slice(-6).join('\n');
+        const detail = String(stderr || stdout || err.message)
+          .trim()
+          .split(/\r?\n/)
+          .slice(-6)
+          .join('\n');
         reject(Object.assign(new Error(`${cmd} ${args[0]} falló: ${detail}`), { code: err.code }));
       } else resolve(String(stdout).trim());
     });
@@ -92,23 +96,33 @@ export async function checkUpdate() {
     lastCheck = { ...base, available: behind > 0, latest, behind, changes, dirty: dirty.length > 0 };
     return lastCheck;
   }
-  if (mode === 'installer') {
+  if (mode === 'installer' || mode === 'docker') {
     let rel;
     try {
       rel = await getJson(RELEASES_URL, { headers: { Accept: 'application/vnd.github+json' } });
     } catch (err) {
-      throw new HttpError(
-        502,
-        err.status === 404
-          ? 'No hay versiones publicadas en GitHub Releases (o el repositorio es privado).'
-          : `No se pudo consultar las versiones publicadas: ${err.message}`
-      );
+      throw new HttpError(502, err.status === 404 ? 'No hay versiones publicadas en GitHub Releases (o el repositorio es privado).' : `No se pudo consultar las versiones publicadas: ${err.message}`);
     }
     const latest = String(rel.tag_name || '').replace(/^v/, '');
     const asset = (rel.assets || []).find((a) => /\.exe$/i.test(a.name));
+    const newer = Boolean(latest && compareVersions(latest, VERSION) > 0);
+    if (mode === 'docker') {
+      // En Docker la imagen se cambia desde fuera: el panel solo avisa.
+      lastCheck = {
+        ...base,
+        available: false,
+        latest: latest || VERSION,
+        notes: newer ? String(rel.body || '').slice(0, 4000) : '',
+        changes: [],
+        message: newer
+          ? `Hay una versión nueva (${latest}). En el equipo: docker compose pull && docker compose up -d (o docker compose build --pull && docker compose up -d si construyes la imagen tú).`
+          : undefined,
+      };
+      return lastCheck;
+    }
     lastCheck = {
       ...base,
-      available: Boolean(latest && asset && compareVersions(latest, VERSION) > 0),
+      available: Boolean(newer && asset),
       latest,
       notes: String(rel.body || '').slice(0, 4000),
       changes: [],
@@ -182,6 +196,7 @@ export function startUpdate() {
   if (state.running) throw new HttpError(409, 'Ya se está actualizando');
   const mode = updateMode();
   if (mode === 'manual') throw new HttpError(409, 'Esta copia no se puede actualizar sola; descarga la versión nueva y reemplaza los archivos (conserva data).');
+  if (mode === 'docker') throw new HttpError(409, 'En Docker el panel se actualiza cambiando la imagen: docker compose pull && docker compose up -d.');
   Object.assign(state, { running: true, step: null, log: [], error: null, done: false });
   (async () => {
     try {

@@ -86,9 +86,7 @@ async function forgeVersions() {
       list.find((l) => l.version === forge).label = `${forge} (recomendada)`;
     }
   }
-  return [...byMc.entries()]
-    .sort((a, b) => compareVersions(b[0], a[0]))
-    .map(([id, loaders]) => ({ id, loaders: loaders.sort((a, b) => compareVersions(b.version, a.version)) }));
+  return [...byMc.entries()].sort((a, b) => compareVersions(b[0], a[0])).map(([id, loaders]) => ({ id, loaders: loaders.sort((a, b) => compareVersions(b.version, a.version)) }));
 }
 
 async function neoforgeVersions() {
@@ -100,9 +98,7 @@ async function neoforgeVersions() {
     if (!byMc.has(mc)) byMc.set(mc, []);
     byMc.get(mc).push({ version: v, label: v.includes('beta') ? `${v} (beta)` : v });
   }
-  return [...byMc.entries()]
-    .sort((a, b) => compareVersions(b[0], a[0]))
-    .map(([id, loaders]) => ({ id, loaders: loaders.sort((a, b) => compareVersions(b.version, a.version)).slice(0, 25) }));
+  return [...byMc.entries()].sort((a, b) => compareVersions(b[0], a[0])).map(([id, loaders]) => ({ id, loaders: loaders.sort((a, b) => compareVersions(b.version, a.version)).slice(0, 25) }));
 }
 
 const LISTERS = {
@@ -142,9 +138,7 @@ export async function fabricLauncherUrl(mcVersion, wantedLoader = null) {
   const loaders = await getJson(`${FABRIC_META}/versions/loader/${encodeURIComponent(mcVersion)}`);
   if (!loaders.length) throw new HttpError(404, `Fabric no soporta ${mcVersion}`);
   // Un modpack fija su versión de Fabric Loader; si no, la estable más reciente.
-  const loader = wantedLoader && loaders.some((l) => l.loader.version === wantedLoader)
-    ? wantedLoader
-    : (loaders.find((l) => l.loader.stable) || loaders[0]).loader.version;
+  const loader = wantedLoader && loaders.some((l) => l.loader.version === wantedLoader) ? wantedLoader : (loaders.find((l) => l.loader.stable) || loaders[0]).loader.version;
   const installers = await getJson(`${FABRIC_META}/versions/installer`);
   const installer = (installers.find((i) => i.stable) || installers[0]).version;
   return {

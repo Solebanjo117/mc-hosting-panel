@@ -5,7 +5,9 @@ import { api, formatDate } from '../../api.js';
 export default function Achievements({ server }) {
   const [data, setData] = useState(null);
   useEffect(() => {
-    api(`/servers/${server.id}/achievements`).then(setData).catch(() => {});
+    api(`/servers/${server.id}/achievements`)
+      .then(setData)
+      .catch(() => {});
   }, [server.id]);
   if (!data) return null;
   return (
@@ -19,7 +21,8 @@ export default function Achievements({ server }) {
         </span>
       </div>
       <p className="muted small">
-        {data.facts.playerHours} h jugadas entre todos, récord de {data.facts.maxConcurrent} a la vez, {data.facts.uniquePlayers} {data.facts.uniquePlayers === 1 ? 'persona' : 'personas'} distintas, {data.facts.ageDays} días de vida.
+        {data.facts.playerHours} h jugadas entre todos, récord de {data.facts.maxConcurrent} a la vez, {data.facts.uniquePlayers} {data.facts.uniquePlayers === 1 ? 'persona' : 'personas'} distintas,{' '}
+        {data.facts.ageDays} días de vida.
       </p>
       <ul className="ach-grid">
         {data.items.map((a) => (

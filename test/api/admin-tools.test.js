@@ -52,7 +52,13 @@ describe('Tareas programadas, logs, seguridad y rendimiento', { skip: !hasJava()
     });
 
     it('crea, edita y borra tareas, y calcula la próxima ejecución', async () => {
-      let r = await c.ok('POST', `${M()}/schedules`, { action: 'restart', when: { type: 'daily', time: '04:00', days: [0, 1, 2, 3, 4, 5, 6] }, warnMinutes: 5, backupBefore: true, label: 'Reinicio diario' });
+      let r = await c.ok('POST', `${M()}/schedules`, {
+        action: 'restart',
+        when: { type: 'daily', time: '04:00', days: [0, 1, 2, 3, 4, 5, 6] },
+        warnMinutes: 5,
+        backupBefore: true,
+        label: 'Reinicio diario',
+      });
       const t = r.tasks[0];
       assert.equal(t.warnMinutes, 5);
       assert.equal(t.backupBefore, true);
@@ -88,10 +94,13 @@ describe('Tareas programadas, logs, seguridad y rendimiento', { skip: !hasJava()
       const pid = (await panel.status(s.id)).pid;
       await c.ok('POST', `${M()}/schedules/${r.tasks.at(-1).id}/run`);
       await panel.waitConsole(s.id, /Guardando un respaldo antes de reiniciar/);
-      await waitFor(async () => {
-        const rt = await panel.status(s.id);
-        return rt.status === 'running' && rt.pid !== pid;
-      }, { timeout: 30000, message: 'el reinicio' });
+      await waitFor(
+        async () => {
+          const rt = await panel.status(s.id);
+          return rt.status === 'running' && rt.pid !== pid;
+        },
+        { timeout: 30000, message: 'el reinicio' }
+      );
       assert.ok((await c.ok('GET', `${M()}/backups`)).backups.some((b) => b.file.endsWith('-programado.zip')));
     });
 
@@ -116,7 +125,10 @@ describe('Tareas programadas, logs, seguridad y rendimiento', { skip: !hasJava()
       fs.writeFileSync(path.join(dir, 'logs', 'latest.log'), '[INFO] Hola\n[WARN] Algo raro con Ana\n[INFO] Adiós\n');
       fs.writeFileSync(path.join(dir, 'logs', '2026-10-01-1.log.gz'), zlib.gzipSync('[INFO] Ana entró ayer\n'));
       const list = await c.ok('GET', `${M()}/logs`);
-      assert.deepEqual(list.logs.map((l) => l.file), ['latest.log', '2026-10-01-1.log.gz']);
+      assert.deepEqual(
+        list.logs.map((l) => l.file),
+        ['latest.log', '2026-10-01-1.log.gz']
+      );
       const full = await c.ok('GET', `${M()}/logs/file/latest.log`);
       assert.equal(full.lines.length, 4);
       const filtered = await c.ok('GET', `${M()}/logs/file/latest.log?q=raro`);
@@ -131,7 +143,10 @@ describe('Tareas programadas, logs, seguridad y rendimiento', { skip: !hasJava()
 
     it('explica los crash reports y el último log', async () => {
       fs.mkdirSync(path.join(dir, 'crash-reports'), { recursive: true });
-      fs.writeFileSync(path.join(dir, 'crash-reports', 'crash-2026.txt'), 'java.lang.UnsupportedClassVersionError: Mod has been compiled by a more recent version of the Java Runtime (class file version 65.0)');
+      fs.writeFileSync(
+        path.join(dir, 'crash-reports', 'crash-2026.txt'),
+        'java.lang.UnsupportedClassVersionError: Mod has been compiled by a more recent version of the Java Runtime (class file version 65.0)'
+      );
       const crash = await c.ok('GET', `${M()}/logs/crash/crash-2026.txt`);
       assert.equal(crash.findings[0].title, 'Algo necesita Java 21');
       fs.appendFileSync(path.join(dir, 'logs', 'latest.log'), '**** FAILED TO BIND TO PORT!\n');
@@ -183,7 +198,10 @@ describe('Tareas programadas, logs, seguridad y rendimiento', { skip: !hasJava()
       await panel.waitConsole(s.id, /> whitelist on/);
       const sec = await c.ok('GET', `${M()}/security`);
       assert.ok(sec.protection.lockdownUntil);
-      assert.deepEqual(sec.protection.bans.map((b) => b.ip), ['45.9.9.9']);
+      assert.deepEqual(
+        sec.protection.bans.map((b) => b.ip),
+        ['45.9.9.9']
+      );
       assert.ok(sec.protection.log.some((l) => l.type === 'lockdown'));
       assert.ok(!(await panel.consoleText(s.id)).includes('ban-ip 192.168'));
 

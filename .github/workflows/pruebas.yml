@@ -30,6 +30,10 @@ jobs:
           java-version: 21
 
       - run: npm ci
+
+      - name: Lint, formato y tipos
+        run: npm run check
+
       - run: npm run build
 
       - name: Unitarias y casos de uso

@@ -8,7 +8,11 @@ import { useLive } from '../../live.jsx';
 function Address({ label, text }) {
   return (
     <div>
-      {label && <div className="faint small" style={{ marginTop: '0.6rem' }}>{label}</div>}
+      {label && (
+        <div className="faint small" style={{ marginTop: '0.6rem' }}>
+          {label}
+        </div>
+      )}
       <div className="address">
         <span>{text}</span>
         <CopyButton text={text} />
@@ -17,8 +21,7 @@ function Address({ label, text }) {
   );
 }
 
-const fwRule = (port, proto) =>
-  `netsh advfirewall firewall add rule name="Minecraft ${proto === 'UDP' ? 'Bedrock ' : ''}${port}" dir=in action=allow protocol=${proto} localport=${port}`;
+const fwRule = (port, proto) => `netsh advfirewall firewall add rule name="Minecraft ${proto === 'UDP' ? 'Bedrock ' : ''}${port}" dir=in action=allow protocol=${proto} localport=${port}`;
 
 export default function NetworkTab({ server, state }) {
   const [net, setNet] = useState(null);
@@ -36,7 +39,9 @@ export default function NetworkTab({ server, state }) {
   const { playit: livePlayit } = useLive();
 
   useEffect(() => {
-    api('/system/network').then(setNet).catch((err) => toast(err.message, 'error'));
+    api('/system/network')
+      .then(setNet)
+      .catch((err) => toast(err.message, 'error'));
   }, [toast]);
 
   const loadTunnels = () =>
@@ -85,7 +90,11 @@ export default function NetworkTab({ server, state }) {
           )}
           {net?.localIps.length > 1 && (
             <p className="faint small" style={{ marginTop: '0.5rem' }}>
-              Otras interfaces: {net.localIps.filter((i) => i !== lan).map((i) => `${i.address} (${i.interface})`).join(', ')}
+              Otras interfaces:{' '}
+              {net.localIps
+                .filter((i) => i !== lan)
+                .map((i) => `${i.address} (${i.interface})`)
+                .join(', ')}
             </p>
           )}
         </div>
@@ -103,8 +112,8 @@ export default function NetworkTab({ server, state }) {
             <p className="faint small">No se pudo detectar tu IP pública.</p>
           )}
           <p className="faint small" style={{ marginTop: '0.5rem' }}>
-            Tu IP pública puede cambiar. Para un nombre fijo usa la sección <a href="#dominio">Dominio</a> de abajo. Si tu internet tiene CGNAT (abriste puertos
-            y aun así no conecta), usa el túnel de playit.gg.
+            Tu IP pública puede cambiar. Para un nombre fijo usa la sección <a href="#dominio">Dominio</a> de abajo. Si tu internet tiene CGNAT (abriste puertos y aun así no conecta), usa el túnel de
+            playit.gg.
           </p>
         </div>
       </section>
@@ -119,8 +128,8 @@ export default function NetworkTab({ server, state }) {
           {server.playit?.enabled && <span className="chip">Activo</span>}
         </div>
         <p className="muted small">
-          Si tu compañía de internet usa CGNAT (o no puedes abrir puertos en el módem), playit.gg da una dirección pública que funciona sin abrir nada.
-          Puede agregar un poco de ping, porque el tráfico pasa por un servidor de playit.
+          Si tu compañía de internet usa CGNAT (o no puedes abrir puertos en el módem), playit.gg da una dirección pública que funciona sin abrir nada. Puede agregar un poco de ping, porque el tráfico
+          pasa por un servidor de playit.
         </p>
         {tunnelError && <div className="error-box">{tunnelError}</div>}
         {createError && (
@@ -141,12 +150,15 @@ export default function NetworkTab({ server, state }) {
             {bedrock && <TunnelRow label="Bedrock" tunnel={tunnels.bedrock} bedrock />}
             {tunnels.notices?.map((n, i) => (
               <p key={i} className="note">
-                {n.message} {n.link && <a href={n.link} target="_blank" rel="noreferrer">Resolver</a>}
+                {n.message}{' '}
+                {n.link && (
+                  <a href={n.link} target="_blank" rel="noreferrer">
+                    Resolver
+                  </a>
+                )}
               </p>
             ))}
-            {!['connected', 'running'].includes(livePlayit?.status || tunnels.status) && (
-              <p className="note">El agente de playit no está conectado. Revisa su estado en Ajustes del panel.</p>
-            )}
+            {!['connected', 'running'].includes(livePlayit?.status || tunnels.status) && <p className="note">El agente de playit no está conectado. Revisa su estado en Ajustes del panel.</p>}
             <div className="row">
               <button disabled={busy} onClick={() => run(() => api(`/servers/${server.id}/playit`, { method: 'POST', body: {} }).then(setTunnels), 'Túneles revisados')}>
                 Reparar túneles
@@ -197,8 +209,8 @@ export default function NetworkTab({ server, state }) {
                 </button>
               </div>
               <span className="faint small">
-                El plan gratuito de playit permite pocos túneles; usa uno por servidor que quieras compartir. Si ya tienes un túnel en playit.gg que apunta al
-                puerto {server.port}, “Crear túnel” lo detecta y lo usa en vez de crear otro.
+                El plan gratuito de playit permite pocos túneles; usa uno por servidor que quieras compartir. Si ya tienes un túnel en playit.gg que apunta al puerto {server.port}, “Crear túnel” lo
+                detecta y lo usa en vez de crear otro.
               </span>
             </>
           )
@@ -227,9 +239,7 @@ export default function NetworkTab({ server, state }) {
         <ol className="stack" style={{ gap: '0.9rem', margin: 0, paddingLeft: '1.2rem' }}>
           <li>
             <strong>Fija la IP de esta PC</strong>
-            <p className="muted small">
-              Reserva {lan ? <span className="mono">{lan.address}</span> : 'la IP local'} en tu router (reserva DHCP) para que no cambie.
-            </p>
+            <p className="muted small">Reserva {lan ? <span className="mono">{lan.address}</span> : 'la IP local'} en tu router (reserva DHCP) para que no cambie.</p>
           </li>
           <li>
             <strong>Permite {bedrock ? 'los puertos' : 'el puerto'} en el Firewall de Windows</strong>
@@ -266,8 +276,7 @@ export default function NetworkTab({ server, state }) {
       <section className="panel stack" style={{ gap: '0.9rem' }}>
         <h2 style={{ margin: 0 }}>Probar desde internet</h2>
         <p className="muted small">
-          Un servicio externo (mcsrvstat.us) intenta conectarse a tu servidor como lo haría un amigo. Si escribes un dominio o una dirección de playit.gg,
-          se prueba esa dirección.
+          Un servicio externo (mcsrvstat.us) intenta conectarse a tu servidor como lo haría un amigo. Si escribes un dominio o una dirección de playit.gg, se prueba esa dirección.
         </p>
         <div className="row">
           {bedrock && (
@@ -296,16 +305,19 @@ export default function NetworkTab({ server, state }) {
         {check &&
           (check.online ? (
             <div className="note" style={{ borderLeftColor: 'var(--prismarine)', background: 'rgba(79,179,169,0.08)' }}>
-              Tu servidor se ve desde internet en <span className="mono">{check.host}:{check.port}</span>
+              Tu servidor se ve desde internet en{' '}
+              <span className="mono">
+                {check.host}:{check.port}
+              </span>
               {check.edition === 'bedrock' ? ' (Bedrock)' : ''}
               {check.version ? `, versión ${check.version}` : ''}
               {check.players ? `, ${check.players.online}/${check.players.max} jugadores` : ''}. Ya pueden entrar tus amigos.
             </div>
           ) : (
             <div className="error-box">
-              No se pudo conectar a {check.host}:{check.port} {check.edition === 'bedrock' ? 'por UDP (Bedrock)' : ''} desde internet. Revisa el firewall
-              y el reenvío de puertos{check.edition === 'bedrock' ? ' (que la regla sea UDP)' : ''}. Si la IP WAN que muestra tu router es distinta a{' '}
-              {net?.publicIp || 'tu IP pública'}, probablemente tu proveedor usa CGNAT; la guía explica qué hacer.
+              No se pudo conectar a {check.host}:{check.port} {check.edition === 'bedrock' ? 'por UDP (Bedrock)' : ''} desde internet. Revisa el firewall y el reenvío de puertos
+              {check.edition === 'bedrock' ? ' (que la regla sea UDP)' : ''}. Si la IP WAN que muestra tu router es distinta a {net?.publicIp || 'tu IP pública'}, probablemente tu proveedor usa CGNAT;
+              la guía explica qué hacer.
               <br />
               <span className="faint">El resultado puede tardar unos minutos en actualizarse porque el servicio guarda caché.</span>
             </div>
@@ -329,9 +341,7 @@ function TunnelRow({ label, tunnel, bedrock }) {
     <div>
       <Address
         label={
-          bedrock
-            ? `${label}: dirección ${host}${port ? `, puerto ${port}` : ''}`
-            : `${label}: esta es la dirección para tus amigos${tunnel.disabled ? ` (desactivado: ${tunnel.disabled})` : ''}`
+          bedrock ? `${label}: dirección ${host}${port ? `, puerto ${port}` : ''}` : `${label}: esta es la dirección para tus amigos${tunnel.disabled ? ` (desactivado: ${tunnel.disabled})` : ''}`
         }
         text={bedrock ? host : tunnel.address}
       />
@@ -339,8 +349,7 @@ function TunnelRow({ label, tunnel, bedrock }) {
   );
 }
 
-const typeLabel = (t) =>
-  t.type === 'minecraft-java' ? 'Minecraft Java' : t.type === 'minecraft-bedrock' ? 'Minecraft Bedrock' : t.typeLabel || (t.portType ? t.portType.toUpperCase() : 'Otro');
+const typeLabel = (t) => (t.type === 'minecraft-java' ? 'Minecraft Java' : t.type === 'minecraft-bedrock' ? 'Minecraft Bedrock' : t.typeLabel || (t.portType ? t.portType.toUpperCase() : 'Otro'));
 
 function fits(t, kind) {
   if (t.type === 'minecraft-java') return kind === 'java';
@@ -376,8 +385,11 @@ function LinkTunnels({ server, bedrockPort, agentId, onClose, onDone }) {
   return (
     <Modal title="Usar un túnel de playit.gg" onClose={onClose} wide>
       <p className="muted small">
-        Crea el túnel en <a href="https://playit.gg/account/setup/new-tunnel" target="_blank" rel="noreferrer">playit.gg → New Tunnel</a> con estos datos y
-        luego pulsa <strong>Actualizar lista</strong>:
+        Crea el túnel en{' '}
+        <a href="https://playit.gg/account/setup/new-tunnel" target="_blank" rel="noreferrer">
+          playit.gg → New Tunnel
+        </a>{' '}
+        con estos datos y luego pulsa <strong>Actualizar lista</strong>:
       </p>
       <ol className="small stack" style={{ gap: '0.3rem', margin: 0, paddingLeft: '1.2rem' }}>
         <li>
@@ -411,9 +423,7 @@ function LinkTunnels({ server, bedrockPort, agentId, onClose, onDone }) {
       {error && <div className="error-box">{error}</div>}
       {!data && !error && <p className="muted">Buscando tus túneles…</p>}
       {data && data.tunnels.length === 0 && (
-        <p className="note">
-          El agente del panel todavía no tiene túneles. Si ya creaste uno, revisa que en “Assign to Agent” hayas elegido el agente del panel y no otro.
-        </p>
+        <p className="note">El agente del panel todavía no tiene túneles. Si ya creaste uno, revisa que en “Assign to Agent” hayas elegido el agente del panel y no otro.</p>
       )}
       {data && data.tunnels.length > 0 && (
         <div className="table-wrap">
@@ -485,9 +495,7 @@ function LinkTunnels({ server, bedrockPort, agentId, onClose, onDone }) {
         <button
           className="btn-go"
           disabled={busy || (!java && !bed)}
-          onClick={() =>
-            run(async () => onDone(await api(`/servers/${server.id}/playit/link`, { method: 'POST', body: { java: java || null, bedrock: bed || null } })), 'Túnel vinculado')
-          }
+          onClick={() => run(async () => onDone(await api(`/servers/${server.id}/playit/link`, { method: 'POST', body: { java: java || null, bedrock: bed || null } })), 'Túnel vinculado')}
         >
           Vincular
         </button>
@@ -521,11 +529,14 @@ function DomainSection({ server, hasTunnel }) {
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const host = (name) => (name ? `${name}.${d.zone}` : d.zone);
   const save = (enabled) =>
-    run(async () => {
-      const r = await api(`/servers/${server.id}/dns`, { method: 'PUT', body: { ...form, enabled } });
-      setD(r);
-      if (r.applied?.error) throw new Error(r.applied.error);
-    }, enabled ? 'Dominio actualizado' : d.srv ? 'Dominio quitado: se borraron sus registros' : 'Dominio quitado de este servidor');
+    run(
+      async () => {
+        const r = await api(`/servers/${server.id}/dns`, { method: 'PUT', body: { ...form, enabled } });
+        setD(r);
+        if (r.applied?.error) throw new Error(r.applied.error);
+      },
+      enabled ? 'Dominio actualizado' : d.srv ? 'Dominio quitado: se borraron sus registros' : 'Dominio quitado de este servidor'
+    );
   const a = d.applied;
   const bedrockOn = Boolean(server.bedrock?.enabled);
 
@@ -551,8 +562,7 @@ function DomainSection({ server, hasTunnel }) {
       )}
       {!d.provider ? (
         <p className="small">
-          Elige un servicio de dominio (deSEC, DuckDNS o Cloudflare) en <Link to="/ajustes">Ajustes del panel</Link> y luego vuelve aquí para ponerle nombre a
-          este servidor.
+          Elige un servicio de dominio (deSEC, DuckDNS o Cloudflare) en <Link to="/ajustes">Ajustes del panel</Link> y luego vuelve aquí para ponerle nombre a este servidor.
         </p>
       ) : (
         <>
@@ -560,8 +570,7 @@ function DomainSection({ server, hasTunnel }) {
             <div className="stack" style={{ gap: '0.2rem' }}>
               {a.java?.unsupported ? (
                 <div className="note small">
-                  <strong>Java:</strong> playit solo deja entrar con la dirección de su túnel, y DuckDNS no puede redirigir a ella (no tiene registros SRV). Para
-                  Java comparte la dirección de playit
+                  <strong>Java:</strong> playit solo deja entrar con la dirección de su túnel, y DuckDNS no puede redirigir a ella (no tiene registros SRV). Para Java comparte la dirección de playit
                   {a.java.playitAddress && (
                     <>
                       : <span className="mono">{a.java.playitAddress}</span>
@@ -574,8 +583,8 @@ function DomainSection({ server, hasTunnel }) {
               )}
               {a.bedrock && <Address label={`Bedrock: dirección ${a.bedrock.host}, puerto ${a.bedrock.port}`} text={a.bedrock.host} />}
               <p className="faint small" style={{ marginTop: '0.4rem' }}>
-                Apunta a {a.target === 'playit' ? 'tu túnel de playit.gg' : 'la IP de tu casa (necesita los puertos abiertos)'} (actualizado {formatDate(a.at)}). Un
-                cambio puede tardar unos minutos en verse en todos lados.
+                Apunta a {a.target === 'playit' ? 'tu túnel de playit.gg' : 'la IP de tu casa (necesita los puertos abiertos)'} (actualizado {formatDate(a.at)}). Un cambio puede tardar unos minutos en
+                verse en todos lados.
               </p>
               {a.warnings?.map((w, i) => (
                 <p key={i} className="note">
@@ -589,11 +598,7 @@ function DomainSection({ server, hasTunnel }) {
           <div className="grid-2">
             <label className="field">
               <span>{d.provider === 'duckdns' ? 'Subdominio de DuckDNS' : 'Nombre'}</span>
-              <input
-                value={form.name}
-                onChange={(e) => set('name', e.target.value.toLowerCase().trim())}
-                placeholder={d.provider === 'duckdns' ? 'miserver' : 'smp (vacío = solo el dominio)'}
-              />
+              <input value={form.name} onChange={(e) => set('name', e.target.value.toLowerCase().trim())} placeholder={d.provider === 'duckdns' ? 'miserver' : 'smp (vacío = solo el dominio)'} />
               <span className="mono">{host(form.name || (d.provider === 'duckdns' ? 'tunombre' : ''))}</span>
             </label>
             {d.provider === 'duckdns' && bedrockOn && (
@@ -622,9 +627,8 @@ function DomainSection({ server, hasTunnel }) {
           </div>
           {!d.srv && (
             <p className="faint small">
-              DuckDNS solo guarda IPs (no tiene registros SRV). Con la IP de tu casa funciona para Java y Bedrock (Java con <span className="mono">:puerto</span> si
-              no es 25565). Con el túnel de playit solo sirve para Bedrock: playit no deja entrar a Java con otro nombre. Para Java con playit usa Cloudflare o
-              deSEC.
+              DuckDNS solo guarda IPs (no tiene registros SRV). Con la IP de tu casa funciona para Java y Bedrock (Java con <span className="mono">:puerto</span> si no es 25565). Con el túnel de
+              playit solo sirve para Bedrock: playit no deja entrar a Java con otro nombre. Para Java con playit usa Cloudflare o deSEC.
             </p>
           )}
           <div className="row">

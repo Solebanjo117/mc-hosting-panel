@@ -16,7 +16,7 @@ Panel web propio para crear y administrar servidores de **Minecraft Java** en tu
 - **Modpack para los jugadores:** un archivo con el modpack completo, los mods que agregaste y tu servidor ya puesto en Multijugador, para importarlo en Modrinth App, CurseForge App o Prism Launcher. Los mods del pack que quitaste o desactivaste en el servidor no se incluyen.
 - **Consolas con MCXboxBroadcast:** el servidor aparece en la pestaña Amigos de Xbox, PlayStation y Switch; el panel muestra el código para iniciar sesión con Xbox.
 - **Tareas programadas:** reinicios diarios con avisos en el chat y respaldo previo, mensajes automáticos, respaldos y comandos a horas fijas o cada cierto tiempo.
-- **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días.
+- **Rendimiento:** gráficas de TPS, jugadores, memoria y CPU de la última hora a los últimos 7 días, por servidor y en **Rendimiento general**: la PC (CPU, RAM, disco) y todos los servidores en la misma línea de tiempo, con un color fijo por servidor, tarjetas de resumen (encendidos, jugadores, RAM, caídas en 24 h, último respaldo) y una tabla servidor por servidor.
 - **Inventario visual** de cada jugador como en el juego (armadura, mano secundaria, inventario, barra rápida y cofre de Ender): arrastra objetos, cambia cantidades o pon objetos nuevos con el buscador.
 - **Mapa del mundo en 3D** con BlueMap dentro del panel, con los jugadores en vivo (Paper, Fabric, Forge y NeoForge). Eliges la **velocidad de dibujo** (Normal, Rápida o Máxima según los núcleos de tu PC) y si se **pausa mientras hay jugadores**.
 - **Pregenerar el mundo** con Chunky desde Mundos: radio con atajos, dimensión, forma, centro y borde del mundo opcional; ves el avance, la velocidad y cuánto falta, y puedes pausar, continuar o cancelar.
@@ -93,6 +93,12 @@ npm start
 - **No abras el puerto del panel (8080) a internet**: el panel rechaza esas conexiones por seguridad. Entra con un túnel SSH (`ssh -L 8080:localhost:8080 usuario@IP` y abre `http://localhost:8080`) o con Tailscale.
 - Abre los puertos de **Minecraft** (25565/TCP, 19132/UDP para Bedrock) en los dos firewalls: el de tu nube (en Oracle, la *Security List*) y el del sistema (iptables, ufw o firewalld).
 
+### Con Docker
+
+En Linux (o donde tengas Docker) basta con `docker compose up -d` en la carpeta del proyecto: construye la imagen, guarda todo en el volumen `mc-data` y mantiene el panel encendido. La imagen también se publica en `ghcr.io/solebanjo117/mc-hosting-panel`. Puertos, actualización y detalles en [`docs/LINUX.md`](docs/LINUX.md#2b-con-docker).
+
+`GET /api/health` responde `{"ok":true,"version":"…","uptime":…}` sin sesión, para Docker, systemd o un monitor como Uptime Kuma.
+
 ### Scripts incluidos
 
 | Archivo | Para qué sirve |
@@ -111,7 +117,8 @@ Todo vive en la carpeta `data/` (no se sube a Git):
 
 ```
 data/
-  db.json          cuenta, ajustes, servidores, tareas programadas
+  db.json          cuenta, ajustes, servidores, tareas programadas (los tokens de otros servicios van cifrados)
+  panel.key        la clave que cifra esos tokens; sin ella hay que volver a escribirlos
   metrics/         historial de rendimiento (7 días)
   activity/        entradas, salidas y eventos de cada servidor (90 días)
   cache/gamedata/  listas de objetos y nombres en español por versión
@@ -133,8 +140,10 @@ En la PC donde corre el panel abre **Restablecer contraseña**: en el menú Inic
 - El panel solo acepta conexiones de esta PC, tu red y Tailscale (configurable en Ajustes). Si alguien abre el 8080 en el router, los de internet ven "Acceso bloqueado".
 - Bloquea peticiones enviadas desde otras páginas (CSRF), manda cabeceras de seguridad y guarda un historial de inicios de sesión.
 - **No abras el puerto 8080 (el panel) en tu router.** Solo se abren los puertos de los servidores de Minecraft. Para administrar desde fuera de casa usa Tailscale (explicado en la guía).
-- La llave de playit (`data/playit/playit.toml`) y los tokens de DuckDNS, deSEC o Cloudflare se guardan en `data/`; no compartas esa carpeta.
-- La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly`. Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
+- Los tokens de DuckDNS, deSEC, Cloudflare y CurseForge se guardan cifrados (AES-256-GCM) en `db.json`; la clave está aparte, en `data/panel.key`. La llave de playit vive en `data/playit/playit.toml`. Aun así, no compartas la carpeta `data/`.
+- Los .zip que llegan de fuera (modpacks, mundos, archivos subidos, Java) se extraen con protección contra rutas `../`, enlaces simbólicos y "bombas zip" que declaran más de lo que cabe en el disco.
+- **Varias cuentas con roles**: el dueño (la cuenta que se crea al instalar) puede invitar desde **Ajustes del panel → Usuarios** a **moderadores** (en los servidores que les asignes: consola, jugadores, chat, respaldos, encender y apagar; sin archivos ni ajustes) y **observadores** (solo miran). Cada cuenta ve únicamente sus servidores, también en el WebSocket y el Rendimiento general; lo demás responde 404 o 403.
+- La contraseña se guarda con bcrypt y la sesión en una cookie `httpOnly` (con `Secure` cuando entras por HTTPS con Caddy o Tailscale). Tras 8 intentos fallidos el acceso se bloquea 10 minutos.
 - Deja `online-mode=true` y usa la lista blanca si tu servidor es solo para amigos.
 
 ## Desarrollo
@@ -144,9 +153,13 @@ npm install
 npm run dev          # API + WebSocket en http://localhost:8080 (se reinicia al guardar)
 npm run dev:client   # interfaz con recarga en http://localhost:5173
 npm run build        # compila la interfaz a dist/
+npm run check        # lint (ESLint), formato (Prettier) y tipos (tsc sobre los archivos con // @ts-check)
+npm run format       # da formato a todo el código
 ```
 
 Variables de entorno: `PORT` (puerto del panel), `MCP_DATA_DIR` (carpeta de datos).
+
+El formato lo pone Prettier (`.prettierrc`) y ESLint solo busca errores reales (`eslint.config.js`); la CI corre `npm run check` antes de las pruebas. `jsconfig.json` da autocompletado en el editor; los archivos que empiezan con `// @ts-check` (por ahora `server/lib/` y `config.js`/`db.js`) se revisan con TypeScript a partir de sus comentarios JSDoc, sin migrar nada a TS. Para sumar un archivo basta con añadirle esa línea y corregir lo que marque.
 
 ### Estructura
 

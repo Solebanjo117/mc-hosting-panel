@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { record } from './activity.js';
-import AdmZip from 'adm-zip';
+import { openZip, extractZip } from '../lib/zip.js';
 import { serverDir, backupDir } from '../config.js';
 import { db, getServer } from '../db.js';
 import { HttpError, safeJoin } from '../lib/util.js';
@@ -58,7 +58,7 @@ export async function createBackup(id, mode = 'completo', reason = 'manual') {
 
     await new Promise((resolve, reject) => {
       const output = fs.createWriteStream(`${dest}.part`);
-      const zip = archiver('zip', { zlib: { level: 6 } });
+      const zip = new ZipArchive({ zlib: { level: 6 } });
       output.on('close', resolve);
       zip.on('error', reject);
       zip.on('warning', (err) => console.warn('[backup]', err.message));
@@ -106,12 +106,12 @@ export function deleteBackup(id, file) {
 
 export async function restoreBackup(id, file) {
   if (isRunning(id)) throw new HttpError(409, 'Apaga el servidor antes de restaurar un respaldo');
-  const zip = new AdmZip(backupPath(id, file));
+  const zip = openZip(backupPath(id, file));
   const dir = serverDir(id);
-  const top = new Set(zip.getEntries().map((e) => e.entryName.split('/')[0]).filter(Boolean));
+  const top = new Set(zip.entries.map((e) => e.name.split('/')[0]).filter(Boolean));
   // Reemplaza solo lo que trae el respaldo; lo demás (librerías, jar) queda igual.
   for (const name of top) fs.rmSync(safeJoin(dir, name), { recursive: true, force: true });
-  zip.extractAllTo(dir, true);
+  extractZip(zip, dir);
   return [...top];
 }
 
@@ -124,8 +124,6 @@ setInterval(() => {
     if (Date.now() - last < sched.intervalHours * 3600_000) continue;
     server.lastAutoBackup = new Date().toISOString();
     db.save();
-    createBackup(server.id, sched.mode || 'mundo', 'auto').catch((err) =>
-      console.error(`[backup auto ${server.name}]`, err.message)
-    );
+    createBackup(server.id, sched.mode || 'mundo', 'auto').catch((err) => console.error(`[backup auto ${server.name}]`, err.message));
   }
 }, 60_000).unref();

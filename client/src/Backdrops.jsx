@@ -35,7 +35,16 @@ function MapBackdrop({ servers, id }) {
 
 // [u, v, ancho, alto] en la textura, por cara. Formato moderno (64×64) con brazos de 4 de ancho.
 const PARTS = [
-  { name: 'head', w: 8, h: 8, d: 8, x: 0, y: 0, faces: { top: [8, 0], bottom: [16, 0], right: [0, 8], front: [8, 8], left: [16, 8], back: [24, 8] }, overlay: { top: [40, 0], bottom: [48, 0], right: [32, 8], front: [40, 8], left: [48, 8], back: [56, 8] } },
+  {
+    name: 'head',
+    w: 8,
+    h: 8,
+    d: 8,
+    x: 0,
+    y: 0,
+    faces: { top: [8, 0], bottom: [16, 0], right: [0, 8], front: [8, 8], left: [16, 8], back: [24, 8] },
+    overlay: { top: [40, 0], bottom: [48, 0], right: [32, 8], front: [40, 8], left: [48, 8], back: [56, 8] },
+  },
   { name: 'body', w: 8, h: 12, d: 4, x: 0, y: 8, faces: { top: [20, 16], bottom: [28, 16], right: [16, 20], front: [20, 20], left: [28, 20], back: [32, 20] } },
   { name: 'arm-r', w: 4, h: 12, d: 4, x: -6, y: 8, swing: 1, faces: { top: [44, 16], bottom: [48, 16], right: [40, 20], front: [44, 20], left: [48, 20], back: [52, 20] } },
   { name: 'arm-l', w: 4, h: 12, d: 4, x: 6, y: 8, swing: -1, faces: { top: [36, 48], bottom: [40, 48], right: [32, 52], front: [36, 52], left: [40, 52], back: [44, 52] } },

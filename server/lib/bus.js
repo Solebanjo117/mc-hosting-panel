@@ -1,3 +1,4 @@
+// @ts-check
 import { EventEmitter } from 'node:events';
 
 /**

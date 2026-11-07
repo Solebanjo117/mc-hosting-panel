@@ -4,6 +4,7 @@ import { COOKIE, verifyToken } from './auth.js';
 import { instance } from './services/processManager.js';
 import { getServer } from './db.js';
 import { clientIp, isAllowed, sameOriginUpgrade } from './lib/netguard.js';
+import { canSeeServer } from './lib/access.js';
 
 function parseCookies(header = '') {
   const out = {};
@@ -47,7 +48,9 @@ export function attachWebSocket(httpServer) {
 
   httpServer.on('upgrade', (req, socket, head) => {
     if (!req.url.startsWith('/ws') || !isAllowed(req.socket.remoteAddress) || !sameOriginUpgrade(req)) return socket.destroy();
-    if (!verifyToken(parseCookies(req.headers.cookie)[COOKIE])) return reject(socket, 401, 'Unauthorized');
+    const account = verifyToken(parseCookies(req.headers.cookie)[COOKIE]);
+    if (!account) return reject(socket, 401, 'Unauthorized');
+    req.account = account;
     const ip = clientIp(req.socket.remoteAddress);
     if ((perIp.get(ip) || 0) >= LIMITS.perIp || wss.clients.size >= LIMITS.total) return reject(socket, 429, 'Too Many Requests');
     wss.handleUpgrade(req, socket, head, (ws) => {
@@ -61,7 +64,8 @@ export function attachWebSocket(httpServer) {
     });
   });
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req) => {
+    ws.account = req.account;
     ws.subscriptions = new Set();
     ws.isAlive = true;
     ws.window = { start: Date.now(), count: 0 };
@@ -78,7 +82,7 @@ export function attachWebSocket(httpServer) {
       } catch {
         return;
       }
-      if (msg?.type === 'subscribe' && typeof msg.id === 'string' && getServer(msg.id)) {
+      if (msg?.type === 'subscribe' && typeof msg.id === 'string' && getServer(msg.id) && canSeeServer(ws.account, msg.id)) {
         if (!ws.subscriptions.has(msg.id) && ws.subscriptions.size >= LIMITS.subscriptions) return;
         ws.subscriptions.add(msg.id);
         ws.send(JSON.stringify({ type: 'console-history', id: msg.id, lines: instance(msg.id).lines }));
@@ -93,15 +97,18 @@ export function attachWebSocket(httpServer) {
     for (const ws of wss.clients) if (ws.readyState === 1 && filter(ws)) ws.send(data);
   };
 
-  bus.on('status', (id, snapshot) => send(() => true, { type: 'status', id, ...snapshot }));
+  // Cada cuenta recibe solo lo de sus servidores; lo del panel entero (playit, actualización) solo el dueño.
+  const sees = (id) => (ws) => canSeeServer(ws.account, id);
+  const owner = (ws) => ws.account?.role === 'owner';
+  bus.on('status', (id, snapshot) => send(sees(id), { type: 'status', id, ...snapshot }));
   bus.on('servers', () => send(() => true, { type: 'servers' }));
-  bus.on('playit', (status) => send(() => true, { type: 'playit', ...status, logs: undefined }));
-  bus.on('install', (id, payload) => send(() => true, { type: 'install', id, ...payload }));
-  bus.on('app-update', (state) => send(() => true, { type: 'app-update', ...state }));
+  bus.on('playit', (status) => send(owner, { type: 'playit', ...status, logs: undefined }));
+  bus.on('install', (id, payload) => send(sees(id), { type: 'install', id, ...payload }));
+  bus.on('app-update', (state) => send(owner, { type: 'app-update', ...state }));
   bus.on('console', (id, line) => send((ws) => ws.subscriptions.has(id), { type: 'console', id, line }));
-  bus.on('achievement', (id, item) => send(() => true, { type: 'achievement', id, ...item }));
-  bus.on('backup-done', (id, file) => send(() => true, { type: 'backup', id, file }));
-  bus.on('zone', (id, payload) => send(() => true, { type: 'zone', id, ...payload }));
+  bus.on('achievement', (id, item) => send(sees(id), { type: 'achievement', id, ...item }));
+  bus.on('backup-done', (id, file) => send(sees(id), { type: 'backup', id, file }));
+  bus.on('zone', (id, payload) => send(sees(id), { type: 'zone', id, ...payload }));
 
   // Cierra conexiones muertas (laptop suspendida, Wi-Fi caído…).
   setInterval(() => {

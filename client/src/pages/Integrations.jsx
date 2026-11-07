@@ -47,8 +47,8 @@ export function PlayitSettings() {
         )}
       </div>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Para cuando no puedes abrir puertos (CGNAT o módem bloqueado). El panel descarga el programa oficial de playit, lo mantiene encendido y crea
-        los túneles de cada servidor desde su pestaña Conexión. Necesitas una cuenta gratuita en playit.gg.
+        Para cuando no puedes abrir puertos (CGNAT o módem bloqueado). El panel descarga el programa oficial de playit, lo mantiene encendido y crea los túneles de cada servidor desde su pestaña
+        Conexión. Necesitas una cuenta gratuita en playit.gg.
       </p>
 
       {!s.claimed ? (
@@ -82,11 +82,7 @@ export function PlayitSettings() {
             </span>
           )}
           <label className="check">
-            <input
-              type="checkbox"
-              checked={s.enabled}
-              onChange={(e) => run(() => api('/integrations/playit/enabled', { method: 'POST', body: { enabled: e.target.checked } }).then(setStatus))}
-            />
+            <input type="checkbox" checked={s.enabled} onChange={(e) => run(() => api('/integrations/playit/enabled', { method: 'POST', body: { enabled: e.target.checked } }).then(setStatus))} />
             <span>Mantener el agente encendido (y arrancarlo con el panel)</span>
           </label>
           <span className="grow" />
@@ -108,7 +104,11 @@ export function PlayitSettings() {
           </button>
         </div>
       )}
-      {showLogs && <pre className="logview" style={{ maxHeight: 260 }}>{(status?.logs || []).join('\n') || 'Sin mensajes todavía.'}</pre>}
+      {showLogs && (
+        <pre className="logview" style={{ maxHeight: 260 }}>
+          {(status?.logs || []).join('\n') || 'Sin mensajes todavía.'}
+        </pre>
+      )}
     </section>
   );
 }
@@ -155,9 +155,8 @@ function ExistingAgent({ detected, onDone }) {
             <span>Clave secreta del agente</span>
             <input type="password" autoComplete="off" value={secret} onChange={(e) => setSecret(e.target.value)} placeholder='secret_key = "…" o solo la clave' />
             <span>
-              Está en el archivo <span className="mono">playit.toml</span>. Con el programa oficial de Windows: abre <span className="mono">%LOCALAPPDATA%\playit_gg</span>{' '}
-              (pégalo en la barra del Explorador), abre playit.toml con el Bloc de notas y copia la línea de secret_key. Si no lo encuentras, en una terminal
-              ejecuta <span className="mono">playit secret-path</span>.
+              Está en el archivo <span className="mono">playit.toml</span>. Con el programa oficial de Windows: abre <span className="mono">%LOCALAPPDATA%\playit_gg</span> (pégalo en la barra del
+              Explorador), abre playit.toml con el Bloc de notas y copia la línea de secret_key. Si no lo encuentras, en una terminal ejecuta <span className="mono">playit secret-path</span>.
             </span>
           </label>
           <div className="row">
@@ -263,9 +262,8 @@ export function DnsSettings() {
         </div>
       )}
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Un nombre fácil como <span className="mono">smp.tudominio.com</span> en lugar de una IP o la dirección de playit. Funciona con la IP de tu casa
-        (puertos abiertos) y con los túneles de playit.gg; el panel mantiene los registros al día. El nombre de cada servidor se elige en su pestaña{' '}
-        <strong>Conexión</strong>.
+        Un nombre fácil como <span className="mono">smp.tudominio.com</span> en lugar de una IP o la dirección de playit. Funciona con la IP de tu casa (puertos abiertos) y con los túneles de
+        playit.gg; el panel mantiene los registros al día. El nombre de cada servidor se elige en su pestaña <strong>Conexión</strong>.
       </p>
       <div className="segmented" role="radiogroup" aria-label="Servicio de dominio">
         {DNS_PROVIDERS.map((p) => (
@@ -289,17 +287,14 @@ export function DnsSettings() {
               y confirma el correo.
             </li>
             <li>
-              Agrega tu dominio con el <strong>+</strong>. Los dominios gratis <span className="mono">.dedyn.io</span> a veces están suspendidos; puedes usar
-              uno gratis de{' '}
+              Agrega tu dominio con el <strong>+</strong>. Los dominios gratis <span className="mono">.dedyn.io</span> a veces están suspendidos; puedes usar uno gratis de{' '}
               <a href="https://domain.digitalplat.org" target="_blank" rel="noreferrer">
                 DigitalPlat
               </a>{' '}
-              (<span className="mono">tunombre.dpdns.org</span>) y en DigitalPlat poner los nameservers <span className="mono">ns1.desec.io</span> y{' '}
-              <span className="mono">ns2.desec.org</span>.
+              (<span className="mono">tunombre.dpdns.org</span>) y en DigitalPlat poner los nameservers <span className="mono">ns1.desec.io</span> y <span className="mono">ns2.desec.org</span>.
             </li>
             <li>
-              Ve a <strong>Token Management</strong>, pulsa <strong>+</strong>, crea un token y cópialo (solo se muestra una vez). No edites los registros NS
-              del dominio.
+              Ve a <strong>Token Management</strong>, pulsa <strong>+</strong>, crea un token y cópialo (solo se muestra una vez). No edites los registros NS del dominio.
             </li>
           </ol>
           <div className="grid-2">
@@ -315,8 +310,8 @@ export function DnsSettings() {
       {provider === 'duckdns' && (
         <>
           <p className="small" style={{ maxWidth: '75ch' }}>
-            Gratis y muy fácil, pero solo guarda IPs. Sirve con la IP de tu casa (puertos abiertos). Con el túnel de playit solo funciona para Bedrock:
-            playit no deja entrar a Java con otro nombre, y DuckDNS no tiene registros SRV para redirigir. Crea uno o más subdominios en{' '}
+            Gratis y muy fácil, pero solo guarda IPs. Sirve con la IP de tu casa (puertos abiertos). Con el túnel de playit solo funciona para Bedrock: playit no deja entrar a Java con otro nombre, y
+            DuckDNS no tiene registros SRV para redirigir. Crea uno o más subdominios en{' '}
             <a href="https://www.duckdns.org" target="_blank" rel="noreferrer">
               duckdns.org
             </a>{' '}
@@ -337,8 +332,7 @@ export function DnsSettings() {
             <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noreferrer">
               My Profile → API Tokens
             </a>{' '}
-            con la plantilla <strong>Edit zone DNS</strong> y elige tu dominio. Los registros se crean sin la nube naranja (el proxy de Cloudflare no
-            funciona con Minecraft).
+            con la plantilla <strong>Edit zone DNS</strong> y elige tu dominio. Los registros se crean sin la nube naranja (el proxy de Cloudflare no funciona con Minecraft).
           </p>
           <div className="grid-2">
             <label className="field">
@@ -359,9 +353,7 @@ export function DnsSettings() {
           <button className="btn-go" disabled={busy || (!saved && !form.token)} onClick={save}>
             {busy ? 'Comprobando…' : s.provider && s.provider !== provider ? `Cambiar a ${DNS_PROVIDERS.find((p) => p.id === provider).label}` : 'Guardar y comprobar'}
           </button>
-          {s.provider && s.provider !== provider && (
-            <span className="faint small">Al cambiar, el panel borra los registros que creó en {s.providerName} y los crea en el nuevo.</span>
-          )}
+          {s.provider && s.provider !== provider && <span className="faint small">Al cambiar, el panel borra los registros que creó en {s.providerName} y los crea en el nuevo.</span>}
         </div>
       )}
       {confirmUnlink && (
@@ -400,9 +392,8 @@ export function AppSettings() {
       <h2 style={{ margin: 0 }}>Notificaciones y app</h2>
       {perm === 'unsupported' ? (
         <p className="muted small" style={{ maxWidth: '75ch' }}>
-          Este navegador no permite notificaciones aquí. Los navegadores solo las dan en páginas seguras: abre el panel como{' '}
-          <span className="mono">http://localhost:{location.port || 80}</span> en esta PC, o por HTTPS (por ejemplo con <span className="mono">tailscale serve</span>)
-          desde el celular.
+          Este navegador no permite notificaciones aquí. Los navegadores solo las dan en páginas seguras: abre el panel como <span className="mono">http://localhost:{location.port || 80}</span> en
+          esta PC, o por HTTPS (por ejemplo con <span className="mono">tailscale serve</span>) desde el celular.
         </p>
       ) : (
         <>
@@ -447,8 +438,8 @@ export function AppSettings() {
           <button onClick={() => promptInstall()}>Instalar el panel como app</button>
         ) : (
           <span className="faint small" style={{ maxWidth: '75ch' }}>
-            Para tenerlo como app: en Chrome o Edge, menú ⋮ → <strong>Instalar MC Hosting Panel</strong> (o “Agregar a pantalla de inicio” en el celular). En
-            iPhone: Safari → Compartir → <strong>Agregar a inicio</strong>.
+            Para tenerlo como app: en Chrome o Edge, menú ⋮ → <strong>Instalar MC Hosting Panel</strong> (o “Agregar a pantalla de inicio” en el celular). En iPhone: Safari → Compartir →{' '}
+            <strong>Agregar a inicio</strong>.
           </span>
         )}
       </div>
@@ -462,14 +453,19 @@ export function CurseForgeSettings() {
   const [key, setKey] = useState('');
   const [run, busy] = useAction();
   useEffect(() => {
-    api('/integrations/curseforge').then(setS).catch(() => {});
+    api('/integrations/curseforge')
+      .then(setS)
+      .catch(() => {});
   }, []);
   if (!s) return null;
   const save = (value) =>
-    run(async () => {
-      setS(await api('/integrations/curseforge', { method: 'PUT', body: { apiKey: value } }));
-      setKey('');
-    }, value ? 'Clave de CurseForge guardada' : 'CurseForge desactivado');
+    run(
+      async () => {
+        setS(await api('/integrations/curseforge', { method: 'PUT', body: { apiKey: value } }));
+        setKey('');
+      },
+      value ? 'Clave de CurseForge guardada' : 'CurseForge desactivado'
+    );
 
   return (
     <section className="panel stack">
@@ -498,13 +494,7 @@ export function CurseForgeSettings() {
       <div className="row" style={{ alignItems: 'flex-end' }}>
         <label className="field grow" style={{ maxWidth: 420 }}>
           <span>Clave de API</span>
-          <input
-            type="password"
-            autoComplete="off"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder={s.hasKey ? `Guardada (${s.hint}); escribe otra para cambiarla` : '$2a$10$…'}
-          />
+          <input type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} placeholder={s.hasKey ? `Guardada (${s.hint}); escribe otra para cambiarla` : '$2a$10$…'} />
         </label>
         <button className="btn-go" disabled={busy || !key.trim()} onClick={() => save(key)}>
           {busy ? 'Comprobando…' : 'Guardar'}

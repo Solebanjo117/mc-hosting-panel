@@ -67,10 +67,13 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
   it('reinicia: se apaga y vuelve a encender solo', async () => {
     const before = (await panel.status(s.id)).pid;
     await c.ok('POST', `/api/servers/${s.id}/restart`);
-    await waitFor(async () => {
-      const rt = await panel.status(s.id);
-      return rt.status === 'running' && rt.pid !== before;
-    }, { timeout: 30000, message: 'que vuelva a encender' });
+    await waitFor(
+      async () => {
+        const rt = await panel.status(s.id);
+        return rt.status === 'running' && rt.pid !== before;
+      },
+      { timeout: 30000, message: 'que vuelva a encender' }
+    );
     assert.deepEqual((await panel.status(s.id)).players, [], 'al reiniciar no queda nadie conectado');
   });
 
@@ -128,7 +131,9 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
     fs.writeFileSync(path.join(dir, 'usercache.json'), JSON.stringify([{ name: 'Ana', uuid }]));
     fs.writeFileSync(
       path.join(dir, 'world', 'stats', `${uuid}.json`),
-      JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:play_time': 72000, 'minecraft:deaths': 3, 'minecraft:walk_one_cm': 50000 }, 'minecraft:mined': { 'minecraft:stone': 40, 'minecraft:dirt': 2 } } })
+      JSON.stringify({
+        stats: { 'minecraft:custom': { 'minecraft:play_time': 72000, 'minecraft:deaths': 3, 'minecraft:walk_one_cm': 50000 }, 'minecraft:mined': { 'minecraft:stone': 40, 'minecraft:dirt': 2 } },
+      })
     );
     const st = await c.ok('GET', `/api/servers/${s.id}/stats`);
     const ana = st.players.find((p) => p.uuid === uuid);
@@ -146,6 +151,23 @@ describe('Encender, apagar, consola y jugadores', { skip: !hasJava() && 'Se nece
     const mine = d.servers.find((x) => x.id === s.id);
     assert.ok(mine.health?.level);
     assert.ok(Array.isArray(mine.spark.players));
+  });
+
+  it('el rendimiento general junta la PC y todos los servidores en la misma línea de tiempo', async () => {
+    const d = await c.ok('GET', '/api/system/metrics?range=1h');
+    assert.equal(d.range, '1h');
+    assert.ok(d.host.points.length > 0 && d.host.totalMemMb > 0 && d.host.cores > 0);
+    const mine = d.servers.find((x) => x.id === s.id);
+    assert.equal(mine.points.length, d.host.points.length, 'misma cuadrícula de tiempo');
+    assert.equal(d.totals.length, d.host.points.length);
+    assert.ok('players' in d.totals[0] && 'tpsMin' in d.totals[0]);
+    const now = d.now.servers.find((x) => x.id === s.id);
+    assert.ok(['running', 'stopped', 'starting', 'stopping', 'crashed'].includes(now.status), now.status);
+    assert.equal(typeof now.crashes24h, 'number');
+    assert.ok('lastBackupAt' in now && 'worldBytes' in now);
+    assert.equal(d.now.totals.servers, d.servers.length);
+    assert.ok(d.now.host.totalMemMb > 0 && d.now.host.memUsedMb > 0);
+    assert.equal((await c.get('/api/system/metrics?range=99x')).body.range, '6h', 'un periodo desconocido usa el de siempre');
   });
 
   it('apagado, administra jugadores editando los archivos (con UUID real u offline)', async () => {

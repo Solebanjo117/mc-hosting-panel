@@ -36,7 +36,9 @@ export async function enter(id, { message = '', helpers = [], until = '', restar
   const server = getServer(id);
   if (!server) throw new HttpError(404, 'Servidor no encontrado');
   if (server.maintenance?.active) throw new HttpError(409, 'Ya está en mantenimiento');
-  const msg = String(message || 'En mantenimiento, volvemos pronto').trim().slice(0, 120);
+  const msg = String(message || 'En mantenimiento, volvemos pronto')
+    .trim()
+    .slice(0, 120);
   const names = [...new Set((Array.isArray(helpers) ? helpers : []).map((h) => String(h).trim()).filter((h) => /^[A-Za-z0-9_.]{2,17}$/.test(h)))];
   const props = readProperties(id);
   const prev = { motd: props.motd ?? null, whitelist: props['white-list'] === 'true', list: readList(id) };

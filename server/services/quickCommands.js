@@ -52,8 +52,12 @@ export function placeholders(template) {
 }
 
 function clean(cmd) {
-  const label = String(cmd?.label || '').trim().slice(0, 40);
-  let template = String(cmd?.template || '').trim().replace(/^\//, '');
+  const label = String(cmd?.label || '')
+    .trim()
+    .slice(0, 40);
+  const template = String(cmd?.template || '')
+    .trim()
+    .replace(/^\//, '');
   if (!label) throw new HttpError(400, 'Cada comando necesita un nombre');
   if (!template) throw new HttpError(400, `"${label}" no tiene comando`);
   if (template.length > 300 || /[\r\n]/.test(template)) throw new HttpError(400, `El comando de "${label}" es demasiado largo o tiene saltos de línea`);

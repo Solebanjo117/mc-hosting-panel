@@ -74,7 +74,9 @@ export async function playerAction(id, action, name, reason = '') {
   const isBedrockName = target.startsWith('.');
   if (!isIp && !/^\.?[A-Za-z0-9_]{1,16}$/.test(target)) throw new HttpError(400, 'Nombre de jugador inválido');
   if (isIp && !/^[0-9a-fA-F:.]+$/.test(target)) throw new HttpError(400, 'IP inválida');
-  const cleanReason = String(reason).replace(/[\r\n]/g, ' ').slice(0, 200);
+  const cleanReason = String(reason)
+    .replace(/[\r\n]/g, ' ')
+    .slice(0, 200);
 
   if (isRunning(id)) {
     const inst = instance(id);
@@ -104,10 +106,7 @@ export async function playerAction(id, action, name, reason = '') {
       writeList(id, 'whitelist', without('whitelist'));
       break;
     case 'op':
-      writeList(id, 'ops', [
-        ...without('ops'),
-        { uuid: await resolveUuid(id, target), name: target, level: 4, bypassesPlayerLimit: false },
-      ]);
+      writeList(id, 'ops', [...without('ops'), { uuid: await resolveUuid(id, target), name: target, level: 4, bypassesPlayerLimit: false }]);
       break;
     case 'deop':
       writeList(id, 'ops', without('ops'));
@@ -122,10 +121,7 @@ export async function playerAction(id, action, name, reason = '') {
       writeList(id, 'banned', without('banned'));
       break;
     case 'ban-ip':
-      writeList(id, 'bannedIps', [
-        ...without('bannedIps', 'ip'),
-        { ip: target, created: now, source: 'MC Hosting Panel', expires: 'forever', reason: cleanReason || 'Baneado por un operador.' },
-      ]);
+      writeList(id, 'bannedIps', [...without('bannedIps', 'ip'), { ip: target, created: now, source: 'MC Hosting Panel', expires: 'forever', reason: cleanReason || 'Baneado por un operador.' }]);
       break;
     case 'pardon-ip':
       writeList(id, 'bannedIps', without('bannedIps', 'ip'));

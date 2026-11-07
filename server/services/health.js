@@ -130,7 +130,8 @@ export async function healthCheck(id) {
   const last = backups[0] ? Date.parse(backups[0].createdAt) : null;
   const auto = server.backupSchedule?.enabled || (server.schedules || []).some((t) => t.enabled && (t.action === 'backup' || t.backupBefore));
   if (!last) add('warn', 'backup', 'Todavía no hay respaldos', 'Haz uno o activa los respaldos automáticos.', 'respaldos');
-  else if (Date.now() - last > 3 * DAY) add('warn', 'backup', `El último respaldo es de hace ${Math.floor((Date.now() - last) / DAY)} días`, auto ? '' : 'Activa los respaldos automáticos.', 'respaldos');
+  else if (Date.now() - last > 3 * DAY)
+    add('warn', 'backup', `El último respaldo es de hace ${Math.floor((Date.now() - last) / DAY)} días`, auto ? '' : 'Activa los respaldos automáticos.', 'respaldos');
   else add('ok', 'backup', 'Respaldo reciente', auto ? 'Respaldos automáticos activos.' : 'Considera activar los automáticos.');
   const mirror = mirrorCheck(id, backups[0]?.file);
   if (mirror.configured) {
@@ -148,7 +149,13 @@ export async function healthCheck(id) {
   const sys = systemInfo();
   const reserved = db.data.servers.filter((s) => s.id === id || instance(s.id).proc).reduce((n, s) => n + Number(s.memoryMb || 0), 0);
   if (reserved > sys.totalMemMb * 0.85) {
-    add('warn', 'ram', 'Los servidores piden casi toda la RAM de la PC', `Reservados ${(reserved / 1024).toFixed(1)} GB de ${(sys.totalMemMb / 1024).toFixed(0)} GB. Baja la memoria o apaga otro servidor.`, 'ajustes');
+    add(
+      'warn',
+      'ram',
+      'Los servidores piden casi toda la RAM de la PC',
+      `Reservados ${(reserved / 1024).toFixed(1)} GB de ${(sys.totalMemMb / 1024).toFixed(0)} GB. Baja la memoria o apaga otro servidor.`,
+      'ajustes'
+    );
   } else if (server.type !== 'paper' && server.type !== 'vanilla' && server.memoryMb < 4096) {
     add('warn', 'ram', 'Poca memoria para un servidor con mods', 'Con mods conviene darle 4 GB o más.', 'ajustes');
   } else add('ok', 'ram', `${(server.memoryMb / 1024).toFixed(1).replace('.0', '')} GB de RAM asignados`);

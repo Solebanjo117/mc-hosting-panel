@@ -25,14 +25,18 @@ export default function PublicSection({ server }) {
           Página pública e invitación
         </h2>
         <label className="check" style={{ alignItems: 'center' }}>
-          <input type="checkbox" checked={cfg.enabled} disabled={busy} onChange={(e) => save({ enabled: e.target.checked }, e.target.checked ? 'Página pública activada' : 'Página pública desactivada')} />
+          <input
+            type="checkbox"
+            checked={cfg.enabled}
+            disabled={busy}
+            onChange={(e) => save({ enabled: e.target.checked }, e.target.checked ? 'Página pública activada' : 'Página pública desactivada')}
+          />
           <span>Activar</span>
         </label>
       </div>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Un enlace que cualquiera puede abrir sin entrar al panel: ve si el servidor está encendido, quién juega, el MOTD y cómo entrar con la dirección correcta.
-        Solo se muestra lo que marques aquí; nunca la consola ni tus archivos. Para que lo abran desde fuera de tu red, el panel tiene que ser accesible (por
-        ejemplo con Tailscale o Cloudflare Tunnel).
+        Un enlace que cualquiera puede abrir sin entrar al panel: ve si el servidor está encendido, quién juega, el MOTD y cómo entrar con la dirección correcta. Solo se muestra lo que marques aquí;
+        nunca la consola ni tus archivos. Para que lo abran desde fuera de tu red, el panel tiene que ser accesible (por ejemplo con Tailscale o Cloudflare Tunnel).
       </p>
       {cfg.enabled && (
         <>

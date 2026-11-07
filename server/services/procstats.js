@@ -13,24 +13,17 @@ const previous = new Map(); // pid -> { cpuMs, at }
 
 function readWindows(pids) {
   return new Promise((resolve) => {
-    const script =
-      `Get-Process -Id ${pids.join(',')} -ErrorAction SilentlyContinue | ` +
-      `ForEach-Object { "$($_.Id) $([int64]$_.TotalProcessorTime.TotalMilliseconds) $($_.WorkingSet64)" }`;
-    execFile(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', script],
-      { windowsHide: true, timeout: 8000 },
-      (err, stdout) => {
-        const out = new Map();
-        if (!err) {
-          for (const line of stdout.split(/\r?\n/)) {
-            const [pid, cpuMs, mem] = line.trim().split(/\s+/).map(Number);
-            if (pid) out.set(pid, { cpuMs, memBytes: mem });
-          }
+    const script = `Get-Process -Id ${pids.join(',')} -ErrorAction SilentlyContinue | ` + `ForEach-Object { "$($_.Id) $([int64]$_.TotalProcessorTime.TotalMilliseconds) $($_.WorkingSet64)" }`;
+    execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 8000 }, (err, stdout) => {
+      const out = new Map();
+      if (!err) {
+        for (const line of stdout.split(/\r?\n/)) {
+          const [pid, cpuMs, mem] = line.trim().split(/\s+/).map(Number);
+          if (pid) out.set(pid, { cpuMs, memBytes: mem });
         }
-        resolve(out);
       }
-    );
+      resolve(out);
+    });
   });
 }
 

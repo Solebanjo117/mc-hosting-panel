@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
-import { serverDir, backupDir, DATA_DIR } from '../config.js';
+import { serverDir, backupDir } from '../config.js';
 import { db, getServer, updateServer } from '../db.js';
 import { bus } from '../lib/bus.js';
 import { HttpError, dirSize } from '../lib/util.js';
@@ -22,6 +22,8 @@ import * as optimize from '../services/optimize.js';
 import { createServerRecord, validatePort } from '../services/serverFactory.js';
 import { cloneServer } from '../services/clone.js';
 import { removeMetrics } from '../services/metrics.js';
+import { canSeeServer } from '../lib/access.js';
+import { forgetServer } from '../auth.js';
 import { publicSettings, setPublicSettings, publicAddress } from '../services/publicPage.js';
 import * as achievements from '../services/achievements.js';
 
@@ -43,8 +45,8 @@ function load(req) {
   return server;
 }
 
-serversRouter.get('/', (_req, res) => {
-  res.json(db.data.servers.map(view));
+serversRouter.get('/', (req, res) => {
+  res.json(db.data.servers.filter((s) => canSeeServer(req.account, s.id)).map(view));
 });
 
 serversRouter.post('/', async (req, res) => {
@@ -108,6 +110,7 @@ serversRouter.delete('/:id', async (req, res) => {
   if (req.query.keepBackups !== 'true') fs.rmSync(backupDir(server.id), { recursive: true, force: true });
   db.data.servers = db.data.servers.filter((s) => s.id !== server.id);
   db.flush();
+  forgetServer(server.id);
   removeInstance(server.id);
   bus.emit('servers');
   res.json({ ok: true });
@@ -238,9 +241,7 @@ serversRouter.post('/:id/bedrock/disable', (req, res) => {
 
 serversRouter.post('/:id/bedrock/broadcast', async (req, res) => {
   const server = load(req);
-  const result = req.body?.enabled
-    ? await bedrock.enableBroadcast(server.id)
-    : bedrock.disableBroadcast(server.id, { forgetAccount: Boolean(req.body?.forgetAccount) });
+  const result = req.body?.enabled ? await bedrock.enableBroadcast(server.id) : bedrock.disableBroadcast(server.id, { forgetAccount: Boolean(req.body?.forgetAccount) });
   res.json({ broadcast: result, restartRequired: isRunning(server.id) });
 });
 

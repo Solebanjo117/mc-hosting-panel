@@ -17,8 +17,7 @@ describe('Pregenerar el mundo (Chunky)', { skip: !hasJava() && 'Se necesita Java
   let paper;
   const P = (s) => `/api/servers/${s.id}/pregen`;
   const task = async (s) => (await c.ok('GET', P(s))).task;
-  const waitState = (s, state, timeout = 20_000) =>
-    waitFor(async () => ((await task(s))?.state === state ? task(s) : null), { timeout, message: `pregeneración ${state}` });
+  const waitState = (s, state, timeout = 20_000) => waitFor(async () => ((await task(s))?.state === state ? task(s) : null), { timeout, message: `pregeneración ${state}` });
 
   before(async () => {
     mocks = await startMocks();

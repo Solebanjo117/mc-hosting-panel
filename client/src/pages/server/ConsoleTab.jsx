@@ -1,5 +1,6 @@
 import { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../auth.jsx';
 import { api, uptime } from '../../api.js';
 import { useLive } from '../../live.jsx';
 import { Confirm, CopyButton, PlayerHead, useToast } from '../../ui.jsx';
@@ -28,6 +29,7 @@ function lineClass(line) {
 }
 
 export default function ConsoleTab({ server, runtime, state }) {
+  const { readOnly, isOwner } = useAuth();
   const { subscribeConsole } = useLive();
   const toast = useToast();
   const [lines, setLines] = useState([]);
@@ -46,12 +48,14 @@ export default function ConsoleTab({ server, runtime, state }) {
 
   useEffect(() => subscribeConsole(server.id, (l) => setLines(l)), [server.id, subscribeConsole]);
   useEffect(() => {
-    api('/system/network')
-      .then((n) => setLanIp(n.localIps.find((i) => !i.virtual)?.address || n.localIps[0]?.address))
-      .catch(() => {});
+    if (isOwner) {
+      api('/system/network')
+        .then((n) => setLanIp(n.localIps.find((i) => !i.virtual)?.address || n.localIps[0]?.address))
+        .catch(() => {});
+    }
     const t = setInterval(() => tick((n) => n + 1), 30_000);
     return () => clearInterval(t);
-  }, []);
+  }, [isOwner]);
 
   useLayoutEffect(() => {
     const el = outRef.current;
@@ -143,124 +147,130 @@ export default function ConsoleTab({ server, runtime, state }) {
           )}
         </section>
       )}
-    <div className="console-layout">
-      <section className="terminal" aria-label="Consola del servidor">
-        <div className="terminal-bar">
-          <div className="terminal-filters" role="radiogroup" aria-label="Mostrar">
-            {FILTERS.map((f) => (
-              <button key={f.id} type="button" className={filter === f.id ? 'on' : ''} onClick={() => setFilter(f.id)}>
-                {f.label}
-              </button>
+      <div className="console-layout">
+        <section className="terminal" aria-label="Consola del servidor">
+          <div className="terminal-bar">
+            <div className="terminal-filters" role="radiogroup" aria-label="Mostrar">
+              {FILTERS.map((f) => (
+                <button key={f.id} type="button" className={filter === f.id ? 'on' : ''} onClick={() => setFilter(f.id)}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <input className="terminal-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar…" aria-label="Buscar en la consola" />
+          </div>
+          <div
+            className="terminal-out"
+            ref={outRef}
+            tabIndex={0}
+            role="log"
+            aria-label="Salida de la consola"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+            }}
+          >
+            {lines.length === 0 && (
+              <span className="faint">{server.installState === 'ready' ? 'La consola aparecerá aquí cuando enciendas el servidor.' : 'Esperando a que termine la instalación.'}</span>
+            )}
+            {lines.length > 0 && shown.length === 0 && <span className="faint">Ninguna línea coincide con el filtro.</span>}
+            {shown.map((l) => (
+              <ConsoleLine key={l.n} text={l.text} nameRe={readOnly ? null : nameRe} onName={onName} />
             ))}
           </div>
-          <input className="terminal-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar…" aria-label="Buscar en la consola" />
-        </div>
-        <div
-          className="terminal-out"
-          ref={outRef}
-          tabIndex={0}
-          role="log"
-          aria-label="Salida de la consola"
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
-          }}
-        >
-          {lines.length === 0 && (
-            <span className="faint">
-              {server.installState === 'ready' ? 'La consola aparecerá aquí cuando enciendas el servidor.' : 'Esperando a que termine la instalación.'}
-            </span>
+          {readOnly ? (
+            <p className="faint small" style={{ margin: '0.4rem 0 0' }}>
+              Tu cuenta solo puede mirar la consola.
+            </p>
+          ) : (
+            <form
+              className="terminal-in"
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(cmd);
+              }}
+            >
+              <span aria-hidden="true">&gt;</span>
+              <input
+                value={cmd}
+                onChange={(e) => setCmd(e.target.value)}
+                onKeyDown={onKey}
+                placeholder={running ? 'Escribe un comando (sin /) y presiona Enter' : 'Enciende el servidor para enviar comandos'}
+                disabled={!running}
+                aria-label="Comando"
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </form>
           )}
-          {lines.length > 0 && shown.length === 0 && <span className="faint">Ninguna línea coincide con el filtro.</span>}
-          {shown.map((l) => (
-            <ConsoleLine key={l.n} text={l.text} nameRe={nameRe} onName={onName} />
-          ))}
-        </div>
-        <form
-          className="terminal-in"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(cmd);
-          }}
-        >
-          <span aria-hidden="true">&gt;</span>
-          <input
-            value={cmd}
-            onChange={(e) => setCmd(e.target.value)}
-            onKeyDown={onKey}
-            placeholder={running ? 'Escribe un comando (sin /) y presiona Enter' : 'Enciende el servidor para enviar comandos'}
-            disabled={!running}
-            aria-label="Comando"
-            spellCheck={false}
-            autoComplete="off"
-          />
-        </form>
-      </section>
+        </section>
 
-      <aside className="stack" style={{ alignContent: 'start' }}>
-        <dl className="stat-list" style={{ margin: 0 }}>
-          <div className="stat">
-            <dt>Jugadores</dt>
-            <dd>
-              {state === 'running' ? `${players.length} en línea` : '—'}
-              {players.length > 0 && (
-                <span className="row" style={{ gap: '0.3rem', marginTop: '0.4rem' }}>
-                  {players.map((p) => (
-                    <span key={p} className="chip">
-                      {p}
-                    </span>
-                  ))}
-                </span>
-              )}
-            </dd>
-          </div>
-          <div className="stat">
-            <dt>TPS</dt>
-            <dd>{runtime?.tps != null ? `${runtime.tps}` : '—'}</dd>
-          </div>
-          <div className="stat">
-            <dt>Memoria</dt>
-            <dd>
-              {stats ? `${(stats.memoryMb / 1024).toFixed(1)} / ${(server.memoryMb / 1024).toFixed(1)} GB` : '—'}
-              <span className="meter" role="presentation">
-                <i style={{ width: `${memPct}%` }} />
-              </span>
-            </dd>
-          </div>
-          <div className="stat">
-            <dt>CPU</dt>
-            <dd>{stats ? `${stats.cpu}%` : '—'}</dd>
-          </div>
-          <div className="stat">
-            <dt>Tiempo encendido</dt>
-            <dd>{runtime?.startedAt ? uptime(runtime.startedAt) : '—'}</dd>
-          </div>
-          <div className="stat">
-            <dt>Dirección en tu casa</dt>
-            <dd>
-              {lanIp && (
-                <span className="address">
-                  <span>
-                    {lanIp}:{server.port}
+        <aside className="stack" style={{ alignContent: 'start' }}>
+          <dl className="stat-list" style={{ margin: 0 }}>
+            <div className="stat">
+              <dt>Jugadores</dt>
+              <dd>
+                {state === 'running' ? `${players.length} en línea` : '—'}
+                {players.length > 0 && (
+                  <span className="row" style={{ gap: '0.3rem', marginTop: '0.4rem' }}>
+                    {players.map((p) => (
+                      <span key={p} className="chip">
+                        {p}
+                      </span>
+                    ))}
                   </span>
-                  <CopyButton text={`${lanIp}:${server.port}`} />
+                )}
+              </dd>
+            </div>
+            <div className="stat">
+              <dt>TPS</dt>
+              <dd>{runtime?.tps != null ? `${runtime.tps}` : '—'}</dd>
+            </div>
+            <div className="stat">
+              <dt>Memoria</dt>
+              <dd>
+                {stats ? `${(stats.memoryMb / 1024).toFixed(1)} / ${(server.memoryMb / 1024).toFixed(1)} GB` : '—'}
+                <span className="meter" role="presentation">
+                  <i style={{ width: `${memPct}%` }} />
                 </span>
-              )}
-              {lanIp && server.bedrock?.enabled && (
-                <span className="small muted stat-note">
-                  Bedrock: {lanIp}, puerto {server.bedrock.port}
-                </span>
-              )}
-              <span className="small muted stat-note">
-                Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
-              </span>
-            </dd>
-          </div>
-        </dl>
+              </dd>
+            </div>
+            <div className="stat">
+              <dt>CPU</dt>
+              <dd>{stats ? `${stats.cpu}%` : '—'}</dd>
+            </div>
+            <div className="stat">
+              <dt>Tiempo encendido</dt>
+              <dd>{runtime?.startedAt ? uptime(runtime.startedAt) : '—'}</dd>
+            </div>
+            {isOwner && (
+              <div className="stat">
+                <dt>Dirección en tu casa</dt>
+                <dd>
+                  {lanIp && (
+                    <span className="address">
+                      <span>
+                        {lanIp}:{server.port}
+                      </span>
+                      <CopyButton text={`${lanIp}:${server.port}`} />
+                    </span>
+                  )}
+                  {lanIp && server.bedrock?.enabled && (
+                    <span className="small muted stat-note">
+                      Bedrock: {lanIp}, puerto {server.bedrock.port}
+                    </span>
+                  )}
+                  <span className="small muted stat-note">
+                    Para amigos fuera de tu red, revisa <Link to={`/servidor/${server.id}/conexion`}>Conexión</Link>.
+                  </span>
+                </dd>
+              </div>
+            )}
+          </dl>
 
-        <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} />
-      </aside>
-    </div>
+          {!readOnly && <QuickCommands server={server} running={state === 'running'} players={players} onSend={send} canEdit={isOwner} />}
+        </aside>
+      </div>
       {menu && (
         <PlayerMenu
           menu={menu}

@@ -27,8 +27,8 @@ export default function ZonesSection({ server }) {
     <section className="panel stack" style={{ gap: '0.8rem' }}>
       <h2 style={{ margin: 0 }}>Zonas con alerta</h2>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Marca lugares del mundo (la base de alguien, la bóveda, el spawn) y el panel te avisa cuando alguien entra. Se guarda en Actividad y, si tienes
-        notificaciones activadas, también en el navegador. Las posiciones se preguntan cada 15 segundos mientras hay zonas.
+        Marca lugares del mundo (la base de alguien, la bóveda, el spawn) y el panel te avisa cuando alguien entra. Se guarda en Actividad y, si tienes notificaciones activadas, también en el
+        navegador. Las posiciones se preguntan cada 15 segundos mientras hay zonas.
       </p>
       {zones.length > 0 && (
         <div className="table-wrap">
@@ -56,11 +56,31 @@ export default function ZonesSection({ server }) {
                     {z.x2}, {z.z2}
                   </td>
                   <td>
-                    <input type="checkbox" checked={z.notify} aria-label={`Avisar en ${z.name}`} disabled={busy} onChange={(e) => save(zones.map((x) => (x.id === z.id ? { ...x, notify: e.target.checked } : x)))} />
+                    <input
+                      type="checkbox"
+                      checked={z.notify}
+                      aria-label={`Avisar en ${z.name}`}
+                      disabled={busy}
+                      onChange={(e) => save(zones.map((x) => (x.id === z.id ? { ...x, notify: e.target.checked } : x)))}
+                    />
                   </td>
-                  <td className="muted small">{online.filter(([, p]) => p.x >= z.x1 && p.x <= z.x2 && p.z >= z.z1 && p.z <= z.z2).map(([n]) => n).join(', ') || '—'}</td>
+                  <td className="muted small">
+                    {online
+                      .filter(([, p]) => p.x >= z.x1 && p.x <= z.x2 && p.z >= z.z1 && p.z <= z.z2)
+                      .map(([n]) => n)
+                      .join(', ') || '—'}
+                  </td>
                   <td className="actions">
-                    <button className="btn-sm btn-ghost" disabled={busy} onClick={() => save(zones.filter((x) => x.id !== z.id), 'Zona quitada')}>
+                    <button
+                      className="btn-sm btn-ghost"
+                      disabled={busy}
+                      onClick={() =>
+                        save(
+                          zones.filter((x) => x.id !== z.id),
+                          'Zona quitada'
+                        )
+                      }
+                    >
                       Quitar
                     </button>
                   </td>
@@ -96,7 +116,13 @@ export default function ZonesSection({ server }) {
         <div className="row" style={{ gap: '0.4rem' }}>
           <span className="muted small">Usar la posición de:</span>
           {online.map(([n, p]) => (
-            <button key={n} type="button" className="btn-sm" onClick={() => setForm({ ...form, name: form.name || `Donde está ${n}`, x1: p.x - R, z1: p.z - R, x2: p.x + R, z2: p.z + R })} title={`x ${p.x}, y ${p.y}, z ${p.z}`}>
+            <button
+              key={n}
+              type="button"
+              className="btn-sm"
+              onClick={() => setForm({ ...form, name: form.name || `Donde está ${n}`, x1: p.x - R, z1: p.z - R, x2: p.x + R, z2: p.z + R })}
+              title={`x ${p.x}, y ${p.y}, z ${p.z}`}
+            >
               {n} ({p.x}, {p.z})
             </button>
           ))}

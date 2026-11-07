@@ -94,7 +94,7 @@ say();
 if (current) say(`  Tu usuario es: ${current}`);
 else say('  Todavía no hay cuenta: se creará con estos datos.');
 
-let username = (await ask(`  Usuario ${current ? '(Enter para dejarlo igual)' : ''}: `)).trim() || current;
+const username = (await ask(`  Usuario ${current ? '(Enter para dejarlo igual)' : ''}: `)).trim() || current;
 if (!username || !/^[A-Za-z0-9_.-]{3,32}$/.test(username)) {
   say('  El usuario debe tener de 3 a 32 caracteres (letras, números, _ . -).');
   await finish(1);

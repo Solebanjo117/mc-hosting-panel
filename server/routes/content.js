@@ -68,6 +68,9 @@ contentRouter.post('/reload', async (req, res) => {
   const done = inst.waitForLine(/Reloading!|Reload (?:failed|complete)|Failed to (?:load|reload) data ?packs/i, 20_000);
   inst.send('minecraft:reload');
   const ok = await done;
-  const worldgen = market.listInstalled(serverId, 'datapack').items.filter((i) => i.enabled && i.worldgen).map((i) => i.title);
+  const worldgen = market
+    .listInstalled(serverId, 'datapack')
+    .items.filter((i) => i.enabled && i.worldgen)
+    .map((i) => i.title);
   res.json({ ok, worldgen });
 });

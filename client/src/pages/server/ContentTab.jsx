@@ -107,14 +107,15 @@ function DatapackNotes({ server, pending, onApplied }) {
   return (
     <div className="stack" style={{ gap: '0.6rem' }}>
       <p className="muted small" style={{ margin: 0, maxWidth: '80ch' }}>
-        Los datapacks van en el mundo activo{world && (
+        Los datapacks van en el mundo activo
+        {world && (
           <>
             {' '}
             (<span className="mono">{world}</span>)
           </>
         )}
-        . Si creas otro mundo en <Link to={`/servidor/${server.id}/mundos`}>Mundos</Link>, puedes copiarle estos datapacks. Los que cambian la generación del mundo (biomas,
-        estructuras) solo afectan las zonas que todavía no se exploran.
+        . Si creas otro mundo en <Link to={`/servidor/${server.id}/mundos`}>Mundos</Link>, puedes copiarle estos datapacks. Los que cambian la generación del mundo (biomas, estructuras) solo afectan
+        las zonas que todavía no se exploran.
       </p>
       {pending && (
         <div className="note row" style={{ margin: 0, alignItems: 'center' }} role="status">
@@ -236,7 +237,11 @@ function Explore({ server, label, kind, onInstalled }) {
         </select>
       </div>
 
-      {error && <div className="error-box">No se pudo buscar en {SOURCE_LABEL[source]}: {error}</div>}
+      {error && (
+        <div className="error-box">
+          No se pudo buscar en {SOURCE_LABEL[source]}: {error}
+        </div>
+      )}
       {data && !sources.includes('curseforge') && page === 0 && !debounced && (
         <p className="faint small" style={{ margin: 0 }}>
           ¿Buscas algo que solo está en CurseForge? Agrega tu clave gratis en <Link to="/ajustes">Ajustes del panel</Link> y aparecerá como otra fuente.
@@ -252,11 +257,7 @@ function Explore({ server, label, kind, onInstalled }) {
               className="mcard-banner"
               onClick={() => setDetails(item)}
               aria-label={`Ver detalles de ${item.title}`}
-              style={
-                item.banner
-                  ? { backgroundImage: `url("${item.banner}")` }
-                  : { background: `linear-gradient(135deg, ${item.color || 'var(--slate-3)'}55, var(--slate-2))` }
-              }
+              style={item.banner ? { backgroundImage: `url("${item.banner}")` } : { background: `linear-gradient(135deg, ${item.color || 'var(--slate-3)'}55, var(--slate-2))` }}
             />
             <div className="mcard-body">
               <div className="mcard-head">
@@ -284,9 +285,21 @@ function Explore({ server, label, kind, onInstalled }) {
                 {item.follows != null && <span title="Seguidores">♥ {formatNumber(item.follows)}</span>}
                 {item.updated && <span title={formatDate(item.updated)}>Actualizado {ago(item.updated)}</span>}
               </div>
-              {item.clientOnly && <div className="small" style={{ color: 'var(--gold)' }}>Solo funciona en el cliente, no en el servidor</div>}
-              {item.worldgen && kind === 'datapack' && <div className="small" style={{ color: 'var(--gold)' }}>Cambia la generación del mundo: mejor antes de explorar</div>}
-              {item.blocked && <div className="small" style={{ color: 'var(--gold)' }}>El autor solo permite bajarlo desde CurseForge: se instala a mano</div>}
+              {item.clientOnly && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  Solo funciona en el cliente, no en el servidor
+                </div>
+              )}
+              {item.worldgen && kind === 'datapack' && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  Cambia la generación del mundo: mejor antes de explorar
+                </div>
+              )}
+              {item.blocked && (
+                <div className="small" style={{ color: 'var(--gold)' }}>
+                  El autor solo permite bajarlo desde CurseForge: se instala a mano
+                </div>
+              )}
             </div>
             <footer className="mcard-foot">
               <button className="btn-sm btn-ghost" onClick={() => setDetails(item)}>
@@ -347,7 +360,7 @@ function Explore({ server, label, kind, onInstalled }) {
   );
 }
 
-function VersionPicker({ server, item, kind, onClose, onPick }) {
+function VersionPicker({ server, item, kind, onClose, onPick, current = null }) {
   const [versions, setVersions] = useState(null);
   const [error, setError] = useState('');
   const [open, setOpen] = useState(null);
@@ -377,39 +390,43 @@ function VersionPicker({ server, item, kind, onClose, onPick }) {
             <tbody>
               {versions.map((v) => (
                 <Fragment key={v.id}>
-                <tr>
-                  <td>
-                    {v.number}
-                    {v.changelog ? (
-                      <button type="button" className="btn-sm btn-ghost" style={{ marginLeft: '0.3rem' }} onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
-                        {open === v.id ? 'Ocultar cambios' : 'Qué cambió'}
-                      </button>
-                    ) : null}
-                  </td>
-                  <td className="muted">{v.type}</td>
-                  <td className="muted">{formatDate(v.date)}</td>
-                  <td className="muted">{v.file ? `${v.file.name} ${v.file.size ? `(${formatBytes(v.file.size)})` : ''}` : 'Descarga externa'}</td>
-                  <td className="actions">
-                    {v.file ? (
-                      <button className="btn-sm btn-go" onClick={() => onPick(v.id)}>
-                        Instalar
-                      </button>
-                    ) : (
-                      v.externalUrl && (
-                        <a className="btn btn-sm" href={v.externalUrl} target="_blank" rel="noreferrer">
-                          Abrir sitio
-                        </a>
-                      )
-                    )}
-                  </td>
-                </tr>
-                {open === v.id && (
                   <tr>
-                    <td colSpan={5}>
-                      <Changelog text={v.changelog} compact />
+                    <td>
+                      {v.number}
+                      {v.changelog ? (
+                        <button type="button" className="btn-sm btn-ghost" style={{ marginLeft: '0.3rem' }} onClick={() => setOpen(open === v.id ? null : v.id)} aria-expanded={open === v.id}>
+                          {open === v.id ? 'Ocultar cambios' : 'Qué cambió'}
+                        </button>
+                      ) : null}
+                    </td>
+                    <td className="muted">{v.type}</td>
+                    <td className="muted">{formatDate(v.date)}</td>
+                    <td className="muted">{v.file ? `${v.file.name} ${v.file.size ? `(${formatBytes(v.file.size)})` : ''}` : 'Descarga externa'}</td>
+                    <td className="actions">
+                      {current && (v.number === current || v.file?.name === current) ? (
+                        <span className="chip" title="Es la versión que tienes instalada">
+                          Instalada
+                        </span>
+                      ) : v.file ? (
+                        <button className="btn-sm btn-go" onClick={() => onPick(v.id)}>
+                          Instalar
+                        </button>
+                      ) : (
+                        v.externalUrl && (
+                          <a className="btn btn-sm" href={v.externalUrl} target="_blank" rel="noreferrer">
+                            Abrir sitio
+                          </a>
+                        )
+                      )}
                     </td>
                   </tr>
-                )}
+                  {open === v.id && (
+                    <tr>
+                      <td colSpan={5}>
+                        <Changelog text={v.changelog} compact />
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
               ))}
             </tbody>
@@ -420,10 +437,16 @@ function VersionPicker({ server, item, kind, onClose, onPick }) {
   );
 }
 
+/** Orígenes con ficha en el panel (descripción, galería, versiones). */
+const WITH_DETAILS = new Set(['modrinth', 'hangar', 'curseforge']);
+
 function Installed({ server, label, kind, onChanged }) {
   const [data, setData] = useState(null);
   const [updates, setUpdates] = useState(null);
+  const [details, setDetails] = useState(null); // item instalado con ficha abierta
+  const [picker, setPicker] = useState(null);
   const [run, busy] = useAction();
+  const toast = useToast();
 
   const load = useCallback(() => api(curl(server, kind, 'installed')).then(setData), [server.id, kind]);
   useEffect(() => {
@@ -431,6 +454,20 @@ function Installed({ server, label, kind, onChanged }) {
   }, [load]);
 
   const updateFor = (filename) => updates?.find((u) => u.filename === filename);
+  const hasDetails = (item) => Boolean(item.projectId) && WITH_DETAILS.has(item.source) && !item.folder;
+  // Lo que la ficha y el selector de versiones esperan de un proyecto.
+  const asProject = (item) => ({ id: item.projectId, source: item.source, title: item.title, icon: item.icon });
+
+  /** Reemplaza el archivo instalado por otra versión del mismo proyecto. */
+  const installVersion = (item, versionId) =>
+    run(async () => {
+      const r = await api(curl(server, kind, 'install'), { method: 'POST', body: { ...asProject(item), projectId: item.projectId, versionId } });
+      const main = r.installed[0];
+      for (const x of r.installed.filter((i) => i.error)) toast(x.error, 'error');
+      await load();
+      onChanged?.({ worldgen: r.installed.some((i) => i.worldgen) });
+      return main;
+    }).then((main) => main && toast(`${main.title} ahora es la versión ${main.version}`));
 
   if (!data) return <p className="muted">Cargando…</p>;
 
@@ -453,7 +490,11 @@ function Installed({ server, label, kind, onChanged }) {
           Buscar actualizaciones
         </button>
       </div>
-      {updates && updates.length === 0 && <p className="small" style={{ color: 'var(--prismarine)' }}>Todo está actualizado.</p>}
+      {updates && updates.length === 0 && (
+        <p className="small" style={{ color: 'var(--prismarine)' }}>
+          Todo está actualizado.
+        </p>
+      )}
 
       {data.items.length === 0 ? (
         <div className="empty">
@@ -480,7 +521,15 @@ function Installed({ server, label, kind, onChanged }) {
                       <div className="row" style={{ gap: '0.55rem', flexWrap: 'nowrap' }}>
                         {item.icon && <img src={item.icon} alt="" width={24} height={24} style={{ borderRadius: 4 }} />}
                         <div>
-                          <div>{item.title}</div>
+                          <div>
+                            {hasDetails(item) ? (
+                              <button type="button" className="link-btn" onClick={() => setDetails(item)} title="Ver la ficha: descripción, imágenes y versiones">
+                                {item.title}
+                              </button>
+                            ) : (
+                              item.title
+                            )}
+                          </div>
                           <div className="faint mono" style={{ fontSize: 11 }}>
                             {item.filename}
                             {item.folder ? '/' : ''}
@@ -520,6 +569,13 @@ function Installed({ server, label, kind, onChanged }) {
                       />
                     </td>
                     <td className="actions">
+                      {hasDetails(item) && !up && (
+                        <>
+                          <button className="btn-sm btn-ghost" disabled={busy} onClick={() => setPicker(item)} title="Instalar otra versión de este proyecto">
+                            Versiones
+                          </button>{' '}
+                        </>
+                      )}
                       {up && (
                         <button
                           className="btn-sm btn-go"
@@ -560,11 +616,41 @@ function Installed({ server, label, kind, onChanged }) {
           </table>
         </div>
       )}
+      {details && (
+        <ProjectDetails
+          server={server}
+          item={asProject(details)}
+          installedItem={details}
+          onClose={() => setDetails(null)}
+          onVersions={() => {
+            setPicker(details);
+            setDetails(null);
+          }}
+        />
+      )}
+      {picker && (
+        <VersionPicker
+          server={server}
+          item={asProject(picker)}
+          kind={kind}
+          current={picker.versionName || picker.filename}
+          onClose={() => setPicker(null)}
+          onPick={(versionId) => {
+            const item = picker;
+            setPicker(null);
+            installVersion(item, versionId);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function ProjectDetails({ server, item, installed, installing, onClose, onInstall, onVersions }) {
+/**
+ * Ficha de un proyecto. Desde la búsqueda llega con autor, descripción y enlace; desde la lista
+ * de instalados (installedItem) solo con id y título, y lo demás se completa con los detalles.
+ */
+function ProjectDetails({ server, item, installed, installing, onClose, onInstall, onVersions, installedItem = null }) {
   const [p, setP] = useState(null);
   const [error, setError] = useState('');
   const [shot, setShot] = useState(0);
@@ -575,15 +661,19 @@ function ProjectDetails({ server, item, installed, installing, onClose, onInstal
   }, [server.id, item]);
   const html = useMemo(() => (p ? renderBody(p.body) : ''), [p]);
   const g = p?.gallery || [];
+  const author = item.author || p?.author;
+  const description = item.description || p?.description;
+  const url = item.url || p?.url;
+  const icon = item.icon || p?.icon;
 
   return (
     <Modal title={item.title} onClose={onClose} wide>
       <div className="stack" style={{ gap: '1rem' }}>
         <div className="row" style={{ gap: '0.9rem', flexWrap: 'nowrap' }}>
-          {item.icon ? <img src={item.icon} alt="" width={64} height={64} className="mcard-icon" style={{ width: 64, height: 64 }} /> : null}
+          {icon ? <img src={icon} alt="" width={64} height={64} className="mcard-icon" style={{ width: 64, height: 64 }} /> : null}
           <div className="grow" style={{ minWidth: 0 }}>
-            <div className="muted small">de {item.author}</div>
-            <p style={{ margin: '0.2rem 0 0' }}>{item.description}</p>
+            {author && <div className="muted small">de {author}</div>}
+            <p style={{ margin: '0.2rem 0 0' }}>{description}</p>
             <div className="mcard-stats faint small" style={{ marginTop: '0.4rem' }}>
               <span>⤓ {formatNumber(p?.downloads ?? item.downloads)} descargas</span>
               {(p?.follows ?? item.follows) != null && <span>♥ {formatNumber(p?.follows ?? item.follows)}</span>}
@@ -592,15 +682,25 @@ function ProjectDetails({ server, item, installed, installing, onClose, onInstal
             </div>
           </div>
         </div>
+        {installedItem && (
+          <p className="small" style={{ margin: 0 }}>
+            <span className="chip">Instalado</span> versión {installedItem.versionName || '—'} · <span className="mono">{installedItem.filename}</span>
+            {installedItem.enabled ? '' : ' · desactivado'}
+          </p>
+        )}
         <div className="row">
-          <button className="btn-go" disabled={installing} onClick={onInstall}>
-            {installing ? 'Instalando…' : installed ? 'Reinstalar' : 'Instalar la versión recomendada'}
-          </button>
-          <button onClick={onVersions}>Elegir versión</button>
+          {onInstall && (
+            <button className="btn-go" disabled={installing} onClick={onInstall}>
+              {installing ? 'Instalando…' : installed ? 'Reinstalar' : 'Instalar la versión recomendada'}
+            </button>
+          )}
+          <button onClick={onVersions}>{installedItem ? 'Cambiar de versión' : 'Elegir versión'}</button>
           <span className="grow" />
-          <a className="btn btn-ghost" href={item.url} target="_blank" rel="noreferrer">
-            Abrir en {SOURCE_LABEL[item.source]?.replace(' (PaperMC)', '') || 'la página'}
-          </a>
+          {url && (
+            <a className="btn btn-ghost" href={url} target="_blank" rel="noreferrer">
+              Abrir en {SOURCE_LABEL[item.source]?.replace(' (PaperMC)', '') || 'la página'}
+            </a>
+          )}
         </div>
         {error && <div className="error-box">{error}</div>}
         {!p && !error && <p className="muted">Cargando detalles…</p>}

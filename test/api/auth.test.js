@@ -19,11 +19,11 @@ describe('Cuenta y sesión', () => {
 
   it('la primera vez pide crear la cuenta, valida usuario y contraseña, y solo deja hacerlo una vez', async () => {
     const c = new Client(panel.base);
-    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: true, authenticated: false, username: null });
+    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: true, authenticated: false, username: null, role: null, servers: null });
     assert.equal((await c.post('/api/auth/setup', { username: 'a', password: 'clave-segura-123' })).status, 400);
     assert.equal((await c.post('/api/auth/setup', { username: 'admin', password: 'corta' })).status, 400);
     assert.equal((await c.post('/api/auth/setup', ADMIN)).status, 200);
-    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: false, authenticated: true, username: 'admin' });
+    assert.deepEqual((await c.get('/api/auth/status')).body, { setupRequired: false, authenticated: true, username: 'admin', role: 'owner', servers: '*' });
     const other = new Client(panel.base);
     assert.equal((await other.post('/api/auth/setup', { username: 'intruso', password: 'otra-clave-123' })).status, 409);
     panel.client = c;
@@ -35,6 +35,12 @@ describe('Cuenta y sesión', () => {
       assert.equal((await anon.get(url)).status, 401, url);
     }
     assert.equal((await anon.post('/api/servers', { name: 'x' })).status, 401);
+    // Salvo la comprobación de salud (Docker, systemd, monitores), que no revela nada privado.
+    const h = await anon.get('/api/health');
+    assert.equal(h.status, 200);
+    assert.equal(h.body.ok, true);
+    assert.match(h.body.version, /^\d+\.\d+\.\d+/);
+    assert.deepEqual(Object.keys(h.body).sort(), ['ok', 'uptime', 'version']);
   });
 
   it('inicia y cierra sesión, y registra cada intento', async () => {
@@ -48,6 +54,18 @@ describe('Cuenta y sesión', () => {
     assert.equal(log[1].username, 'admin');
     await c.ok('POST', '/api/auth/logout');
     assert.equal((await c.get('/api/servers')).status, 401);
+  });
+
+  it('la cookie de sesión es HttpOnly y lleva Secure cuando se entra por HTTPS (Caddy, Tailscale)', async () => {
+    const login = (headers) => fetch(`${panel.base}/api/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(ADMIN) });
+    const plain = (await login({})).headers.get('set-cookie');
+    assert.match(plain, /mcp_token=/);
+    assert.match(plain, /HttpOnly/);
+    assert.match(plain, /SameSite=Lax/);
+    assert.doesNotMatch(plain, /Secure/, 'en http://localhost la cookie debe funcionar');
+    // El proxy HTTPS corre en esta misma PC y avisa con X-Forwarded-Proto.
+    const https = (await login({ 'x-forwarded-proto': 'https' })).headers.get('set-cookie');
+    assert.match(https, /Secure/);
   });
 
   it('bloquea un rato después de 8 intentos fallidos (aunque luego acierte)', async () => {
@@ -71,7 +89,10 @@ describe('Cuenta y sesión', () => {
     assert.equal((await atacante.post('/api/auth/login', ADMIN, via('198.51.100.7'))).status, 429, 'el atacante queda bloqueado');
     assert.equal((await new Client(panel.base).post('/api/auth/login', ADMIN, via('203.0.113.10'))).status, 200, 'los demás siguen entrando');
     const log = await otro.ok('GET', '/api/auth/log');
-    assert.ok(log.some((e) => e.ip === '198.51.100.7'), 'el historial muestra la IP real');
+    assert.ok(
+      log.some((e) => e.ip === '198.51.100.7'),
+      'el historial muestra la IP real'
+    );
   });
 
   it('cambiar la contraseña cierra las demás sesiones', async () => {
@@ -189,7 +210,11 @@ describe('Olvidé mi contraseña', () => {
       assert.match(r.out, /Se aplicará cuando abras el panel/);
       const pending = fs.readFileSync(path.join(dir, 'restablecer-contrasena.json'), 'utf8');
 
-      const p = await startPanel({ setup: false, db: { admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) } }, beforeStart: (d) => fs.writeFileSync(path.join(d, 'restablecer-contrasena.json'), pending) });
+      const p = await startPanel({
+        setup: false,
+        db: { admin: { username: 'admin', passwordHash: '$2b$12$' + 'x'.repeat(53) } },
+        beforeStart: (d) => fs.writeFileSync(path.join(d, 'restablecer-contrasena.json'), pending),
+      });
       try {
         await new Client(p.base).ok('POST', '/api/auth/login', { username: 'admin', password: 'al-abrir-123' });
       } finally {

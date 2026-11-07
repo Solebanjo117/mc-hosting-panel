@@ -15,7 +15,9 @@ export default function PowerSchedule({ server }) {
   const base = `/servers/${server.id}/power`;
 
   useEffect(() => {
-    api(base).then(setData).catch(() => {});
+    api(base)
+      .then(setData)
+      .catch(() => {});
   }, [base]);
   useEffect(() => {
     const up = () => {
@@ -57,8 +59,8 @@ export default function PowerSchedule({ server }) {
         </label>
       </div>
       <p className="muted small" style={{ maxWidth: '75ch' }}>
-        Pinta las horas en que el servidor debe estar encendido (hora de esta PC). Al empezar una hora marcada se enciende solo; al terminar la última, se
-        apaga con un aviso de un minuto en el chat. Las tareas programadas siguen funcionando aparte.
+        Pinta las horas en que el servidor debe estar encendido (hora de esta PC). Al empezar una hora marcada se enciende solo; al terminar la última, se apaga con un aviso de un minuto en el chat.
+        Las tareas programadas siguen funcionando aparte.
       </p>
       <div className="power-grid" role="group" aria-label="Horario semanal" onMouseLeave={() => paint.current && (paint.current.dirty = true)}>
         <div className="power-corner" />

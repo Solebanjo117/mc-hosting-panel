@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import AdmZip from 'adm-zip';
+import { openZip, extractZip } from '../lib/zip.js';
 import { serverDir } from '../config.js';
 import { getServer } from '../db.js';
 import { HttpError, dirSize, safeJoin } from '../lib/util.js';
@@ -131,24 +131,15 @@ export function worldFolders(id, name) {
 /** Importa un mundo desde un .zip: busca el level.dat más cercano a la raíz. */
 export function importWorld(id, zipPath, wantedName) {
   requireStopped(id);
-  const zip = new AdmZip(zipPath);
-  const levelDats = zip
-    .getEntries()
-    .filter((e) => !e.isDirectory && /(^|\/)level\.dat$/.test(e.entryName))
-    .sort((a, b) => a.entryName.split('/').length - b.entryName.split('/').length);
+  const zip = openZip(zipPath);
+  const levelDats = zip.entries.filter((e) => !e.isDirectory && /(^|\/)level\.dat$/.test(e.name)).sort((a, b) => a.name.split('/').length - b.name.split('/').length);
   if (!levelDats.length) throw new HttpError(400, 'El .zip no contiene un mundo de Minecraft (falta level.dat)');
-  const prefix = levelDats[0].entryName.replace(/level\.dat$/, '');
+  const prefix = levelDats[0].name.replace(/level\.dat$/, '');
   const base = validName(wantedName || prefix.split('/').filter(Boolean).pop() || 'mundo-importado');
   let name = base;
   for (let i = 2; folders(id, name).length; i++) name = `${base}-${i}`;
   const dest = safeJoin(serverDir(id), name);
-  for (const entry of zip.getEntries()) {
-    if (!entry.entryName.startsWith(prefix) || entry.isDirectory) continue;
-    const rel = entry.entryName.slice(prefix.length);
-    if (!rel) continue;
-    const target = safeJoin(dest, rel);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, entry.getData());
-  }
+  // Solo lo que cuelga de la carpeta del mundo; una ruta que intente salir rechaza todo el zip.
+  extractZip(zip, dest, { select: (e) => (e.name.startsWith(prefix) ? e.name.slice(prefix.length) : null) });
   return name;
 }

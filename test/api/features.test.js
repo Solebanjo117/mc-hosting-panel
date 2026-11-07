@@ -5,7 +5,7 @@ import path from 'node:path';
 import http from 'node:http';
 import dgram from 'node:dgram';
 import { startMocks } from '../helpers/mocks.js';
-import { startPanel, hasJava, waitFor } from '../helpers/panel.js';
+import { startPanel, hasJava } from '../helpers/panel.js';
 import { makePng } from '../helpers/zip.js';
 
 function freeUdpPort() {
@@ -229,7 +229,10 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       assert.ok(!ids.some((i) => i.startsWith('mod:')), 'Paper no usa mods');
       assert.equal(st.items.find((i) => i.id === 'view-distance').label, 'Distancia de visión: 16 → 10');
       const f = await c.ok('GET', `/api/servers/${fabric.id}/optimize`);
-      assert.deepEqual(f.items.filter((i) => i.id.startsWith('mod:')).map((i) => i.id), ['mod:lithium', 'mod:ferrite-core', 'mod:modernfix']);
+      assert.deepEqual(
+        f.items.filter((i) => i.id.startsWith('mod:')).map((i) => i.id),
+        ['mod:lithium', 'mod:ferrite-core', 'mod:modernfix']
+      );
       assert.ok(!f.items.some((i) => i.id === 'sync-chunk-writes'));
     });
 
@@ -334,7 +337,10 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
       assert.ok(def.types.includes('item'));
       const saved = await c.ok('PUT', '/api/system/quick-commands', { commands: [{ label: 'Dar diamantes', template: 'give {jugador} diamond {cantidad}' }] });
       assert.equal(saved.custom, true);
-      assert.deepEqual(saved.commands[0].params.map((p) => p.type), ['player', 'number']);
+      assert.deepEqual(
+        saved.commands[0].params.map((p) => p.type),
+        ['player', 'number']
+      );
       assert.equal((await c.put('/api/system/quick-commands', { commands: [{ label: 'x', template: 'a\nb' }] })).status, 400);
       const reset = await c.ok('PUT', '/api/system/quick-commands', { reset: true });
       assert.equal(reset.custom, false);
@@ -344,11 +350,17 @@ describe('Mapa, revisión, optimización, copias, ícono y comandos rápidos', {
     it('da las listas del juego en español para elegir (objetos, efectos, encantamientos, criaturas)', async () => {
       const items = await c.ok('GET', `/api/servers/${paper.id}/gamedata/item`);
       assert.equal(items.version, '1.21.4');
-      assert.deepEqual(items.list.find((i) => i.id === 'diamond_sword'), { id: 'diamond_sword', name: 'Espada de diamante' });
+      assert.deepEqual(
+        items.list.find((i) => i.id === 'diamond_sword'),
+        { id: 'diamond_sword', name: 'Espada de diamante' }
+      );
       assert.ok(!items.list.some((i) => i.id === 'air'));
       assert.equal(items.list.find((i) => i.id === 'stone').name, 'Piedra', 'los bloques también');
       const sorted = items.list.map((i) => i.name || i.id);
-      assert.deepEqual(sorted, [...sorted].sort((a, b) => a.localeCompare(b, 'es')));
+      assert.deepEqual(
+        sorted,
+        [...sorted].sort((a, b) => a.localeCompare(b, 'es'))
+      );
       assert.equal((await c.ok('GET', `/api/servers/${paper.id}/gamedata/effect`)).list.find((e) => e.id === 'speed').name, 'Velocidad');
       assert.equal((await c.ok('GET', `/api/servers/${paper.id}/gamedata/entity`)).list.find((e) => e.id === 'zombie').name, 'Zombi');
       assert.ok((await c.ok('GET', `/api/servers/${paper.id}/gamedata/enchantment`)).list.length > 0);

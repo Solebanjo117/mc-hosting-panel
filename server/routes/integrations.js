@@ -43,9 +43,7 @@ integrationsRouter.put('/curseforge', async (req, res) => res.json(await cursefo
 const packSource = (v) => (v === 'curseforge' ? 'curseforge' : 'modrinth');
 
 integrationsRouter.get('/modpacks/search', async (req, res) => res.json(await modpack.searchModpacks({ ...req.query, source: packSource(req.query.source) })));
-integrationsRouter.get('/modpacks/:projectId/versions', async (req, res) =>
-  res.json(await modpack.modpackVersions(req.params.projectId, packSource(req.query.source)))
-);
+integrationsRouter.get('/modpacks/:projectId/versions', async (req, res) => res.json(await modpack.modpackVersions(req.params.projectId, packSource(req.query.source))));
 
 /** Revisa un modpack subido (.mrpack o .zip de CurseForge) y devuelve qué servidor se va a crear. */
 integrationsRouter.post('/modpacks/inspect', upload.single('file'), (req, res) => {

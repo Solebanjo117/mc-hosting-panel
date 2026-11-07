@@ -75,7 +75,12 @@ export function setAppearance(patch) {
   }
   if (patch.sounds !== undefined) {
     const s = patch.sounds && typeof patch.sounds === 'object' ? patch.sounds : bad('sounds');
-    next.sounds = { enabled: Boolean(s.enabled ?? cur.sounds.enabled), join: Boolean(s.join ?? cur.sounds.join), backup: Boolean(s.backup ?? cur.sounds.backup), achievement: Boolean(s.achievement ?? cur.sounds.achievement) };
+    next.sounds = {
+      enabled: Boolean(s.enabled ?? cur.sounds.enabled),
+      join: Boolean(s.join ?? cur.sounds.join),
+      backup: Boolean(s.backup ?? cur.sounds.backup),
+      achievement: Boolean(s.achievement ?? cur.sounds.achievement),
+    };
   }
   if (patch.custom !== undefined) {
     const c = patch.custom && typeof patch.custom === 'object' ? patch.custom : bad('custom');

@@ -12,7 +12,9 @@ export default function MaintenanceSection({ server }) {
   const [run, busy] = useAction();
   const base = `/servers/${server.id}/maintenance`;
   useEffect(() => {
-    api(base).then(setSt).catch(() => {});
+    api(base)
+      .then(setSt)
+      .catch(() => {});
   }, [base, runtime?.status]);
   if (!st) return null;
   const online = runtime?.players || [];
@@ -22,10 +24,15 @@ export default function MaintenanceSection({ server }) {
       {st.active ? (
         <>
           <div className="note">
-            En mantenimiento desde {formatDate(st.since)}: “{st.message}”{st.until ? ` (${st.until})` : ''}. Pueden entrar: {st.helpers.length ? st.helpers.join(', ') : 'nadie más que los operadores en la lista blanca'}.
+            En mantenimiento desde {formatDate(st.since)}: “{st.message}”{st.until ? ` (${st.until})` : ''}. Pueden entrar:{' '}
+            {st.helpers.length ? st.helpers.join(', ') : 'nadie más que los operadores en la lista blanca'}.
           </div>
           <div className="row">
-            <button className="btn-go" disabled={busy} onClick={() => run(() => api(base, { method: 'DELETE', body: { restart: runtime?.status === 'running' } }).then(setSt), 'Mantenimiento terminado')}>
+            <button
+              className="btn-go"
+              disabled={busy}
+              onClick={() => run(() => api(base, { method: 'DELETE', body: { restart: runtime?.status === 'running' } }).then(setSt), 'Mantenimiento terminado')}
+            >
               Terminar el mantenimiento
             </button>
             <span className="muted small">Se restauran el MOTD y la lista blanca tal como estaban.</span>
@@ -34,8 +41,8 @@ export default function MaintenanceSection({ server }) {
       ) : (
         <>
           <p className="muted small" style={{ maxWidth: '75ch' }}>
-            Cierra el servidor a los jugadores sin apagarlo: el MOTD avisa (“🔧 volvemos a las 8”), se activa una lista blanca temporal con quienes te
-            ayudan y se expulsa a los demás con el mensaje. Al terminar, todo vuelve a como estaba.
+            Cierra el servidor a los jugadores sin apagarlo: el MOTD avisa (“🔧 volvemos a las 8”), se activa una lista blanca temporal con quienes te ayudan y se expulsa a los demás con el mensaje.
+            Al terminar, todo vuelve a como estaba.
           </p>
           <div>
             <button onClick={() => setOpen(true)} disabled={busy}>
@@ -79,7 +86,15 @@ export default function MaintenanceSection({ server }) {
                   () =>
                     api(base, {
                       method: 'POST',
-                      body: { message: form.message, until: form.until, helpers: form.helpers.split(',').map((s) => s.trim()).filter(Boolean), restart: form.restart },
+                      body: {
+                        message: form.message,
+                        until: form.until,
+                        helpers: form.helpers
+                          .split(',')
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                        restart: form.restart,
+                      },
                     }).then((r) => {
                       setSt(r);
                       setOpen(false);

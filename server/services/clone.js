@@ -23,7 +23,9 @@ export async function cloneServer(id, { name }) {
   const src = getServer(id);
   if (!src) throw new HttpError(404, 'Servidor no encontrado');
   if (src.installState !== 'ready') throw new HttpError(409, 'Espera a que termine la instalación');
-  const cleanName = String(name || `${src.name} (copia)`).trim().slice(0, 40);
+  const cleanName = String(name || `${src.name} (copia)`)
+    .trim()
+    .slice(0, 40);
 
   const inst = instance(id);
   const running = isRunning(id) && inst.status === 'running';

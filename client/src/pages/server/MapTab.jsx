@@ -38,8 +38,8 @@ export default function MapTab({ server, state }) {
       <section className="panel stack" style={{ maxWidth: 760 }}>
         <h2 style={{ margin: 0 }}>Mapa del mundo</h2>
         <p className="muted">
-          Con <strong>BlueMap</strong> ves tu mundo en 3D desde el navegador: puedes girar, acercarte, ver construcciones y dónde está cada jugador en
-          tiempo real. Tus amigos también pueden verlo si les compartes el panel por Tailscale.
+          Con <strong>BlueMap</strong> ves tu mundo en 3D desde el navegador: puedes girar, acercarte, ver construcciones y dónde está cada jugador en tiempo real. Tus amigos también pueden verlo si
+          les compartes el panel por Tailscale.
         </p>
         <ul className="small muted" style={{ margin: 0, paddingLeft: '1.2rem' }}>
           <li>La primera vez descarga sus recursos y dibuja el mapa poco a poco: usa CPU un rato y espacio en disco.</li>
@@ -51,10 +51,13 @@ export default function MapTab({ server, state }) {
             className="btn-go"
             disabled={busy || server.installState !== 'ready'}
             onClick={() =>
-              run(async () => {
-                const r = await api(`/servers/${server.id}/map`, { method: 'POST', body: { enabled: true } });
-                setS(r);
-              }, running ? 'BlueMap instalado. Reinicia el servidor para ver el mapa.' : 'BlueMap instalado. Enciende el servidor para ver el mapa.')
+              run(
+                async () => {
+                  const r = await api(`/servers/${server.id}/map`, { method: 'POST', body: { enabled: true } });
+                  setS(r);
+                },
+                running ? 'BlueMap instalado. Reinicia el servidor para ver el mapa.' : 'BlueMap instalado. Enciende el servidor para ver el mapa.'
+              )
             }
           >
             {busy ? 'Instalando…' : 'Instalar el mapa (BlueMap)'}
@@ -69,9 +72,7 @@ export default function MapTab({ server, state }) {
     <div className="stack" style={{ gap: '0.75rem' }}>
       <div className="row">
         <span className="muted small grow">
-          {running
-            ? 'Arrastra para mover, rueda para acercar, clic derecho para girar. Si se ve vacío, BlueMap todavía está dibujando.'
-            : 'Enciende el servidor para ver el mapa.'}
+          {running ? 'Arrastra para mover, rueda para acercar, clic derecho para girar. Si se ve vacío, BlueMap todavía está dibujando.' : 'Enciende el servidor para ver el mapa.'}
         </span>
         <button className="btn-sm" onClick={() => setReloadKey((k) => k + 1)} disabled={!running}>
           Recargar
@@ -81,11 +82,14 @@ export default function MapTab({ server, state }) {
           disabled={busy}
           title="Borra lo dibujado y BlueMap vuelve a dibujar el mundo actual desde cero. Úsalo si el mapa muestra un mundo viejo."
           onClick={() =>
-            run(async () => {
-              const r = await api(`/servers/${server.id}/map/redraw`, { method: 'POST' });
-              setTimeout(() => setReloadKey((k) => k + 1), 1500);
-              return r;
-            }, running ? 'BlueMap está volviendo a dibujar el mapa (tarda unos minutos)' : 'Listo: el mapa se dibuja de nuevo al encender el servidor')
+            run(
+              async () => {
+                const r = await api(`/servers/${server.id}/map/redraw`, { method: 'POST' });
+                setTimeout(() => setReloadKey((k) => k + 1), 1500);
+                return r;
+              },
+              running ? 'BlueMap está volviendo a dibujar el mapa (tarda unos minutos)' : 'Listo: el mapa se dibuja de nuevo al encender el servidor'
+            )
           }
         >
           Volver a dibujar
@@ -145,13 +149,7 @@ function MapSpeed({ server, s, onChange }) {
         </legend>
         {Object.entries(SPEED_LABEL).map(([id, [label, hint]]) => (
           <label key={id} className="check">
-            <input
-              type="radio"
-              name={`map-speed-${server.id}`}
-              checked={s.speed === id}
-              disabled={busy}
-              onChange={() => save({ speed: id })}
-            />
+            <input type="radio" name={`map-speed-${server.id}`} checked={s.speed === id} disabled={busy} onChange={() => save({ speed: id })} />
             <span>
               {label} · {s.threads[id]} {s.threads[id] === 1 ? 'hilo' : 'hilos'}
               <span className="faint" style={{ display: 'block' }}>
@@ -166,14 +164,13 @@ function MapSpeed({ server, s, onChange }) {
         <span>
           Pausar el dibujo mientras hay jugadores conectados
           <span className="faint" style={{ display: 'block' }}>
-            Así el dibujo no le quita rendimiento al juego; sigue solo cuando el servidor se queda vacío. Las posiciones de los jugadores se siguen
-            viendo en vivo.
+            Así el dibujo no le quita rendimiento al juego; sigue solo cuando el servidor se queda vacío. Las posiciones de los jugadores se siguen viendo en vivo.
           </span>
         </span>
       </label>
       <p className="faint small" style={{ margin: 0 }}>
-        {s.applied ? msg(s) : 'Los cambios se aplican al momento si el servidor está encendido.'} El primer dibujo de un mundo grande puede tardar
-        bastante; las zonas nuevas se dibujan mientras se exploran.
+        {s.applied ? msg(s) : 'Los cambios se aplican al momento si el servidor está encendido.'} El primer dibujo de un mundo grande puede tardar bastante; las zonas nuevas se dibujan mientras se
+        exploran.
       </p>
     </section>
   );

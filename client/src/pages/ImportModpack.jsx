@@ -24,8 +24,8 @@ export default function ImportModpack() {
         <div className="grow">
           <h1>Crear desde un modpack</h1>
           <p className="muted" style={{ marginTop: '0.4rem', maxWidth: '70ch' }}>
-            El panel instala el loader y la versión de Minecraft que pide el modpack, descarga todos sus mods y copia su configuración. Los mods que solo
-            sirven en el juego (shaders, minimapas) se omiten en el servidor; después puedes descargar el modpack para tus jugadores desde la pestaña Mods.
+            El panel instala el loader y la versión de Minecraft que pide el modpack, descarga todos sus mods y copia su configuración. Los mods que solo sirven en el juego (shaders, minimapas) se
+            omiten en el servidor; después puedes descargar el modpack para tus jugadores desde la pestaña Mods.
           </p>
         </div>
       </div>
@@ -201,8 +201,8 @@ function Upload({ onPick }) {
   return (
     <div className="empty">
       <p className="muted" style={{ maxWidth: '65ch' }}>
-        Sube el modpack: el archivo <span className="mono">.mrpack</span> de Modrinth o el <span className="mono">.zip</span> de CurseForge (el que se
-        importa en el CurseForge App, no el "server pack"). Los de CurseForge necesitan tu clave de CurseForge en Ajustes del panel.
+        Sube el modpack: el archivo <span className="mono">.mrpack</span> de Modrinth o el <span className="mono">.zip</span> de CurseForge (el que se importa en el CurseForge App, no el "server
+        pack"). Los de CurseForge necesitan tu clave de CurseForge en Ajustes del panel.
       </p>
       <button className="btn-go" disabled={busy} onClick={() => ref.current.click()}>
         {busy ? 'Revisando…' : 'Elegir archivo'}

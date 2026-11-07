@@ -39,7 +39,10 @@ describe('Mundos y respaldos', { skip: !hasJava() && 'Se necesita Java' }, () =>
   it('lista el mundo activo con su Nether', async () => {
     const r = await c.ok('GET', W());
     assert.equal(r.active, 'world');
-    assert.deepEqual(r.worlds.map((w) => [w.name, w.active, w.generated, w.dimensions]), [['world', true, true, 2]]);
+    assert.deepEqual(
+      r.worlds.map((w) => [w.name, w.active, w.generated, w.dimensions]),
+      [['world', true, true, 2]]
+    );
   });
 
   it('crea un mundo nuevo con semilla y tipo (se genera al encender)', async () => {
@@ -123,7 +126,10 @@ describe('Mundos y respaldos', { skip: !hasJava() && 'Se necesita Java' }, () =>
 
     const world = await c.ok('POST', B(), { mode: 'mundo' });
     const names = zipNames(fs.readFileSync(path.join(panel.dataDir, 'backups', s.id, world.file)));
-    assert.ok(names.every((n) => /^world(_nether|_the_end)?\//.test(n)), names.join());
+    assert.ok(
+      names.every((n) => /^world(_nether|_the_end)?\//.test(n)),
+      names.join()
+    );
     const list = await c.ok('GET', B());
     assert.equal(list.backups.length, 2);
   });

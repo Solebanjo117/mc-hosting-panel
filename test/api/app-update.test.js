@@ -77,15 +77,21 @@ describe('Actualizar el panel', () => {
       const r = await panel.client.ok('POST', '/api/system/update/check');
       assert.equal(r.lastCheck.available, true);
       assert.equal(r.lastCheck.behind, 2);
-      assert.deepEqual(r.lastCheck.changes.map((c) => c.subject), ['Novedad: pregenerar el mundo', 'Arreglo: el mapa se ve bien']);
+      assert.deepEqual(
+        r.lastCheck.changes.map((c) => c.subject),
+        ['Novedad: pregenerar el mundo', 'Arreglo: el mapa se ve bien']
+      );
       assert.equal(r.lastCheck.dirty, false);
 
       const started = await panel.client.post('/api/system/update');
       assert.equal(started.status, 202);
-      const done = await waitFor(async () => {
-        const st = await panel.client.ok('GET', '/api/system/update');
-        return !st.running && st.done ? st : null;
-      }, { message: 'que termine de actualizar' });
+      const done = await waitFor(
+        async () => {
+          const st = await panel.client.ok('GET', '/api/system/update');
+          return !st.running && st.done ? st : null;
+        },
+        { message: 'que termine de actualizar' }
+      );
       assert.equal(done.error, null);
       assert.equal(git(repo.app, 'rev-parse', 'HEAD'), head);
       assert.ok(fs.existsSync(path.join(repo.app, 'nuevo.txt')));
@@ -171,6 +177,29 @@ describe('Actualizar el panel', () => {
       const file = path.join(panel.dataDir, 'tmp', 'MC-Hosting-Panel-Setup-99.0.0.exe');
       assert.equal(fs.readFileSync(file, 'utf8'), 'MZ instalador simulado');
     });
+  });
+
+  it('en Docker avisa de la versión nueva pero no se actualiza solo', async () => {
+    const panel = await startPanel({ mocks, env: { MCP_UPDATE_MODE: 'docker' } });
+    try {
+      mocks.state.release = { tag_name: 'v0.0.1', body: '', assets: [] };
+      let r = await panel.client.ok('POST', '/api/system/update/check');
+      assert.equal(r.mode, 'docker');
+      assert.equal(r.lastCheck.available, false);
+      assert.equal(r.lastCheck.message, undefined, 'con una versión vieja no hay nada que avisar');
+
+      mocks.state.release = { tag_name: 'v99.0.0', body: 'Novedades', assets: [] };
+      r = await panel.client.ok('POST', '/api/system/update/check');
+      assert.equal(r.lastCheck.available, false, 'no puede instalarla él mismo');
+      assert.equal(r.lastCheck.latest, '99.0.0');
+      assert.match(r.lastCheck.message, /docker compose pull/);
+      const u = await panel.client.post('/api/system/update');
+      assert.equal(u.status, 409);
+      assert.match(u.body.error, /docker compose/);
+    } finally {
+      mocks.state.release = null;
+      await panel.close();
+    }
   });
 
   it('una copia sin git ni instalador explica cómo actualizar a mano', async () => {
