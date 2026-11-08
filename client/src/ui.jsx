@@ -135,7 +135,8 @@ export function ToastProvider({ children }) {
     (message, kind = 'ok') => {
       const id = Math.random();
       setItems((list) => [...list, { id, message, kind }]);
-      setTimeout(() => dismiss(id), kind === 'error' ? 7000 : kind === 'achievement' ? 8000 : 3500);
+      // Los avisos largos (info) se quedan más para poder leerlos.
+      setTimeout(() => dismiss(id), kind === 'error' ? 7000 : kind === 'achievement' || kind === 'info' ? 8000 : 3500);
     },
     [dismiss]
   );

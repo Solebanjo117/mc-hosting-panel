@@ -17,7 +17,42 @@ public class FakeServer {
   static volatile int chunkyStep = 0;
   static volatile Thread chunkyTask = null;
   static boolean chunkyPending = false;
+  static volatile boolean chunkyExists = false; // hay una tarea sin terminar (corriendo o en pausa)
   static final int CHUNKY_STEPS = Integer.parseInt(System.getProperty("fake.chunkySteps", "40"));
+
+  // Como Chunky real (tasks.properties): la tarea sin terminar se guarda en disco y sobrevive a un reinicio.
+  static final Path CHUNKY_TASK = Paths.get("chunky-task.txt");
+
+  static void chunkySave() {
+    chunkyExists = true;
+    try {
+      Files.write(CHUNKY_TASK, (chunkyWorld + " " + chunkyRadius + " " + chunkyStep).getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      // sin disco: la tarea vive solo en memoria
+    }
+  }
+
+  static void chunkyForget() {
+    chunkyExists = false;
+    try {
+      Files.deleteIfExists(CHUNKY_TASK);
+    } catch (IOException e) {
+      // nada
+    }
+  }
+
+  static void chunkyLoad() {
+    try {
+      if (!Files.exists(CHUNKY_TASK)) return;
+      String[] p = new String(Files.readAllBytes(CHUNKY_TASK), StandardCharsets.UTF_8).trim().split(" ");
+      chunkyWorld = p[0];
+      chunkyRadius = Integer.parseInt(p[1]);
+      chunkyStep = Integer.parseInt(p[2]);
+      chunkyExists = true;
+    } catch (Exception e) {
+      // archivo dañado: como si no hubiera tarea
+    }
+  }
 
   static long chunkyTotal() {
     long side = (2L * chunkyRadius + 15) / 16;
@@ -32,6 +67,8 @@ public class FakeServer {
           Thread.sleep(150);
           if (Thread.currentThread() != chunkyTask) return;
           chunkyStep++;
+          if (chunkyStep < CHUNKY_STEPS) chunkySave();
+          else chunkyForget();
           long done = chunkyTotal() * chunkyStep / CHUNKY_STEPS;
           double pct = 100.0 * chunkyStep / CHUNKY_STEPS;
           if (chunkyStep < CHUNKY_STEPS) {
@@ -67,12 +104,13 @@ public class FakeServer {
     } else if (sub.equals("quiet") && w.length > 2) {
       out("[Chunky] Quiet interval changed to " + w[2] + ".");
     } else if (sub.equals("start")) {
-      if (chunkyTask != null || (chunkyStep > 0 && chunkyStep < CHUNKY_STEPS)) {
+      if (chunkyTask != null || chunkyExists) {
         chunkyPending = true;
         out("[Chunky] Task already exists for " + chunkyWorld + ". Type /chunky confirm to overwrite.");
         return;
       }
       chunkyStep = 0;
+      chunkySave();
       out("[Chunky] Task started for " + chunkyWorld + " at 0, 0 with radius " + chunkyRadius + ".");
       chunkyRun();
     } else if (sub.equals("confirm") && chunkyPending) {
@@ -81,21 +119,36 @@ public class FakeServer {
       chunkyTask = null;
       if (t != null) t.interrupt();
       chunkyStep = 0;
+      chunkySave();
       out("[Chunky] Task started for " + chunkyWorld + " at 0, 0 with radius " + chunkyRadius + ".");
       chunkyRun();
     } else if (sub.equals("pause")) {
+      if (chunkyTask == null) {
+        out("[Chunky] No tasks to pause.");
+        return;
+      }
       Thread t = chunkyTask;
       chunkyTask = null;
-      if (t != null) t.interrupt();
+      t.interrupt();
+      chunkySave();
       out("[Chunky] Task paused for " + chunkyWorld + ".");
     } else if (sub.equals("continue")) {
+      if (chunkyTask == null && !chunkyExists) {
+        out("[Chunky] No tasks to continue.");
+        return;
+      }
       out("[Chunky] Task continuing for " + chunkyWorld + ".");
       chunkyRun();
     } else if (sub.equals("cancel")) {
+      if (chunkyTask == null && !chunkyExists) {
+        out("[Chunky] No tasks to cancel.");
+        return;
+      }
       Thread t = chunkyTask;
       chunkyTask = null;
       if (t != null) t.interrupt();
       chunkyStep = 0;
+      chunkyForget();
       out("[Chunky] Task cancelled for " + chunkyWorld + ".");
     } else {
       out("[Chunky] Unknown command");
@@ -108,6 +161,7 @@ public class FakeServer {
   }
 
   public static void main(String[] args) throws Exception {
+    chunkyLoad();
     String level = "world";
     Path props = Paths.get("server.properties");
     if (Files.exists(props)) {

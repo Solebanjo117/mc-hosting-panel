@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, formatBytes } from '../../api.js';
-import { Confirm, Progress, useAction } from '../../ui.jsx';
+import { Confirm, Progress, useAction, useToast } from '../../ui.jsx';
 
 const DIM_LABEL = { overworld: 'Mundo normal', nether: 'Nether', end: 'End' };
 const STATE_LABEL = {
@@ -19,6 +19,7 @@ export default function Pregen({ server, state }) {
   const [form, setForm] = useState({ radius: 2500, dimension: 'overworld', shape: 'square', center: 'spawn', x: 0, z: 0, border: false });
   const [est, setEst] = useState(null);
   const [ask, setAsk] = useState(null);
+  const toast = useToast();
   const [run, busy] = useAction();
   const timer = useRef();
   const on = state === 'running';
@@ -53,12 +54,14 @@ export default function Pregen({ server, state }) {
 
   if (!st) return null;
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  // Si Chunky ya no tenía la tarea, el panel lo explica en vez del mensaje de siempre.
   const act = (path, body, ok) =>
     run(async () => {
       const r = await api(`/servers/${server.id}/pregen/${path}`, { method: 'POST', body: body ?? undefined });
       setSt(r);
+      toast(r.notice || ok, r.notice ? 'info' : undefined);
       return r;
-    }, ok);
+    });
   const t = st.task;
   const active = t && ['running', 'paused', 'interrupted'].includes(t.state);
 
@@ -102,6 +105,7 @@ export default function Pregen({ server, state }) {
                 {t.state === 'running' && t.eta ? ` · faltan ${t.eta}` : ''}
                 {t.state === 'done' && t.totalTime ? ` · tardó ${t.totalTime}` : ''}
               </span>
+              {t.gone && <span className="small muted">Chunky ya no tenía esta tarea pendiente, así que no quedó nada por cancelar. Lo ya generado se conserva en el mundo.</span>}
               <div className="row">
                 {t.state === 'running' && (
                   <button className="btn-sm" disabled={busy} onClick={() => act('pause', null, 'En pausa')}>

@@ -120,6 +120,49 @@ describe('Pregenerar el mundo (Chunky)', { skip: !hasJava() && 'Se necesita Java
     await panel.stop(paper.id);
   });
 
+  it('si Chunky ya no tiene la tarea, cancelar o continuar lo reconocen en vez de fallar', async () => {
+    const forget = () => fs.rmSync(path.join(panel.serverDir(paper.id), 'chunky-task.txt'), { force: true });
+    await panel.start(paper.id);
+    await c.ok('POST', `${P(paper)}/start`, { radius: 500 });
+    await waitFor(async () => (await task(paper)).percent > 0);
+    await c.ok('POST', `${P(paper)}/pause`);
+    // El servidor se reinicia y Chunky pierde la tarea pausada: el panel sigue mostrándola.
+    await panel.stop(paper.id);
+    forget();
+    await panel.start(paper.id);
+    assert.equal((await task(paper)).state, 'paused');
+
+    let r = await c.post(`${P(paper)}/cancel`);
+    assert.equal(r.status, 200, 'antes: 504 "Chunky no respondió"');
+    assert.equal(r.body.task.state, 'cancelled');
+    assert.equal(r.body.task.gone, true);
+    assert.match(r.body.notice, /ya no tenía esta tarea/);
+    assert.match(await panel.consoleText(paper.id), /No tasks to cancel/);
+
+    // Lo mismo al continuar: no se puede, y el panel lo dice.
+    await c.ok('POST', `${P(paper)}/start`, { radius: 500 });
+    assert.equal((await task(paper)).gone, false, 'una tarea nueva no hereda el aviso');
+    await waitFor(async () => (await task(paper)).percent > 0);
+    await panel.stop(paper.id);
+    forget();
+    await panel.start(paper.id);
+    assert.equal((await task(paper)).state, 'interrupted');
+    r = await c.ok('POST', `${P(paper)}/continue`);
+    assert.equal(r.task.state, 'cancelled');
+    assert.match(r.notice, /no se puede continuar/);
+
+    // Escribirlo a mano en la consola también pone al día al panel.
+    await c.ok('POST', `${P(paper)}/start`, { radius: 500 });
+    await waitFor(async () => (await task(paper)).percent > 0);
+    await c.ok('POST', `${P(paper)}/pause`);
+    await panel.stop(paper.id);
+    forget();
+    await panel.start(paper.id);
+    await panel.command(paper.id, 'chunky cancel world');
+    await waitState(paper, 'cancelled');
+    await panel.stop(paper.id);
+  });
+
   it('instalado con el servidor encendido, pide reiniciar; en Fabric usa los nombres de dimensión', async () => {
     const fabric = await panel.createServer({ name: 'Fabric', type: 'fabric', mcVersion: '1.21.4' });
     await panel.start(fabric.id);

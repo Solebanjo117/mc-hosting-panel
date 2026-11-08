@@ -105,9 +105,15 @@ function requireLoaded(id) {
   if (needsRestart(id)) throw new HttpError(409, 'Reinicia el servidor para que cargue Chunky');
 }
 
-/** Manda un comando de Chunky y espera su respuesta; si pide confirmar, confirma. */
-async function chunkyCommand(inst, command, expect, { confirm = false } = {}) {
-  const answer = new RegExp(`${expect.source}|chunky confirm|Unknown or incomplete command|Unknown command`, 'i');
+/** Lo que contesta Chunky cuando no tiene ninguna tarea para pausar, continuar o cancelar. */
+export const RE_NO_TASK = /\[Chunky\] (?:No tasks to (?:pause|continue|cancel)|No task (?:running|found) for)/i;
+
+/**
+ * Manda un comando de Chunky y espera su respuesta; si pide confirmar, confirma.
+ * Con noTask, también acepta "No tasks to …" y devuelve { none: true } en vez de esperar en vano.
+ */
+async function chunkyCommand(inst, command, expect, { confirm = false, noTask = false } = {}) {
+  const answer = new RegExp(`${expect.source}|chunky confirm|Unknown or incomplete command|Unknown command${noTask ? `|${RE_NO_TASK.source}` : ''}`, 'i');
   const wait = inst.waitForLine(answer, 8000);
   let last = '';
   const grab = (line) => answer.test(line) && (last = line);
@@ -121,6 +127,7 @@ async function chunkyCommand(inst, command, expect, { confirm = false } = {}) {
     throw new HttpError(409, 'El servidor no reconoce los comandos de Chunky: reinícialo para que lo cargue.');
   }
   inst.chunkyLoaded = true;
+  if (noTask && RE_NO_TASK.test(last)) return { none: true, line: last };
   if (/chunky confirm/i.test(last) && !expect.test(last)) {
     if (!confirm) return { needsConfirm: true, line: last };
     return chunkyCommand(inst, 'chunky confirm', expect);
@@ -172,6 +179,7 @@ export async function start(id, { radius, dimension = 'overworld', shape = 'squa
     startedAt: new Date().toISOString(),
     finishedAt: null,
     totalTime: null,
+    gone: false,
   });
   persist(id);
   return status(id);
@@ -188,10 +196,33 @@ export async function control(id, action) {
   if (action === 'continue' && !['paused', 'interrupted'].includes(t.state)) throw new HttpError(409, 'No hay nada pausado que continuar');
   const [expect, state] = map[action];
   // Con varias tareas, Chunky pide el mundo: se indica siempre.
-  await chunkyCommand(instance(id), `chunky ${action} ${t.world}`, expect, { confirm: true });
+  const r = await chunkyCommand(instance(id), `chunky ${action} ${t.world}`, expect, { confirm: true, noTask: true });
+  if (r.none) return noTask(id, action);
   save(id, { state, ...(action === 'cancel' ? { finishedAt: new Date().toISOString() } : {}) });
   persist(id);
   return status(id);
+}
+
+/**
+ * Chunky dice que no tiene esa tarea: la que muestra el panel ya no existe para él (por ejemplo,
+ * estaba en pausa y el servidor se reinició). El panel se pone al día en vez de fallar.
+ * Lo que ya se generó queda en el mundo: empezar de nuevo salta esos chunks rápido.
+ */
+function noTask(id, action) {
+  const now = new Date().toISOString();
+  let notice;
+  if (action === 'cancel') {
+    save(id, { state: 'cancelled', finishedAt: now, gone: true });
+    notice = 'Chunky ya no tenía esta tarea pendiente (se pierde, por ejemplo, al reiniciar el servidor con ella en pausa). Se quitó del panel.';
+  } else if (action === 'continue') {
+    save(id, { state: 'cancelled', finishedAt: now, gone: true });
+    notice = 'Chunky ya no guarda esta tarea, así que no se puede continuar. Empieza una nueva: lo ya generado se conserva y se salta rápido.';
+  } else {
+    save(id, { state: 'interrupted' });
+    notice = 'Chunky no estaba pregenerando. Quedó como interrumpida: prueba Continuar.';
+  }
+  persist(id);
+  return { ...status(id), notice };
 }
 
 /** Olvida la última tarea terminada o cancelada (para la interfaz). */
@@ -222,6 +253,16 @@ export function parseLine(line) {
 
 bus.on('console', (id, line) => {
   if (!line.includes('[Chunky]')) return;
+  // "No tasks to cancel" escrito a mano: si el panel creía que había una en pausa, ya no la hay.
+  const noTaskTyped = line.match(/\[Chunky\] No tasks to cancel/i);
+  if (noTaskTyped) {
+    const t = taskView(id);
+    if (t && ['paused', 'interrupted'].includes(t.state)) {
+      save(id, { state: 'cancelled', finishedAt: new Date().toISOString(), gone: true });
+      persist(id);
+    }
+    return;
+  }
   const p = parseLine(line);
   if (!p) return;
   const t = taskView(id);
