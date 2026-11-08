@@ -73,6 +73,7 @@ describe('Mods, plugins, datapacks y modpacks', { skip: !hasJava() && 'Se necesi
       list.items.map((i) => [i.title, i.source, i.enabled]),
       [['LuckPerms', 'modrinth', true]]
     );
+    assert.equal(list.items[0].versionId, 'v-luckperms-1', 'la ficha compara con la versión instalada exacta');
   });
 
   it('instala de Hangar; si el autor solo da un enlace externo, explica cómo bajarlo', async () => {
