@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import Changelog from '../../changelog.jsx';
+import { pickUpdate } from '../../versions.js';
 import { Link } from 'react-router-dom';
 import { api, qs, formatBytes, formatDate, formatNumber } from '../../api.js';
 import { Modal, useAction, useToast } from '../../ui.jsx';
@@ -621,6 +622,12 @@ function Installed({ server, label, kind, onChanged }) {
           server={server}
           item={asProject(details)}
           installedItem={details}
+          kind={kind}
+          onUpdate={(versionId) => {
+            const item = details;
+            setDetails(null);
+            installVersion(item, versionId);
+          }}
           onClose={() => setDetails(null)}
           onVersions={() => {
             setPicker(details);
@@ -650,8 +657,10 @@ function Installed({ server, label, kind, onChanged }) {
  * Ficha de un proyecto. Desde la búsqueda llega con autor, descripción y enlace; desde la lista
  * de instalados (installedItem) solo con id y título, y lo demás se completa con los detalles.
  */
-function ProjectDetails({ server, item, installed, installing, onClose, onInstall, onVersions, installedItem = null }) {
+function ProjectDetails({ server, item, installed, installing, onClose, onInstall, onVersions, installedItem = null, kind = null, onUpdate }) {
   const [p, setP] = useState(null);
+  const [update, setUpdate] = useState(undefined); // undefined: buscando · null: al día · { version, reason }
+  const [showChanges, setShowChanges] = useState(false);
   const [error, setError] = useState('');
   const [shot, setShot] = useState(0);
   useEffect(() => {
@@ -659,6 +668,18 @@ function ProjectDetails({ server, item, installed, installing, onClose, onInstal
       .then(setP)
       .catch((err) => setError(err.message));
   }, [server.id, item]);
+  // Con un plugin instalado, ¿hay una versión mejor para este servidor?
+  const serverId = server.id;
+  useEffect(() => {
+    if (!installedItem) return;
+    let alive = true;
+    api(curl({ id: serverId }, kind, 'versions', { source: item.source, projectId: item.id }))
+      .then((list) => alive && setUpdate(pickUpdate(list, installedItem)))
+      .catch(() => alive && setUpdate(null));
+    return () => {
+      alive = false;
+    };
+  }, [serverId, kind, item, installedItem]);
   const html = useMemo(() => (p ? renderBody(p.body) : ''), [p]);
   const g = p?.gallery || [];
   const author = item.author || p?.author;
@@ -686,7 +707,36 @@ function ProjectDetails({ server, item, installed, installing, onClose, onInstal
           <p className="small" style={{ margin: 0 }}>
             <span className="chip">Instalado</span> versión {installedItem.versionName || '—'} · <span className="mono">{installedItem.filename}</span>
             {installedItem.enabled ? '' : ' · desactivado'}
+            {update === undefined && <span className="faint"> · buscando versiones…</span>}
+            {update === null && <span className="faint"> · es la versión recomendada para este servidor</span>}
           </p>
+        )}
+        {installedItem && update && (
+          <div className="note stack" role="status" style={{ gap: '0.5rem' }}>
+            <div className="row" style={{ gap: '0.6rem' }}>
+              <strong className="grow">
+                {update.reason === 'newer'
+                  ? `Hay una versión nueva: ${update.version.number}`
+                  : `La versión instalada no aparece entre las compatibles con ${server.mcVersion}. La recomendada es ${update.version.number}.`}
+                <span className="faint small" style={{ fontWeight: 400 }}>
+                  {' '}
+                  · {formatDate(update.version.date)}
+                  {update.version.type !== 'release' ? ` · ${update.version.type}` : ''}
+                </span>
+              </strong>
+              {update.version.changelog && (
+                <button type="button" className="btn-sm btn-ghost" onClick={() => setShowChanges(!showChanges)} aria-expanded={showChanges}>
+                  {showChanges ? 'Ocultar cambios' : 'Qué cambió'}
+                </button>
+              )}
+              {onUpdate && (
+                <button className="btn-sm btn-go" onClick={() => onUpdate(update.version.id)}>
+                  {update.reason === 'newer' ? `Actualizar a ${update.version.number}` : `Instalar ${update.version.number}`}
+                </button>
+              )}
+            </div>
+            {showChanges && <Changelog text={update.version.changelog} compact />}
+          </div>
         )}
         <div className="row">
           {onInstall && (

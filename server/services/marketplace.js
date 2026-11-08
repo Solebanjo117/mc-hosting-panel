@@ -406,6 +406,7 @@ export function listInstalled(id, kind = null) {
         source: rec?.source || 'manual',
         projectId: rec?.projectId || null,
         versionName: rec?.versionName || null,
+        versionId: rec?.versionId || null,
         dependency: rec?.dependency || false,
         managedBy: rec?.managedBy || null,
         ...(isPack ? { worldgen: datapackInfo(path.join(dir, e.name)).worldgen } : {}),

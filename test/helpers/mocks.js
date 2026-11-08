@@ -321,7 +321,7 @@ export async function startMocks() {
           name: `${d.title} 1.0.0`,
           version_number: '1.0.0',
           version_type: 'release',
-          date_published: new Date().toISOString(),
+          date_published: new Date(Date.now() - 86_400_000).toISOString(), // un día antes que la 2.0.0, como en Modrinth
           downloads: 5,
           loaders: d.loaders,
           game_versions: ['1.21.4'],
